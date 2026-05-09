@@ -40,6 +40,7 @@ function sidebarGuide(): DefaultTheme.SidebarItem[] {
       items: [
         { text: 'Overview', link: '' },
         { text: 'Quick Start', link: 'quick-start' },
+        { text: 'Deployment', link: 'deployment' },
         { text: 'Run Server', link: 'server' },
         { text: 'Connect Agent', link: 'agent' },
         { text: 'Publish First Site', link: 'first-site' },

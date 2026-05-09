@@ -1,10 +1,4 @@
-<p align="right">
-  <strong>中文</strong> | <a href="./README.en.md">English</a>
-</p>
-
 <div align="center">
-
-[//]: # (  <img src="./openflare_server/web/public/logo.png" width="120" height="120" alt="OpenFlare logo">)
 
 # OpenFlare
 
@@ -24,66 +18,28 @@
   </a>
 </p>
 
-> [!NOTE]
-> 当前项目处于快速迭代期，设计与实现均不稳定，请确保使用最新版本并关注更新日志。
-
 > [!WARNING]
-> 使用 root 用户初次登录系统后，务必修改默认密码 `123456`，并且确保关闭新用户注册功能。
+> 使用 `root` 用户初次登录系统后，务必修改默认密码 `123456`，并按需关闭新用户注册功能。
 
-## 为什么存在
+## 文档
 
-OpenFlare 解决的是一类朴素但高频的运维问题：
+**https://open-flare.pages.dev**
 
-* 在一个管理端里维护域名到源站的反向代理规则
-* 生成完整 OpenResty 配置并以不可变版本发布
-* 让节点侧 Agent 自动拉取、校验、reload 与失败回滚
-* 统一托管证书、域名、节点凭证与版本状态
-* 提供足够实用的总览、节点详情与访问分析能力
+常用入口：
+
+* [快速开始](https://open-flare.pages.dev/guide/quick-start)
+* [部署说明](https://open-flare.pages.dev/guide/deployment)
+* [配置项参考](https://open-flare.pages.dev/reference/configuration)
+* [系统设计](https://open-flare.pages.dev/design/)
 
 ## 核心能力
 
-* 配置版本化：支持预览、发布、激活、历史回滚
-* Agent 自动应用：周期性同步、落盘、`openresty -t`、`openresty -s reload`、失败自动回滚
-* OpenResty 托管：统一管理主配置模板、性能参数、缓存参数与受管路由
-* TLS 与域名管理：支持证书托管、域名资产维护、精确匹配与通配符匹配
-* 访问与节点观测：支持请求窗口聚合、状态码分布、来源分布、节点资源与健康事件展示
-* 网站防护: 支持 POW, 限流功能
-
-## 系统架构
-
-```text
-OpenFlare Server (Gin + GORM + SQLite/PostgreSQL + Web UI)
-        |
-        | HTTP API / Config Pull
-        v
-OpenFlare Agent (register / heartbeat / sync / apply / update)
-        |
-        v
-Local OpenResty or Docker OpenResty
-        |
-        v
-Origin
-```
-
-职责划分：
-
-* `openflare_server`：管理端 UI、管理 API、Agent API、配置渲染、版本发布与状态存储
-* `openflare_agent`：节点注册、心跳、同步、本地写入、校验、reload、回滚、自更新
-* `openflare_server/web`：新版管理端前端，静态导出后由 Go Server 托管
-
-## 界面预览
-
-### 仪表盘总览
-
-![OpenFlare dashboard overview](./docs/assets/readme/dashboard-overview.png)
-
-### 节点详情
-
-![OpenFlare node detail](./docs/assets/readme/node-detail.png)
-
-### 配置新增
-
-![OpenFlare version release](./docs/assets/readme/proxy-route-detail.png)
+* 反向代理网站配置与多域名绑定
+* 配置预览、发布、激活与历史回滚
+* Agent 自动注册、心跳、同步、校验、reload 与失败回滚
+* OpenResty 主配置、性能参数、缓存参数与 Lua 资源托管
+* TLS 证书、域名资产、节点凭证与版本状态管理
+* 请求聚合、访问分析、资源快照、健康事件与节点详情
 
 ## 快速开始
 
@@ -179,42 +135,20 @@ curl -fsSL https://raw.githubusercontent.com/Rain-kl/OpenFlare/main/scripts/unin
 
 版本号格式固定为 `YYYYMMDD-NNN`，历史版本不可变，回滚通过重新激活旧版本完成。
 
-## 仓库结构
 
-* `openflare_server`：Gin + GORM + SQLite/PostgreSQL 单体控制面
-* `openflare_server/web`：Next.js 15 App Router 管理端前端
-* `openflare_agent`：Go 单体 Agent
-* `scripts`：安装脚本与辅助脚本
-* `docs`：设计、规范、部署与配置文档
+## 界面预览
 
-## 本地开发
+### 仪表盘总览
 
-### Server
+![OpenFlare dashboard overview](./docs/assets/readme/dashboard-overview.png)
 
-```bash
-cd openflare_server
-export SESSION_SECRET='replace-with-random-string'
-export SQLITE_PATH='./openflare.db'
-# 可选：设置 DSN 或 SQL_DSN 后切换到 PostgreSQL。
-# 如果 PostgreSQL 为空且 ./openflare.db 存在，启动时会自动迁移 SQLite 数据。
-# export DSN='postgres://openflare:secret@127.0.0.1:5432/openflare?sslmode=disable'
-go run .
-```
+### 节点详情
 
-### Frontend
+![OpenFlare node detail](./docs/assets/readme/node-detail.png)
 
-```bash
-cd openflare_server/web
-pnpm install
-pnpm dev
-```
+### 配置新增
 
-### Agent
-
-```bash
-cd openflare_agent
-go run ./cmd/agent -config /path/to/agent.json
-```
+![OpenFlare version release](./docs/assets/readme/proxy-route-detail.png)
 
 ## 管理端与接口
 

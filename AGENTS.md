@@ -1,41 +1,41 @@
 # AGENTS.md
 
-本文件是 OpenFlare 的 AI 接手入口，不承载详细设计、规范和计划。接手项目时，先按顺序阅读以下文档：
+本文件是 OpenFlare 的 AI 接手入口，不承载详细设计、规范和计划。接手项目时，先按顺序阅读以下 VitePress 文档源文件：
 
-1. [docs/design.md](./docs/design.md)
-   作用：理解当前 MVP 的产品范围、系统边界、核心对象和整体架构。
+1. [docs/design/index.md](./docs/design/index.md)
+   作用：理解当前 MVP 的产品范围、系统边界、核心对象和长期约束。
 
-2. [docs/development-guidelines.md](./docs/development-guidelines.md)
-   作用：理解当前开发规范，包括技术基线、分层约束、数据模型边界、API 约定、Agent 约束、测试要求。
+2. [docs/design/architecture.md](./docs/design/architecture.md)
+   作用：理解 Server、Agent、OpenResty 与前端的职责边界。
 
-3. [docs/development-plan.md](./docs/development-plan.md)
-   作用：理解当前开发阶段、实施顺序、阶段目标和验收标准。
+3. [docs/design/release-model.md](./docs/design/release-model.md)
+   作用：理解配置发布、激活、回滚与 Agent 应用模型。
 
-4. [docs/frontend-development-guidelines.md](./docs/frontend-development-guidelines.md)
-   作用：理解新版前端的技术选型、目录分层、组件规范、请求层、状态管理、样式和测试约束。
+4. [docs/design/development.md](./docs/design/development.md)
+   作用：理解当前开发规范、阶段原则、分层约束、数据模型边界、API 约定、Agent 约束、前端规范与测试要求。
 
-5. [docs/deployment.md](./docs/deployment.md)
-   作用：理解当前的部署方式和联调步骤，确保开发过程中产出的功能能够成功部署和验证。
+5. [docs/guide/deployment.md](./docs/guide/deployment.md)
+   作用：理解当前部署方式、Agent 接入、升级、卸载和联调步骤。
 
-6. [docs/app-config.md](./docs/app-config.md)
-   作用：系统启动时支持的环境变量和配置项说明，确保开发过程中新增的配置项能够正确使用和文档化。
+6. [docs/reference/configuration.md](./docs/reference/configuration.md)
+   作用：理解系统启动时支持的环境变量、命令行参数、运行时配置项和 Agent 配置字段。
 
+线上文档入口：https://open-flare.pages.dev
 
 ## 执行要求
 
-* 如果实现内容超出 `docs/design.md` 的范围，先修改设计文档，再继续编码。
-* 如果实现方式违反 `docs/development-guidelines.md`，应优先调整方案，而不是绕过规范。
-* 如果需求与当前开发阶段冲突，优先遵守 `docs/development-plan.md` 的阶段顺序。
-* 如果任务涉及前端改造或管理端 UI，必须同时阅读 `docs/frontend-development-guidelines.md`。
-
+* 如果实现内容超出 [产品边界](./docs/design/index.md)，先修改设计文档，再继续编码。
+* 如果实现方式违反 [开发约束](./docs/design/development.md)，应优先调整方案，而不是绕过规范。
+* 如果需求与当前阶段原则冲突，优先遵守 [开发约束](./docs/design/development.md) 中的变更准入与验收标准。
+* 如果任务涉及前端改造或管理端 UI，必须同时遵守 [开发约束](./docs/design/development.md) 中的前端规范。
 
 ## 文档维护要求
 
-当以下内容发生变化时，应同步更新对应文档：
+当以下内容发生变化时，应同步更新对应 VitePress 页面：
 
-* 产品启动配置部署方式发生变化时: 更新 `docs/deployment.md`和 `README.md`
-* 产品范围或系统边界变化：更新 `docs/design.md`
-* 开发约束、代码规范、接口约定变化：更新 `docs/development-guidelines.md`
-* 阶段目标、顺序、验收标准变化：更新 `docs/development-plan.md`
-* 前端目录分层、组件规范、样式体系、测试基线变化：更新 `docs/frontend-development-guidelines.md`
-* 环境变量或配置项变化：更新 `docs/app-config.md`
+* 产品范围或系统边界变化：更新 `docs/design/index.md`
+* 系统结构、模块职责变化：更新 `docs/design/architecture.md`
+* 发布、同步、回滚模型变化：更新 `docs/design/release-model.md`
+* 开发约束、代码规范、接口约定、阶段原则、测试基线变化：更新 `docs/design/development.md`
+* 产品启动、部署、升级、联调方式变化：更新 `docs/guide/deployment.md` 和 `README.md`
+* 环境变量、命令行参数、运行时配置、Agent 配置变化：更新 `docs/reference/configuration.md`

@@ -12,13 +12,7 @@ export default defineConfig({
     'zh/**',
     'components/**',
     'snippets/**',
-    'design.md',
-    'website-configuration-redesign.md',
-    'development-plan.md',
-    'development-guidelines.md',
-    'frontend-development-guidelines.md',
-    'deployment.md',
-    'app-config.md'
+    'website-configuration-redesign.md'
   ],
 
   markdown: {
