@@ -14,7 +14,6 @@ logs
 # https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
 #
 # Binaries for programs and plugins
-*.exe
 *.exe~
 *.dll
 *.so
@@ -43,10 +42,9 @@ go.work.sum
 # .idea/
 # .vscode/
 
-*.log
-
 .DS_Store
 .codex-cache
 /.gomodcache/
-/anubis-1.25.0/
 *.mmdb
+
+*-source
