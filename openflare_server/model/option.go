@@ -254,6 +254,8 @@ func updateOptionMap(key string, value string) {
 		}
 	case "OpenRestyEventsUse":
 		common.OpenRestyEventsUse = value
+	case "OpenRestyResolvers":
+		common.OpenRestyResolvers = value
 	case "OpenRestyEventsMultiAcceptEnabled":
 		common.OpenRestyEventsMultiAcceptEnabled = value == "true"
 	case "OpenRestyKeepaliveTimeout":
