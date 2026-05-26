@@ -333,7 +333,7 @@ func HasConfigChanges() (bool, error) {
 	return activeVersion.Checksum != bundle.Checksum, nil
 }
 
-func PublishConfigVersion(createdBy string) (*ReleaseResult, error) {
+func PublishConfigVersion(createdBy string, force bool) (*ReleaseResult, error) {
 	bundle, err := buildCurrentConfigBundle(true)
 	if err != nil {
 		return nil, err
@@ -342,7 +342,7 @@ func PublishConfigVersion(createdBy string) (*ReleaseResult, error) {
 		return nil, errors.New("没有可发布的启用规则")
 	}
 	activeVersion, err := model.GetActiveConfigVersion()
-	if err == nil && activeVersion.Checksum == bundle.Checksum {
+	if !force && err == nil && activeVersion.Checksum == bundle.Checksum {
 		return nil, errors.New("当前规则没有变更，不能重复发布")
 	}
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {

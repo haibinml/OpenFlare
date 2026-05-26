@@ -167,7 +167,7 @@ export function ProxyRoutesPage() {
     }
 
     setFeedback(null);
-    publishMutation.mutate();
+    publishMutation.mutate(false);
   };
 
   if (routesQuery.isLoading) {

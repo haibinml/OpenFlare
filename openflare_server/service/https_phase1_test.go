@@ -48,7 +48,7 @@ func TestCreateTLSCertificateAndRenderHTTPSConfig(t *testing.T) {
 		t.Fatal("expected https fields to be persisted")
 	}
 
-	result, err := PublishConfigVersion("root")
+	result, err := PublishConfigVersion("root", false)
 	if err != nil {
 		t.Fatalf("PublishConfigVersion failed: %v", err)
 	}
@@ -158,7 +158,7 @@ func TestPublishConfigVersionRendersCustomHeaders(t *testing.T) {
 		t.Fatalf("CreateProxyRoute failed: %v", err)
 	}
 
-	result, err := PublishConfigVersion("root")
+	result, err := PublishConfigVersion("root", false)
 	if err != nil {
 		t.Fatalf("PublishConfigVersion failed: %v", err)
 	}
@@ -238,7 +238,7 @@ func TestPublishConfigVersionRendersRouteLevelCachePolicy(t *testing.T) {
 		t.Fatalf("CreateProxyRoute uncached failed: %v", err)
 	}
 
-	result, err := PublishConfigVersion("root")
+	result, err := PublishConfigVersion("root", false)
 	if err != nil {
 		t.Fatalf("PublishConfigVersion failed: %v", err)
 	}
@@ -297,7 +297,7 @@ func TestPublishConfigVersionRendersMultipleUpstreams(t *testing.T) {
 		t.Fatalf("expected route upstreams to persist, got %s", route.Upstreams)
 	}
 
-	result, err := PublishConfigVersion("root")
+	result, err := PublishConfigVersion("root", false)
 	if err != nil {
 		t.Fatalf("PublishConfigVersion failed: %v", err)
 	}
@@ -354,7 +354,7 @@ func TestPublishConfigVersionRendersMultiDomainWebsite(t *testing.T) {
 		t.Fatalf("CreateProxyRoute failed: %v", err)
 	}
 
-	result, err := PublishConfigVersion("root")
+	result, err := PublishConfigVersion("root", false)
 	if err != nil {
 		t.Fatalf("PublishConfigVersion failed: %v", err)
 	}
@@ -424,7 +424,7 @@ func TestPublishConfigVersionRendersMultipleCertificatesForMultiDomainWebsite(t 
 		t.Fatalf("expected domain_cert_ids to persist per domain, got %#v", route.DomainCertIDs)
 	}
 
-	result, err := PublishConfigVersion("root")
+	result, err := PublishConfigVersion("root", false)
 	if err != nil {
 		t.Fatalf("PublishConfigVersion failed: %v", err)
 	}
@@ -480,7 +480,7 @@ func TestPublishConfigVersionSkipsHTTPSForDomainsWithoutCertificate(t *testing.T
 		t.Fatalf("expected domain_cert_ids to preserve unassigned domains, got %#v", route.DomainCertIDs)
 	}
 
-	result, err := PublishConfigVersion("root")
+	result, err := PublishConfigVersion("root", false)
 	if err != nil {
 		t.Fatalf("PublishConfigVersion failed: %v", err)
 	}
@@ -510,7 +510,7 @@ func TestDiffConfigVersionTracksAddedDomainWithinWebsite(t *testing.T) {
 	if err != nil {
 		t.Fatalf("CreateProxyRoute failed: %v", err)
 	}
-	if _, err := PublishConfigVersion("root"); err != nil {
+	if _, err := PublishConfigVersion("root", false); err != nil {
 		t.Fatalf("PublishConfigVersion failed: %v", err)
 	}
 
@@ -578,7 +578,7 @@ func TestPublishConfigVersionRendersRouteRateLimits(t *testing.T) {
 		t.Fatalf("CreateProxyRoute failed: %v", err)
 	}
 
-	result, err := PublishConfigVersion("root")
+	result, err := PublishConfigVersion("root", false)
 	if err != nil {
 		t.Fatalf("PublishConfigVersion failed: %v", err)
 	}
@@ -615,7 +615,7 @@ func TestPublishConfigVersionRendersHostnameLoadBalancingUpstream(t *testing.T) 
 		t.Fatalf("CreateProxyRoute failed: %v", err)
 	}
 
-	result, err := PublishConfigVersion("root")
+	result, err := PublishConfigVersion("root", false)
 	if err != nil {
 		t.Fatalf("PublishConfigVersion failed: %v", err)
 	}
@@ -649,7 +649,7 @@ func TestPublishConfigVersionOverridesOriginHostHeader(t *testing.T) {
 		t.Fatalf("CreateProxyRoute failed: %v", err)
 	}
 
-	result, err := PublishConfigVersion("root")
+	result, err := PublishConfigVersion("root", false)
 	if err != nil {
 		t.Fatalf("PublishConfigVersion failed: %v", err)
 	}
@@ -685,7 +685,7 @@ func TestPublishConfigVersionUsesNamedUpstreamForOriginBasePath(t *testing.T) {
 		t.Fatalf("CreateProxyRoute failed: %v", err)
 	}
 
-	result, err := PublishConfigVersion("root")
+	result, err := PublishConfigVersion("root", false)
 	if err != nil {
 		t.Fatalf("PublishConfigVersion failed: %v", err)
 	}
@@ -709,7 +709,7 @@ func TestPublishConfigVersionUsesNamedUpstreamForHostnameOrigins(t *testing.T) {
 		t.Fatalf("CreateProxyRoute failed: %v", err)
 	}
 
-	result, err := PublishConfigVersion("root")
+	result, err := PublishConfigVersion("root", false)
 	if err != nil {
 		t.Fatalf("PublishConfigVersion failed: %v", err)
 	}
@@ -736,7 +736,7 @@ func TestPublishConfigVersionUsesNamedUpstreamForIPOrigins(t *testing.T) {
 		t.Fatalf("CreateProxyRoute failed: %v", err)
 	}
 
-	result, err := PublishConfigVersion("root")
+	result, err := PublishConfigVersion("root", false)
 	if err != nil {
 		t.Fatalf("PublishConfigVersion failed: %v", err)
 	}
@@ -810,7 +810,7 @@ func TestPreviewAndDiffConfigVersion(t *testing.T) {
 	if err != nil {
 		t.Fatalf("CreateProxyRoute removed failed: %v", err)
 	}
-	if _, err = PublishConfigVersion("root"); err != nil {
+	if _, err = PublishConfigVersion("root", false); err != nil {
 		t.Fatalf("initial PublishConfigVersion failed: %v", err)
 	}
 
@@ -936,7 +936,7 @@ func TestPublishConfigVersionDetectsPoWChanges(t *testing.T) {
 		t.Fatalf("CreateProxyRoute failed: %v", err)
 	}
 
-	firstRelease, err := PublishConfigVersion("root")
+	firstRelease, err := PublishConfigVersion("root", false)
 	if err != nil {
 		t.Fatalf("initial PublishConfigVersion failed: %v", err)
 	}
@@ -967,7 +967,7 @@ func TestPublishConfigVersionDetectsPoWChanges(t *testing.T) {
 		t.Fatalf("expected PoW change to mark site as modified, got %#v", diff.ModifiedSites)
 	}
 
-	secondRelease, err := PublishConfigVersion("root")
+	secondRelease, err := PublishConfigVersion("root", false)
 	if err != nil {
 		t.Fatalf("PublishConfigVersion after PoW change failed: %v", err)
 	}

@@ -27,8 +27,9 @@ export function getConfigVersionDiff() {
   return apiRequest<ConfigDiffResult>('/config-versions/diff');
 }
 
-export function publishConfigVersion() {
-  return apiRequest<ConfigVersionDetail>('/config-versions/publish', {
+export function publishConfigVersion(force?: boolean) {
+  const query = force ? '?force=true' : '';
+  return apiRequest<ConfigVersionDetail>(`/config-versions/publish${query}`, {
     method: 'POST',
   });
 }

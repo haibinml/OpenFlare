@@ -19,7 +19,7 @@ func TestGetActiveConfigForAgentIncludesPoWConfig(t *testing.T) {
 		t.Fatalf("CreateProxyRoute failed: %v", err)
 	}
 
-	if _, err := PublishConfigVersion("root"); err != nil {
+	if _, err := PublishConfigVersion("root", false); err != nil {
 		t.Fatalf("PublishConfigVersion failed: %v", err)
 	}
 
@@ -57,7 +57,7 @@ func TestGetActiveConfigForAgentUsesTenMinutePoWSessionDefault(t *testing.T) {
 		t.Fatalf("CreateProxyRoute failed: %v", err)
 	}
 
-	if _, err := PublishConfigVersion("root"); err != nil {
+	if _, err := PublishConfigVersion("root", false); err != nil {
 		t.Fatalf("PublishConfigVersion failed: %v", err)
 	}
 

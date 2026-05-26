@@ -435,7 +435,7 @@ export function ConfigVersionsPage() {
   });
 
   const publishMutation = useMutation({
-    mutationFn: publishConfigVersion,
+    mutationFn: (force?: boolean) => publishConfigVersion(force),
     onSuccess: async (version) => {
       setFeedback({
         tone: 'success',
@@ -517,13 +517,26 @@ export function ConfigVersionsPage() {
           title="配置版本"
           description="查看历史快照、预览待发布配置差异，并在需要时重新激活旧版本。"
           action={
-            <PrimaryButton
-              type="button"
-              onClick={handleOpenPublishPreview}
-              disabled={isPreviewLoading}
-            >
-              {isPreviewLoading ? '加载预览中...' : '预览并发布'}
-            </PrimaryButton>
+            <div className="flex gap-2">
+              <SecondaryButton
+                type="button"
+                onClick={() => {
+                  if (window.confirm('确认强制重新发布吗？这会忽略配置变化检查并立即生成一个新版本。')) {
+                    publishMutation.mutate(true);
+                  }
+                }}
+                disabled={publishMutation.isPending}
+              >
+                重新发布
+              </SecondaryButton>
+              <PrimaryButton
+                type="button"
+                onClick={handleOpenPublishPreview}
+                disabled={isPreviewLoading || publishMutation.isPending}
+              >
+                {isPreviewLoading ? '加载预览中...' : '预览并发布'}
+              </PrimaryButton>
+            </div>
           }
         />
 
@@ -544,7 +557,7 @@ export function ConfigVersionsPage() {
                 : null
             }
             isPublishing={publishMutation.isPending}
-            onConfirm={() => publishMutation.mutate()}
+            onConfirm={() => publishMutation.mutate(false)}
             onCancel={() => setPublishPreview(null)}
           />
         ) : null}

@@ -142,7 +142,8 @@ func DiffConfigVersion(c *gin.Context) {
 // @Router /api/config-versions/publish [post]
 func PublishConfigVersion(c *gin.Context) {
 	username := c.GetString("username")
-	result, err := service.PublishConfigVersion(username)
+	force := c.Query("force") == "true"
+	result, err := service.PublishConfigVersion(username, force)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
