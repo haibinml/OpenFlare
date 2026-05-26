@@ -989,6 +989,21 @@ func TestPublishConfigVersionDetectsPoWChanges(t *testing.T) {
 	if !strings.Contains(secondRelease.Version.RenderedConfig, "application/javascript js mjs;") {
 		t.Fatal("expected rendered config to serve Anubis module scripts with a JavaScript MIME type")
 	}
+	if !strings.Contains(secondRelease.Version.RenderedConfig, "    access_by_lua_file __OPENFLARE_LUA_DIR__/pow/check.lua;\n\n    location = /.within.website/x/cmd/anubis/api/pass-challenge") {
+		t.Fatal("expected PoW access handler to render at server scope before PoW locations")
+	}
+	locationStart := strings.Index(secondRelease.Version.RenderedConfig, "    location / {\n")
+	if locationStart < 0 {
+		t.Fatal("expected rendered config to include root proxy location")
+	}
+	locationEnd := strings.Index(secondRelease.Version.RenderedConfig[locationStart:], "    }\n")
+	if locationEnd < 0 {
+		t.Fatal("expected rendered config to close root proxy location")
+	}
+	rootLocationBlock := secondRelease.Version.RenderedConfig[locationStart : locationStart+locationEnd]
+	if strings.Contains(rootLocationBlock, "access_by_lua_file") {
+		t.Fatal("expected root proxy location to avoid mixing access_by_lua_file with proxy_pass")
+	}
 	if !strings.Contains(secondRelease.Version.SnapshotJSON, `"difficulty":5`) {
 		t.Fatal("expected snapshot to persist PoW config")
 	}
