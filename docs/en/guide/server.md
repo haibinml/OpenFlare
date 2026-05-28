@@ -1,18 +1,23 @@
-# Run Server
+# Starting the Server
 
-OpenFlare Server is the Gin + GORM control plane. It owns the web console, management API, Agent API, configuration rendering, release publishing, and state storage.
+You will learn: How to build the management console frontend from source, start OpenFlare Server, select SQLite or PostgreSQL, and access Swagger.
 
-## Requirements
+OpenFlare Server is a Gin + GORM monolithic control plane, responsible for the management console UI, management APIs, Agent APIs, configuration rendering, version releases, data storage, and aggregated queries.
 
-| Item | Requirement                                           |
-| --- |-------------------------------------------------------|
-| Go | `1.25+`                                               |
-| Node.js | `18+`                                                 |
-| Database | Writable SQLite path or reachable PostgreSQL instance |
+## Prerequisites
 
-Set `SESSION_SECRET` explicitly in production and prefer PostgreSQL.
+| Project | Requirement |
+| --- | --- |
+| Go | `1.25+` |
+| Node.js | `18+` |
+| pnpm | Recommended to use the pnpm declared by the project via `corepack enable` |
+| Database | SQLite file directory is writable, or an accessible PostgreSQL instance |
 
-## Build Frontend
+In production environments, it is recommended to explicitly configure `SESSION_SECRET` and prioritize PostgreSQL.
+
+## Build the Management Console Frontend
+
+The Go Server hosts the static artifacts in `openflare_server/web/build`. Before starting from source, build the frontend first:
 
 ```bash
 cd openflare_server/web
@@ -21,32 +26,81 @@ pnpm install
 pnpm build
 ```
 
-## Run from Source
+Common frontend checks:
+
+```bash
+pnpm lint
+pnpm typecheck
+pnpm test
+```
+
+## Start with SQLite
 
 ```bash
 cd openflare_server
-export SESSION_SECRET='replace-with-random-string'
+export SESSION_SECRET='replace-with-a-long-random-string'
 export SQLITE_PATH='./openflare.db'
 export LOG_LEVEL='info'
-# Optional PostgreSQL:
-# export DSN='postgres://openflare:secret@127.0.0.1:5432/openflare?sslmode=disable'
 go run .
 ```
 
-The default port is `3000`.
+Listens on port `3000` by default. Access:
+
+```text
+http://localhost:3000
+```
+
+## Start with PostgreSQL
+
+```bash
+cd openflare_server
+export SESSION_SECRET='replace-with-a-long-random-string'
+export DSN='postgres://openflare:secret@127.0.0.1:5432/openflare?sslmode=disable'
+export LOG_LEVEL='info'
+go run .
+```
+
+`DSN` takes precedence over SQLite once set. When `DSN` and the legacy-named `SQL_DSN` both exist, `DSN` takes precedence.
+
+If the target PostgreSQL database is empty and the local `SQLITE_PATH` file exists, the Server will attempt to migrate SQLite data to PostgreSQL during the startup phase and output the migration progress in the logs.
+
+## Command Line Parameters
+
+```bash
+go run . --port 3000 --log-dir ./logs
+```
+
+| Parameter | Action | Default Value |
+| --- | --- | --- |
+| `--port` | Specify the Server listening port | `3000` |
+| `--log-dir` | Specify the log directory | Empty (outputs to standard output) |
+| `--version` | Output the version and exit | `false` |
+| `--help` | Output the help information and exit | `false` |
+
+## First Login
+
+Default account:
+
+| Username | Password |
+| --- | --- |
+| `root` | `123456` |
+
+Please change the default password immediately after logging in for the first time.
 
 ## Swagger
 
-After logging in, open:
+Access after logging into the management console:
 
 ```text
 http://localhost:3000/swagger/index.html
 ```
 
-Regenerate Swagger files locally:
+Regenerate Swagger locally:
 
 ```bash
 go install github.com/swaggo/swag/cmd/swag@v1.16.4
 cd openflare_server
 swag init -g main.go -o docs
 ```
+
+The generated Swagger files are located in `openflare_server/docs`.

@@ -1,32 +1,47 @@
 # Repository Layout
 
+You will learn: What the Server, Agent, frontend, scripts, and documentation directories in the OpenFlare repository are responsible for, and which layer to place your logic when contributing code.
+
 | Path | Responsibility |
 | --- | --- |
-| `openflare_server` | Gin + GORM + SQLite/PostgreSQL control plane |
-| `openflare_server/web` | Next.js 15 App Router admin frontend, statically exported and served by Go Server |
-| `openflare_agent` | Go Agent running on nodes |
-| `scripts` | Agent install, uninstall, and helper scripts |
-| `docs` | VitePress docs site, design baseline, development rules, deployment and configuration docs |
+| `openflare_server` | Gin + GORM + SQLite/PostgreSQL monolithic control plane |
+| `openflare_server/web` | Next.js 15 App Router management console frontend, statically exported and hosted by the Go Server |
+| `openflare_agent` | Go monolithic Agent, running on the node side |
+| `scripts` | Helper scripts such as Agent installation, uninstallation, etc. |
+| `docs` | VitePress documentation site, design baseline, development constraints, deployment, and configuration documents |
 
-## Server Layers
+## Server Layering
 
 | Directory | Responsibility |
 | --- | --- |
-| `controller/` | Parse input, call service, return response |
-| `service/` | Business logic, validation, transactions, rendering |
-| `model/` | Models, database versioning, migrations |
+| `controller/` | Parameter parsing, calling services, returning responses |
+| `service/` | Business logic, verification, transaction orchestration, configuration rendering |
+| `model/` | Model definition, database version, and migration |
 | `router/` | Route registration |
-| `middleware/` | Auth, authorization, rate limiting, cross-cutting logic |
-| `common/` | Configuration, global state, initialization |
-| `utils/` | Pure helpers |
+| `middleware/` | Auth, authorization, rate limiting, and other cross-cutting logic |
+| `common/` | Configuration, global state, and initialization entry points |
+| `utils/` | Pure utility functions and general helpers |
 
-## Frontend Layers
+## Agent Modules
+
+| Module | Responsibility |
+| --- | --- |
+| `config` | Configuration reading and default values |
+| `heartbeat` | Heartbeat and version summary judgment |
+| `sync` | Configuration pulling and application orchestration |
+| `nginx` / `openresty` | OpenResty file writing, verification, reload, startup, and rollback |
+| `state` | Local state and observability supplementary reporting buffer |
+| `httpclient` | Server communication |
+| `protocol` | Agent API protocol types |
+| `internal/updater` | Agent self-updating |
+
+## Frontend Layering
 
 | Directory | Responsibility |
 | --- | --- |
-| `app/` | Routes, layouts, page composition |
-| `features/` | Business-domain modules |
-| `components/` | Cross-feature reusable components |
-| `lib/` | API client, env, utilities, constants |
-| `store/` | Small cross-page UI state |
-| `types/` | Shared types |
+| `app/` | Routes, layouts, page assembly |
+| `features/` | Organize modules by business domains |
+| `components/` | Reuse components across features |
+| `lib/` | Request client, environment variables, utility functions, constants |
+| `store/` | A small amount of cross-page UI state |
+| `types/` | Shared type definitions |

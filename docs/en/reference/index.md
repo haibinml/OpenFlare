@@ -1,10 +1,12 @@
 # Reference
 
-This section collects stable runtime, API, and repository information for deployment, integration, and troubleshooting.
+You will learn: What information belongs to stable reference materials, and where to look up configurations, commands, APIs, and the repository structure.
+
+This section collects stable information at the runtime, interface, and repository levels, suitable for quick lookups during deployment, joint debugging, and troubleshooting.
 
 | Page | Content |
 | --- | --- |
-| [Configuration](./configuration.md) | Server environment variables, CLI flags, runtime options, and Agent config fields |
-| [Commands and Scripts](./cli.md) | Startup, build, test, install, and uninstall commands |
-| [API Conventions](./api.md) | Management API and Agent API response, auth, and path conventions |
+| [Configuration Items](./configuration.md) | Server environment variables, command line parameters, runtime Options, and Agent configuration fields |
+| [Commands and Scripts](./cli.md) | Common startup, build, test, install, and uninstall commands |
+| [API Conventions](./api.md) | Response structure, authentication, and path conventions of management and Agent APIs |
 | [Repository Layout](./repository.md) | Responsibilities of `openflare_server`, `openflare_agent`, `openflare_server/web`, and `docs` |
