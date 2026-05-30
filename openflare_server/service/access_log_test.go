@@ -179,6 +179,8 @@ func TestListFoldedAccessLogsAndIPSummaries(t *testing.T) {
 		NodeID:      "node-folded",
 		Page:        0,
 		PageSize:    10,
+		SortBy:      "request_count",
+		SortOrder:   "desc",
 		FoldMinutes: 5,
 	})
 	if err != nil {
@@ -192,6 +194,28 @@ func TestListFoldedAccessLogsAndIPSummaries(t *testing.T) {
 	}
 	if folded.Items[0].RequestCount+folded.Items[1].RequestCount != 3 {
 		t.Fatalf("unexpected folded request count sum: %+v", folded.Items)
+	}
+	if folded.Items[0].RequestCount != 2 {
+		t.Fatalf("expected folded buckets to sort by request_count desc, got %+v", folded.Items)
+	}
+
+	bucketIPs, err := ListFoldedAccessLogIPs(FoldedAccessLogIPQuery{
+		NodeID:          "node-folded",
+		BucketStartedAt: folded.Items[0].BucketStartedAt.Format(time.RFC3339),
+		FoldMinutes:     5,
+		Page:            0,
+		PageSize:        10,
+		SortBy:          "request_count",
+		SortOrder:       "desc",
+	})
+	if err != nil {
+		t.Fatalf("ListFoldedAccessLogIPs failed: %v", err)
+	}
+	if bucketIPs.TotalIP != 1 || len(bucketIPs.Items) != 1 {
+		t.Fatalf("expected one folded bucket IP row, got %+v", bucketIPs)
+	}
+	if bucketIPs.Items[0].RemoteAddr != "203.0.113.1" || bucketIPs.Items[0].RequestCount != 2 {
+		t.Fatalf("unexpected top folded bucket IP row: %+v", bucketIPs.Items[0])
 	}
 
 	ipSummaries, err := ListAccessLogIPSummaries(AccessLogIPSummaryQuery{

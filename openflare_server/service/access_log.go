@@ -73,6 +73,40 @@ type FoldedAccessLogList struct {
 	FoldMinutes int                   `json:"fold_minutes"`
 }
 
+type FoldedAccessLogIPQuery struct {
+	NodeID          string `json:"node_id"`
+	RemoteAddr      string `json:"remote_addr"`
+	Host            string `json:"host"`
+	Path            string `json:"path"`
+	BucketStartedAt string `json:"bucket_started_at"`
+	FoldMinutes     int    `json:"fold_minutes"`
+	Page            int    `json:"page"`
+	PageSize        int    `json:"page_size"`
+	SortBy          string `json:"sort_by"`
+	SortOrder       string `json:"sort_order"`
+}
+
+type FoldedAccessLogIPView struct {
+	RemoteAddr       string    `json:"remote_addr"`
+	RequestCount     int64     `json:"request_count"`
+	SuccessCount     int64     `json:"success_count"`
+	ClientErrorCount int64     `json:"client_error_count"`
+	ServerErrorCount int64     `json:"server_error_count"`
+	LastSeenAt       time.Time `json:"last_seen_at"`
+}
+
+type FoldedAccessLogIPList struct {
+	Items           []FoldedAccessLogIPView `json:"items"`
+	Page            int                     `json:"page"`
+	PageSize        int                     `json:"page_size"`
+	HasMore         bool                    `json:"has_more"`
+	TotalIP         int64                   `json:"total_ip"`
+	BucketStartedAt time.Time               `json:"bucket_started_at"`
+	FoldMinutes     int                     `json:"fold_minutes"`
+	SortBy          string                  `json:"sort_by"`
+	SortOrder       string                  `json:"sort_order"`
+}
+
 type AccessLogIPSummaryQuery struct {
 	NodeID     string `json:"node_id"`
 	RemoteAddr string `json:"remote_addr"`
@@ -187,7 +221,7 @@ func ListFoldedAccessLogs(input AccessLogQuery) (*FoldedAccessLogList, error) {
 		Since:       modelQuery.Since,
 		Page:        normalized.Page,
 		PageSize:    normalized.PageSize,
-		SortBy:      normalizeFoldSortBy(normalized.SortBy),
+		SortBy:      normalizeFoldSortBy(input.SortBy),
 		SortOrder:   normalized.SortOrder,
 		FoldMinutes: foldMinutes,
 	}
@@ -227,6 +261,58 @@ func ListFoldedAccessLogs(input AccessLogQuery) (*FoldedAccessLogList, error) {
 		TotalRecord: totalRecords,
 		TotalIP:     totalIPs,
 		FoldMinutes: foldMinutes,
+	}, nil
+}
+
+func ListFoldedAccessLogIPs(input FoldedAccessLogIPQuery) (*FoldedAccessLogIPList, error) {
+	normalized, bucketStartedAt, err := normalizeFoldedAccessLogIPQuery(input)
+	if err != nil {
+		return nil, err
+	}
+	modelQuery := model.NodeAccessLogBucketIPQuery{
+		NodeID:          normalized.NodeID,
+		RemoteAddr:      normalized.RemoteAddr,
+		Host:            normalized.Host,
+		Path:            normalized.Path,
+		BucketStartedAt: bucketStartedAt,
+		FoldMinutes:     normalized.FoldMinutes,
+		Page:            normalized.Page,
+		PageSize:        normalized.PageSize,
+		SortBy:          normalized.SortBy,
+		SortOrder:       normalized.SortOrder,
+	}
+	items, err := model.ListNodeAccessLogBucketIPs(modelQuery)
+	if err != nil {
+		return nil, err
+	}
+	totalIP, err := model.CountNodeAccessLogBucketIPs(modelQuery)
+	if err != nil {
+		return nil, err
+	}
+	views := make([]FoldedAccessLogIPView, 0, len(items))
+	for _, item := range items {
+		if item == nil {
+			continue
+		}
+		views = append(views, FoldedAccessLogIPView{
+			RemoteAddr:       item.RemoteAddr,
+			RequestCount:     item.RequestCount,
+			SuccessCount:     item.SuccessCount,
+			ClientErrorCount: item.ClientErrorCount,
+			ServerErrorCount: item.ServerErrorCount,
+			LastSeenAt:       time.Unix(item.LastSeenEpoch, 0).UTC(),
+		})
+	}
+	return &FoldedAccessLogIPList{
+		Items:           views,
+		Page:            normalized.Page,
+		PageSize:        normalized.PageSize,
+		HasMore:         int64((normalized.Page+1)*normalized.PageSize) < totalIP,
+		TotalIP:         totalIP,
+		BucketStartedAt: bucketStartedAt,
+		FoldMinutes:     normalized.FoldMinutes,
+		SortBy:          normalized.SortBy,
+		SortOrder:       normalized.SortOrder,
 	}, nil
 }
 
@@ -396,6 +482,35 @@ func normalizeAccessLogIPSummaryQuery(input AccessLogIPSummaryQuery) AccessLogIP
 		SortBy:     normalizeIPSummarySortBy(input.SortBy),
 		SortOrder:  normalizeAccessLogSortOrder(input.SortOrder),
 	}
+}
+
+func normalizeFoldedAccessLogIPQuery(input FoldedAccessLogIPQuery) (FoldedAccessLogIPQuery, time.Time, error) {
+	foldMinutes, err := normalizeFoldMinutes(input.FoldMinutes)
+	if err != nil {
+		return FoldedAccessLogIPQuery{}, time.Time{}, err
+	}
+	bucketStartedAt, err := time.Parse(time.RFC3339, strings.TrimSpace(input.BucketStartedAt))
+	if err != nil {
+		return FoldedAccessLogIPQuery{}, time.Time{}, errors.New("bucket_started_at 必须为 RFC3339 时间")
+	}
+	normalizedSortBy := strings.TrimSpace(input.SortBy)
+	switch normalizedSortBy {
+	case "last_seen_at", "remote_addr":
+	default:
+		normalizedSortBy = "request_count"
+	}
+	return FoldedAccessLogIPQuery{
+		NodeID:          strings.TrimSpace(input.NodeID),
+		RemoteAddr:      strings.TrimSpace(input.RemoteAddr),
+		Host:            strings.TrimSpace(input.Host),
+		Path:            strings.TrimSpace(input.Path),
+		BucketStartedAt: strings.TrimSpace(input.BucketStartedAt),
+		FoldMinutes:     foldMinutes,
+		Page:            normalizeAccessLogPage(input.Page),
+		PageSize:        normalizeAccessLogPageSize(input.PageSize),
+		SortBy:          normalizedSortBy,
+		SortOrder:       normalizeAccessLogSortOrder(input.SortOrder),
+	}, bucketStartedAt.UTC(), nil
 }
 
 func normalizeAccessLogIPTrendQuery(input AccessLogIPTrendQuery) (AccessLogIPTrendQuery, error) {

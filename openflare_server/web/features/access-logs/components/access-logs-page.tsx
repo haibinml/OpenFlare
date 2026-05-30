@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { TrendChart } from '@/components/data/trend-chart';
@@ -16,6 +16,7 @@ import {
   getAccessLogIPSummaries,
   getAccessLogIPTrend,
   getAccessLogs,
+  getFoldedAccessLogIPs,
   getFoldedAccessLogs,
 } from '@/features/access-logs/api/access-logs';
 import type {
@@ -23,6 +24,7 @@ import type {
   AccessLogIPSummaryItem,
   AccessLogIPSummaryList,
   AccessLogList,
+  FoldedAccessLogIPList,
   FoldedAccessLogList,
 } from '@/features/access-logs/types';
 import {
@@ -94,7 +96,10 @@ function buildSummary(totalRecord = 0, totalIP = 0, activeTab: ActiveTab) {
   return [
     { label: '访问记录', value: formatCompactNumber(totalRecord) },
     { label: '来源 IP', value: formatCompactNumber(totalIP) },
-    { label: '当前视图', value: activeTab === 'detail' ? '明细日志' : 'IP 维度' },
+    {
+      label: '当前视图',
+      value: activeTab === 'detail' ? '明细日志' : 'IP 维度',
+    },
   ];
 }
 
@@ -109,6 +114,36 @@ function buildTrendLabels(points: Array<{ bucket_started_at: string }>) {
     ).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(
       date.getMinutes(),
     ).padStart(2, '0')}`;
+  });
+}
+
+function isFoldedAccessLogList(
+  value: AccessLogList | FoldedAccessLogList | undefined,
+): value is FoldedAccessLogList {
+  if (!value || !Array.isArray(value.items)) {
+    return false;
+  }
+  return value.items.every((item) => {
+    const candidate = item as Partial<FoldedAccessLogList['items'][number]>;
+    return (
+      typeof candidate.bucket_started_at === 'string' &&
+      typeof candidate.request_count === 'number'
+    );
+  });
+}
+
+function isAccessLogList(
+  value: AccessLogList | FoldedAccessLogList | undefined,
+): value is AccessLogList {
+  if (!value || !Array.isArray(value.items)) {
+    return false;
+  }
+  return value.items.every((item) => {
+    const candidate = item as Partial<AccessLogList['items'][number]>;
+    return (
+      typeof candidate.logged_at === 'string' &&
+      typeof candidate.status_code === 'number'
+    );
   });
 }
 
@@ -134,7 +169,13 @@ export function AccessLogsPage() {
   const [detailSort, setDetailSort] = useState('logged_at:desc');
   const [foldedSort, setFoldedSort] = useState('bucket_started_at:desc');
   const [ipSort, setIPSort] = useState('total_requests:desc');
-  const [selectedIP, setSelectedIP] = useState<AccessLogIPSummaryItem | null>(null);
+  const [expandedBucket, setExpandedBucket] = useState<string | null>(null);
+  const [bucketIPPages, setBucketIPPages] = useState<Record<string, number>>(
+    {},
+  );
+  const [selectedIP, setSelectedIP] = useState<AccessLogIPSummaryItem | null>(
+    null,
+  );
   const [cleanupDays, setCleanupDays] = useState<string>('7');
   const [customCleanupDays, setCustomCleanupDays] = useState('14');
   const [isCleanupModalOpen, setCleanupModalOpen] = useState(false);
@@ -179,8 +220,14 @@ export function AccessLogsPage() {
         sort_order: detailSortState.sortOrder,
       });
     },
-    placeholderData: (previousData: AccessLogList | FoldedAccessLogList | undefined) =>
-      previousData,
+    placeholderData: (
+      previousData: AccessLogList | FoldedAccessLogList | undefined,
+    ) => {
+      if (foldMinutes > 0) {
+        return isFoldedAccessLogList(previousData) ? previousData : undefined;
+      }
+      return isAccessLogList(previousData) ? previousData : undefined;
+    },
   });
 
   const ipSummaryQuery = useQuery<AccessLogIPSummaryList>({
@@ -195,11 +242,18 @@ export function AccessLogsPage() {
         sort_by: ipSortState.sortBy,
         sort_order: ipSortState.sortOrder,
       }),
-    placeholderData: (previousData: AccessLogIPSummaryList | undefined) => previousData,
+    placeholderData: (previousData: AccessLogIPSummaryList | undefined) =>
+      previousData,
   });
 
   const ipTrendQuery = useQuery({
-    queryKey: ['access-logs', 'ip-trend', selectedIP?.remote_addr, filters.nodeId, filters.host],
+    queryKey: [
+      'access-logs',
+      'ip-trend',
+      selectedIP?.remote_addr,
+      filters.nodeId,
+      filters.host,
+    ],
     queryFn: () =>
       getAccessLogIPTrend({
         node_id: filters.nodeId || undefined,
@@ -212,18 +266,26 @@ export function AccessLogsPage() {
   });
 
   const cleanupMutation = useMutation({
-    mutationFn: (payload: AccessLogCleanupPayload) => cleanupAccessLogs(payload),
+    mutationFn: (payload: AccessLogCleanupPayload) =>
+      cleanupAccessLogs(payload),
     onSuccess: async () => {
       setCleanupModalOpen(false);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['access-logs', 'detail'] }),
-        queryClient.invalidateQueries({ queryKey: ['access-logs', 'ip-summary'] }),
-        queryClient.invalidateQueries({ queryKey: ['access-logs', 'ip-trend'] }),
+        queryClient.invalidateQueries({
+          queryKey: ['access-logs', 'ip-summary'],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['access-logs', 'ip-trend'],
+        }),
       ]);
     },
   });
 
-  const detailSummaryData = detailQuery.data as AccessLogList | FoldedAccessLogList | undefined;
+  const detailSummaryData = detailQuery.data as
+    | AccessLogList
+    | FoldedAccessLogList
+    | undefined;
   const summary = useMemo(
     () =>
       buildSummary(
@@ -252,6 +314,8 @@ export function AccessLogsPage() {
     });
     setDetailPage(0);
     setIPPage(0);
+    setExpandedBucket(null);
+    setBucketIPPages({});
   };
 
   const handleReset = () => {
@@ -261,6 +325,8 @@ export function AccessLogsPage() {
     setDetailPage(0);
     setIPPage(0);
     setSelectedIP(null);
+    setExpandedBucket(null);
+    setBucketIPPages({});
   };
 
   const handleCleanupConfirm = () => {
@@ -277,13 +343,19 @@ export function AccessLogsPage() {
         title="日志"
         description="升级后的日志中心支持按节点、IP、域名与路径检索，支持时间折叠、IP 维度聚合与按保留天数清理旧日志。"
         action={
-          <PrimaryButton type="button" onClick={() => setCleanupModalOpen(true)}>
+          <PrimaryButton
+            type="button"
+            onClick={() => setCleanupModalOpen(true)}
+          >
             清理日志
           </PrimaryButton>
         }
       />
 
-      <AppCard title="日志摘要" description="所有汇总、排序、折叠与分页都由后端计算，前端仅展示当前页结果。">
+      <AppCard
+        title="日志摘要"
+        description="所有汇总、排序、折叠与分页都由后端计算，前端仅展示当前页结果。"
+      >
         <div className="grid gap-4 md:grid-cols-3">
           {summary.map((item) => (
             <div
@@ -320,8 +392,16 @@ export function AccessLogsPage() {
         <div className="space-y-5">
           <div className="flex flex-wrap gap-2">
             {[
-              { key: 'detail', label: '明细日志', description: '按请求明细查看与折叠聚合' },
-              { key: 'ip', label: 'IP 维度', description: '查看来源 IP 汇总与趋势' },
+              {
+                key: 'detail',
+                label: '明细日志',
+                description: '按请求明细查看与折叠聚合',
+              },
+              {
+                key: 'ip',
+                label: 'IP 维度',
+                description: '查看来源 IP 汇总与趋势',
+              },
             ].map((tab) => (
               <button
                 key={tab.key}
@@ -344,7 +424,10 @@ export function AccessLogsPage() {
               <ResourceInput
                 value={draft.nodeId}
                 onChange={(event) =>
-                  setDraft((current) => ({ ...current, nodeId: event.target.value }))
+                  setDraft((current) => ({
+                    ...current,
+                    nodeId: event.target.value,
+                  }))
                 }
                 placeholder="按 node_id 搜索"
               />
@@ -353,7 +436,10 @@ export function AccessLogsPage() {
               <ResourceInput
                 value={draft.remoteAddr}
                 onChange={(event) =>
-                  setDraft((current) => ({ ...current, remoteAddr: event.target.value }))
+                  setDraft((current) => ({
+                    ...current,
+                    remoteAddr: event.target.value,
+                  }))
                 }
                 placeholder="按 IP 搜索"
               />
@@ -362,20 +448,30 @@ export function AccessLogsPage() {
               <ResourceInput
                 value={draft.host}
                 onChange={(event) =>
-                  setDraft((current) => ({ ...current, host: event.target.value }))
+                  setDraft((current) => ({
+                    ...current,
+                    host: event.target.value,
+                  }))
                 }
                 placeholder="按域名搜索"
               />
             </ResourceField>
             <ResourceField
               label="请求路径"
-              hint={activeTab === 'ip' ? 'IP 维度页暂不使用路径过滤。' : '支持按路径模糊过滤。'}
+              hint={
+                activeTab === 'ip'
+                  ? 'IP 维度页暂不使用路径过滤。'
+                  : '支持按路径模糊过滤。'
+              }
             >
               <ResourceInput
                 value={draft.path}
                 disabled={activeTab === 'ip'}
                 onChange={(event) =>
-                  setDraft((current) => ({ ...current, path: event.target.value }))
+                  setDraft((current) => ({
+                    ...current,
+                    path: event.target.value,
+                  }))
                 }
                 placeholder="按路径搜索"
               />
@@ -400,7 +496,11 @@ export function AccessLogsPage() {
               </ResourceSelect>
             </ResourceField>
 
-            <ResourceField label={activeTab === 'detail' && foldMinutes > 0 ? '折叠排序' : '排序'}>
+            <ResourceField
+              label={
+                activeTab === 'detail' && foldMinutes > 0 ? '折叠排序' : '排序'
+              }
+            >
               <ResourceSelect
                 value={
                   activeTab === 'detail' && foldMinutes > 0
@@ -444,6 +544,8 @@ export function AccessLogsPage() {
                   onChange={(event) => {
                     setFoldMinutes(Number(event.target.value) as 0 | 3 | 5);
                     setDetailPage(0);
+                    setExpandedBucket(null);
+                    setBucketIPPages({});
                   }}
                 >
                   {foldOptions.map((option) => (
@@ -474,7 +576,19 @@ export function AccessLogsPage() {
           detailPage={detailPage}
           pageSize={pageSize}
           foldMinutes={foldMinutes}
+          filters={filters}
           query={detailQuery}
+          expandedBucket={expandedBucket}
+          bucketIPPages={bucketIPPages}
+          onToggleBucket={(bucket) =>
+            setExpandedBucket((current) => (current === bucket ? null : bucket))
+          }
+          onBucketIPPageChange={(bucket, nextPage) =>
+            setBucketIPPages((current) => ({
+              ...current,
+              [bucket]: Math.max(nextPage, 0),
+            }))
+          }
           onPrevPage={() => setDetailPage((value) => Math.max(value - 1, 0))}
           onNextPage={() => setDetailPage((value) => value + 1)}
         />
@@ -499,7 +613,10 @@ export function AccessLogsPage() {
         {ipTrendQuery.isLoading ? (
           <LoadingState />
         ) : ipTrendQuery.isError ? (
-          <ErrorState title="IP 趋势加载失败" description={getErrorMessage(ipTrendQuery.error)} />
+          <ErrorState
+            title="IP 趋势加载失败"
+            description={getErrorMessage(ipTrendQuery.error)}
+          />
         ) : ipTrendQuery.data ? (
           <TrendChart
             labels={trendLabels}
@@ -515,7 +632,10 @@ export function AccessLogsPage() {
             yAxisValueFormatter={(value) => formatCompactNumber(value)}
           />
         ) : (
-          <EmptyState title="暂无趋势数据" description="当前 IP 在最近 24 小时内没有可展示的访问曲线。" />
+          <EmptyState
+            title="暂无趋势数据"
+            description="当前 IP 在最近 24 小时内没有可展示的访问曲线。"
+          />
         )}
       </AppModal>
 
@@ -526,7 +646,10 @@ export function AccessLogsPage() {
         onClose={() => setCleanupModalOpen(false)}
         footer={
           <div className="flex flex-wrap justify-end gap-2">
-            <SecondaryButton type="button" onClick={() => setCleanupModalOpen(false)}>
+            <SecondaryButton
+              type="button"
+              onClick={() => setCleanupModalOpen(false)}
+            >
               取消
             </SecondaryButton>
             <PrimaryButton
@@ -607,13 +730,19 @@ function DetailTab({
   detailPage,
   pageSize,
   foldMinutes,
+  filters,
   query,
+  expandedBucket,
+  bucketIPPages,
+  onToggleBucket,
+  onBucketIPPageChange,
   onPrevPage,
   onNextPage,
 }: {
   detailPage: number;
   pageSize: number;
   foldMinutes: 0 | 3 | 5;
+  filters: AppliedSearch;
   query: {
     isLoading: boolean;
     isError: boolean;
@@ -621,6 +750,10 @@ function DetailTab({
     error: unknown;
     data?: AccessLogList | FoldedAccessLogList;
   };
+  expandedBucket: string | null;
+  bucketIPPages: Record<string, number>;
+  onToggleBucket: (bucket: string) => void;
+  onBucketIPPageChange: (bucket: string, page: number) => void;
   onPrevPage: () => void;
   onNextPage: () => void;
 }) {
@@ -635,13 +768,26 @@ function DetailTab({
   if (query.isError) {
     return (
       <AppCard title="访问日志" description="日志查询失败。">
-        <ErrorState title="访问日志加载失败" description={getErrorMessage(query.error)} />
+        <ErrorState
+          title="访问日志加载失败"
+          description={getErrorMessage(query.error)}
+        />
       </AppCard>
     );
   }
 
   if (foldMinutes > 0) {
-    const data = query.data as FoldedAccessLogList;
+    if (!isFoldedAccessLogList(query.data)) {
+      return (
+        <AppCard
+          title="折叠日志"
+          description={`当前按 ${foldMinutes} 分钟时间桶折叠，适合在高频刷新时快速定位异常波段。`}
+        >
+          <LoadingState />
+        </AppCard>
+      );
+    }
+    const data = query.data;
     return (
       <AppCard
         title="折叠日志"
@@ -649,7 +795,10 @@ function DetailTab({
       >
         <div className="space-y-4">
           {data.items.length === 0 ? (
-            <EmptyState title="暂无折叠日志" description="当前筛选条件下没有可展示的时间桶。" />
+            <EmptyState
+              title="暂无折叠日志"
+              description="当前筛选条件下没有可展示的时间桶。"
+            />
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-[var(--border-default)] text-left text-sm">
@@ -665,34 +814,83 @@ function DetailTab({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--border-default)]">
-                  {data.items.map((item) => (
-                    <tr key={item.bucket_started_at} className="align-top">
-                      <td className="px-3 py-4 text-[var(--foreground-secondary)]">
-                        <div>{formatDateTime(item.bucket_started_at)}</div>
-                        <div className="mt-1 text-xs text-[var(--foreground-muted)]">
-                          {formatRelativeTime(item.bucket_started_at)}
-                        </div>
-                      </td>
-                      <td className="px-3 py-4 font-medium text-[var(--foreground-primary)]">
-                        {formatCompactNumber(item.request_count)}
-                      </td>
-                      <td className="px-3 py-4 text-[var(--foreground-secondary)]">
-                        {formatCompactNumber(item.unique_ip_count)}
-                      </td>
-                      <td className="px-3 py-4 text-[var(--foreground-secondary)]">
-                        {formatCompactNumber(item.unique_host_count)}
-                      </td>
-                      <td className="px-3 py-4 text-emerald-600">
-                        {formatCompactNumber(item.success_count)}
-                      </td>
-                      <td className="px-3 py-4 text-amber-600">
-                        {formatCompactNumber(item.client_error_count)}
-                      </td>
-                      <td className="px-3 py-4 text-rose-600">
-                        {formatCompactNumber(item.server_error_count)}
-                      </td>
-                    </tr>
-                  ))}
+                  {data.items.map((item) => {
+                    const isExpanded =
+                      expandedBucket === item.bucket_started_at;
+                    const bucketPage =
+                      bucketIPPages[item.bucket_started_at] ?? 0;
+                    return (
+                      <Fragment key={item.bucket_started_at}>
+                        <tr
+                          key={item.bucket_started_at}
+                          className="cursor-pointer align-top transition hover:bg-[var(--surface-elevated)]"
+                          onClick={() => onToggleBucket(item.bucket_started_at)}
+                        >
+                          <td className="px-3 py-4 text-[var(--foreground-secondary)]">
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                onToggleBucket(item.bucket_started_at);
+                              }}
+                              className="text-left font-medium text-[var(--foreground-primary)] underline-offset-4 hover:underline"
+                            >
+                              {formatDateTime(item.bucket_started_at)}
+                            </button>
+                            <div className="mt-1 text-xs text-[var(--foreground-muted)]">
+                              {formatRelativeTime(item.bucket_started_at)}
+                            </div>
+                          </td>
+                          <td className="px-3 py-4 font-medium text-[var(--foreground-primary)]">
+                            {formatCompactNumber(item.request_count)}
+                          </td>
+                          <td className="px-3 py-4 text-[var(--foreground-secondary)]">
+                            {formatCompactNumber(item.unique_ip_count)}
+                          </td>
+                          <td className="px-3 py-4 text-[var(--foreground-secondary)]">
+                            {formatCompactNumber(item.unique_host_count)}
+                          </td>
+                          <td className="px-3 py-4 text-emerald-600">
+                            {formatCompactNumber(item.success_count)}
+                          </td>
+                          <td className="px-3 py-4 text-amber-600">
+                            {formatCompactNumber(item.client_error_count)}
+                          </td>
+                          <td className="px-3 py-4 text-rose-600">
+                            {formatCompactNumber(item.server_error_count)}
+                          </td>
+                        </tr>
+                        {isExpanded ? (
+                          <tr key={`${item.bucket_started_at}-detail`}>
+                            <td
+                              colSpan={7}
+                              className="bg-[var(--surface-elevated)] px-3 py-4"
+                            >
+                              <FoldedBucketIPDetails
+                                bucketStartedAt={item.bucket_started_at}
+                                foldMinutes={foldMinutes as 3 | 5}
+                                filters={filters}
+                                page={bucketPage}
+                                pageSize={pageSize}
+                                onPrevPage={() =>
+                                  onBucketIPPageChange(
+                                    item.bucket_started_at,
+                                    bucketPage - 1,
+                                  )
+                                }
+                                onNextPage={() =>
+                                  onBucketIPPageChange(
+                                    item.bucket_started_at,
+                                    bucketPage + 1,
+                                  )
+                                }
+                              />
+                            </td>
+                          </tr>
+                        ) : null}
+                      </Fragment>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -701,6 +899,7 @@ function DetailTab({
             page={detailPage}
             pageSize={pageSize}
             hasMore={data.has_more}
+            itemCount={data.items.length}
             isFetching={query.isFetching}
             onPrev={onPrevPage}
             onNext={onNextPage}
@@ -710,7 +909,18 @@ function DetailTab({
     );
   }
 
-  const data = query.data as AccessLogList;
+  if (!isAccessLogList(query.data)) {
+    return (
+      <AppCard
+        title="访问明细"
+        description="展示原始访问明细，支持按时间、状态码、IP 与域名排序。"
+      >
+        <LoadingState />
+      </AppCard>
+    );
+  }
+
+  const data = query.data;
   return (
     <AppCard
       title="访问明细"
@@ -718,7 +928,10 @@ function DetailTab({
     >
       <div className="space-y-4">
         {data.items.length === 0 ? (
-          <EmptyState title="暂无访问日志" description="当前筛选条件下没有可展示的访问明细。" />
+          <EmptyState
+            title="暂无访问日志"
+            description="当前筛选条件下没有可展示的访问明细。"
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-[var(--border-default)] text-left text-sm">
@@ -769,7 +982,10 @@ function DetailTab({
                         </div>
                       </td>
                       <td className="px-3 py-4">
-                        <StatusBadge label={statusMeta.label} variant={statusMeta.variant} />
+                        <StatusBadge
+                          label={statusMeta.label}
+                          variant={statusMeta.variant}
+                        />
                       </td>
                     </tr>
                   );
@@ -782,6 +998,7 @@ function DetailTab({
           page={detailPage}
           pageSize={pageSize}
           hasMore={data.has_more}
+          itemCount={data.items.length}
           isFetching={query.isFetching}
           onPrev={onPrevPage}
           onNext={onNextPage}
@@ -826,9 +1043,15 @@ function IPTab({
       {query.isLoading ? (
         <LoadingState />
       ) : query.isError ? (
-        <ErrorState title="IP 汇总加载失败" description={getErrorMessage(query.error)} />
+        <ErrorState
+          title="IP 汇总加载失败"
+          description={getErrorMessage(query.error)}
+        />
       ) : items.length === 0 ? (
-        <EmptyState title="暂无 IP 访问记录" description="当前筛选条件下没有可展示的来源 IP。" />
+        <EmptyState
+          title="暂无 IP 访问记录"
+          description="当前筛选条件下没有可展示的来源 IP。"
+        />
       ) : (
         <div className="space-y-4">
           <div className="overflow-x-auto">
@@ -872,6 +1095,7 @@ function IPTab({
             page={ipPage}
             pageSize={pageSize}
             hasMore={hasMore}
+            itemCount={items.length}
             isFetching={query.isFetching}
             onPrev={onPrevPage}
             onNext={onNextPage}
@@ -882,10 +1106,137 @@ function IPTab({
   );
 }
 
+function FoldedBucketIPDetails({
+  bucketStartedAt,
+  foldMinutes,
+  filters,
+  page,
+  pageSize,
+  onPrevPage,
+  onNextPage,
+}: {
+  bucketStartedAt: string;
+  foldMinutes: 3 | 5;
+  filters: AppliedSearch;
+  page: number;
+  pageSize: number;
+  onPrevPage: () => void;
+  onNextPage: () => void;
+}) {
+  const query = useQuery<FoldedAccessLogIPList>({
+    queryKey: [
+      'access-logs',
+      'fold-bucket-ip',
+      filters,
+      bucketStartedAt,
+      foldMinutes,
+      page,
+      pageSize,
+    ],
+    queryFn: () =>
+      getFoldedAccessLogIPs({
+        node_id: filters.nodeId || undefined,
+        remote_addr: filters.remoteAddr || undefined,
+        host: filters.host || undefined,
+        path: filters.path || undefined,
+        bucket_started_at: bucketStartedAt,
+        fold_minutes: foldMinutes,
+        p: page,
+        page_size: pageSize,
+        sort_by: 'request_count',
+        sort_order: 'desc',
+      }),
+    placeholderData: (previousData: FoldedAccessLogIPList | undefined) =>
+      previousData,
+  });
+
+  if (query.isLoading) {
+    return <LoadingState />;
+  }
+  if (query.isError) {
+    return (
+      <ErrorState
+        title="时间桶 IP 明细加载失败"
+        description={getErrorMessage(query.error)}
+      />
+    );
+  }
+  const items = query.data?.items ?? [];
+  if (items.length === 0) {
+    return (
+      <EmptyState
+        title="暂无 IP 明细"
+        description="该时间段内没有可展示的来源 IP。"
+      />
+    );
+  }
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm font-medium text-[var(--foreground-primary)]">
+          时间段内 IP 访问情况
+        </p>
+        <p className="text-xs text-[var(--foreground-muted)]">
+          共 {formatCompactNumber(query.data?.total_ip ?? 0)} 个
+          IP，按访问次数从高到低排序
+        </p>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-[var(--border-default)] text-left text-sm">
+          <thead>
+            <tr className="text-[var(--foreground-secondary)]">
+              <th className="px-3 py-3 font-medium">来源 IP</th>
+              <th className="px-3 py-3 font-medium">访问次数</th>
+              <th className="px-3 py-3 font-medium">2xx</th>
+              <th className="px-3 py-3 font-medium">4xx</th>
+              <th className="px-3 py-3 font-medium">5xx</th>
+              <th className="px-3 py-3 font-medium">最后访问</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[var(--border-default)]">
+            {items.map((item) => (
+              <tr key={item.remote_addr}>
+                <td className="px-3 py-3 font-medium text-[var(--foreground-primary)]">
+                  {item.remote_addr}
+                </td>
+                <td className="px-3 py-3 text-[var(--foreground-secondary)]">
+                  {formatCompactNumber(item.request_count)}
+                </td>
+                <td className="px-3 py-3 text-emerald-600">
+                  {formatCompactNumber(item.success_count)}
+                </td>
+                <td className="px-3 py-3 text-amber-600">
+                  {formatCompactNumber(item.client_error_count)}
+                </td>
+                <td className="px-3 py-3 text-rose-600">
+                  {formatCompactNumber(item.server_error_count)}
+                </td>
+                <td className="px-3 py-3 text-[var(--foreground-secondary)]">
+                  {formatDateTime(item.last_seen_at)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <Pager
+        page={page}
+        pageSize={pageSize}
+        hasMore={query.data?.has_more ?? false}
+        itemCount={items.length}
+        isFetching={query.isFetching}
+        onPrev={onPrevPage}
+        onNext={onNextPage}
+      />
+    </div>
+  );
+}
+
 function Pager({
   page,
   pageSize,
   hasMore,
+  itemCount,
   isFetching,
   onPrev,
   onNext,
@@ -893,20 +1244,30 @@ function Pager({
   page: number;
   pageSize: number;
   hasMore: boolean;
+  itemCount: number;
   isFetching: boolean;
   onPrev: () => void;
   onNext: () => void;
 }) {
+  const canTryNext = hasMore || itemCount >= pageSize;
   return (
     <div className="flex flex-col gap-3 border-t border-[var(--border-default)] pt-4 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-sm text-[var(--foreground-secondary)]">
         第 {page + 1} 页，每页 {pageSize} 条。
       </p>
       <div className="flex gap-2">
-        <SecondaryButton type="button" disabled={page === 0 || isFetching} onClick={onPrev}>
+        <SecondaryButton
+          type="button"
+          disabled={page === 0 || isFetching}
+          onClick={onPrev}
+        >
           上一页
         </SecondaryButton>
-        <SecondaryButton type="button" disabled={!hasMore || isFetching} onClick={onNext}>
+        <SecondaryButton
+          type="button"
+          disabled={!canTryNext || isFetching}
+          onClick={onNext}
+        >
           下一页
         </SecondaryButton>
       </div>

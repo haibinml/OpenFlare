@@ -59,6 +59,43 @@ func GetFoldedAccessLogs(c *gin.Context) {
 	respondSuccess(c, logs)
 }
 
+// GetFoldedAccessLogIPs godoc
+// @Summary List folded access log IP summaries
+// @Tags AccessLogs
+// @Produce json
+// @Security BearerAuth
+// @Param node_id query string false "Node ID"
+// @Param remote_addr query string false "Remote address"
+// @Param host query string false "Host"
+// @Param path query string false "Path"
+// @Param bucket_started_at query string true "Bucket started at"
+// @Param fold_minutes query int true "Fold minutes"
+// @Param p query int false "Page index"
+// @Param page_size query int false "Page size"
+// @Param sort_by query string false "Sort by"
+// @Param sort_order query string false "Sort order"
+// @Success 200 {object} map[string]interface{}
+// @Router /api/access-logs/folds/ip-summary [get]
+func GetFoldedAccessLogIPs(c *gin.Context) {
+	result, err := service.ListFoldedAccessLogIPs(service.FoldedAccessLogIPQuery{
+		NodeID:          c.Query("node_id"),
+		RemoteAddr:      c.Query("remote_addr"),
+		Host:            c.Query("host"),
+		Path:            c.Query("path"),
+		BucketStartedAt: c.Query("bucket_started_at"),
+		FoldMinutes:     readQueryInt(c, "fold_minutes"),
+		Page:            readQueryInt(c, "p"),
+		PageSize:        readQueryInt(c, "page_size"),
+		SortBy:          c.Query("sort_by"),
+		SortOrder:       c.Query("sort_order"),
+	})
+	if err != nil {
+		respondFailure(c, err.Error())
+		return
+	}
+	respondSuccess(c, result)
+}
+
 // GetAccessLogIPSummaries godoc
 // @Summary List access log IP summaries
 // @Tags AccessLogs

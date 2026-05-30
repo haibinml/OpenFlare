@@ -184,6 +184,7 @@ func SetApiRouter(router *gin.Engine) {
 		{
 			accessLogRoute.GET("/", controller.GetAccessLogs)
 			accessLogRoute.GET("/folds", controller.GetFoldedAccessLogs)
+			accessLogRoute.GET("/folds/ip-summary", controller.GetFoldedAccessLogIPs)
 			accessLogRoute.GET("/ip-summary", controller.GetAccessLogIPSummaries)
 			accessLogRoute.GET("/ip-summary/trend", controller.GetAccessLogIPTrend)
 			accessLogRoute.POST("/cleanup", controller.CleanupAccessLogs)

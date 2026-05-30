@@ -9,13 +9,17 @@ import type {
   AccessLogIPTrend,
   AccessLogIPTrendFilters,
   AccessLogList,
+  FoldedAccessLogIPFilters,
+  FoldedAccessLogIPList,
   FoldedAccessLogFilters,
   FoldedAccessLogList,
 } from '@/features/access-logs/types';
 
 function buildSearchParams(filters: object) {
   const searchParams = new URLSearchParams();
-  Object.entries(filters as Record<string, string | number | undefined>).forEach(([key, value]) => {
+  Object.entries(
+    filters as Record<string, string | number | undefined>,
+  ).forEach(([key, value]) => {
     if (value === undefined || value === null || value === '') {
       return;
     }
@@ -31,7 +35,16 @@ export function getAccessLogs(filters: AccessLogFilters) {
 
 export function getFoldedAccessLogs(filters: FoldedAccessLogFilters) {
   const query = buildSearchParams(filters);
-  return apiRequest<FoldedAccessLogList>(`/access-logs/folds${query ? `?${query}` : ''}`);
+  return apiRequest<FoldedAccessLogList>(
+    `/access-logs/folds${query ? `?${query}` : ''}`,
+  );
+}
+
+export function getFoldedAccessLogIPs(filters: FoldedAccessLogIPFilters) {
+  const query = buildSearchParams(filters);
+  return apiRequest<FoldedAccessLogIPList>(
+    `/access-logs/folds/ip-summary${query ? `?${query}` : ''}`,
+  );
 }
 
 export function getAccessLogIPSummaries(filters: AccessLogIPSummaryFilters) {

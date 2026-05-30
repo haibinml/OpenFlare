@@ -55,6 +55,31 @@ export interface FoldedAccessLogList {
   fold_minutes: number;
 }
 
+export interface FoldedAccessLogIPFilters extends FoldedAccessLogFilters {
+  bucket_started_at: string;
+}
+
+export interface FoldedAccessLogIPItem {
+  remote_addr: string;
+  request_count: number;
+  success_count: number;
+  client_error_count: number;
+  server_error_count: number;
+  last_seen_at: string;
+}
+
+export interface FoldedAccessLogIPList {
+  items: FoldedAccessLogIPItem[];
+  page: number;
+  page_size: number;
+  has_more: boolean;
+  total_ip: number;
+  bucket_started_at: string;
+  fold_minutes: number;
+  sort_by: string;
+  sort_order: 'asc' | 'desc';
+}
+
 export interface AccessLogIPSummaryFilters {
   node_id?: string;
   remote_addr?: string;
