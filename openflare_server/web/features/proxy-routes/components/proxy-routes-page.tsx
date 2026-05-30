@@ -48,6 +48,7 @@ function hasConfigChanges(diff: {
   removed_domains: string[];
   modified_domains: string[];
   main_config_changed: boolean;
+  waf_config_changed?: boolean;
   changed_option_keys: string[];
 }) {
   return (
@@ -58,6 +59,7 @@ function hasConfigChanges(diff: {
     diff.removed_domains.length > 0 ||
     diff.modified_domains.length > 0 ||
     diff.main_config_changed ||
+    Boolean(diff.waf_config_changed) ||
     diff.changed_option_keys.length > 0 ||
     !diff.active_version
   );

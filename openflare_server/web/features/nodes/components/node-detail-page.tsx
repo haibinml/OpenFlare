@@ -28,7 +28,6 @@ import {
   requestNodeForceSync,
   requestNodeOpenrestyRestart,
   requestNodeAgentUpdate,
-  rotateNodeBootstrapToken,
   updateNode,
 } from '@/features/nodes/api/nodes';
 import { NodeEditorModal } from '@/features/nodes/components/node-editor-modal';

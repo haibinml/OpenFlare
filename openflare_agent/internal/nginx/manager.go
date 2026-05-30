@@ -220,6 +220,9 @@ func (m *Manager) writeTargetFiles(mainConfig string, routeConfig string, suppor
 	if err := m.writePowConfig(supportFiles); err != nil {
 		return err
 	}
+	if err := m.writeWAFConfig(supportFiles); err != nil {
+		return err
+	}
 	if err := m.ensureMimeTypes(); err != nil {
 		return err
 	}
@@ -289,6 +292,7 @@ func (m *Manager) EnsureLuaAssets() error {
 		return nil
 	}
 	allSupportFiles := append(ManagedObservabilityLuaFiles(), m.managedPowLuaFiles()...)
+	allSupportFiles = append(allSupportFiles, m.managedWAFLuaFiles()...)
 	powStaticFiles, err := ManagedPowStaticFiles()
 	if err != nil {
 		return fmt.Errorf("load pow static files: %w", err)
@@ -628,10 +632,30 @@ func (m *Manager) writePowConfig(supportFiles []protocol.SupportFile) error {
 	return nil
 }
 
+func (m *Manager) writeWAFConfig(supportFiles []protocol.SupportFile) error {
+	if m.RuntimeConfigDir == "" {
+		return nil
+	}
+	configPath := filepath.Join(m.RuntimeConfigDir, "waf_config.json")
+	for _, file := range supportFiles {
+		if file.Path == "waf_config.json" {
+			if err := os.WriteFile(configPath, []byte(file.Content), 0o644); err != nil {
+				return fmt.Errorf("write waf_config.json: %w", err)
+			}
+			slog.Info("wrote waf config", "path", configPath, "size", len(file.Content))
+			return nil
+		}
+	}
+	if err := os.Remove(configPath); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("remove waf_config.json: %w", err)
+	}
+	return nil
+}
+
 func (m *Manager) writeManagedCertFiles(certFiles []protocol.SupportFile) error {
 	files := make([]managedFile, 0, len(certFiles))
 	for _, file := range certFiles {
-		if file.Path == "pow_config.json" {
+		if file.Path == "pow_config.json" || file.Path == "waf_config.json" {
 			continue
 		}
 		targetPath, err := m.certFileTargetPath(file.Path)
@@ -1007,6 +1031,15 @@ func (m *Manager) renderMainConfig(content string) string {
 
 func (m *Manager) managedPowLuaFiles() []protocol.SupportFile {
 	files := ManagedPowLuaFiles()
+	runtimeConfigDir := filepath.ToSlash(strings.TrimSpace(m.RuntimeConfigDir))
+	for index := range files {
+		files[index].Content = strings.ReplaceAll(files[index].Content, RuntimeConfigDirPlaceholder, runtimeConfigDir)
+	}
+	return files
+}
+
+func (m *Manager) managedWAFLuaFiles() []protocol.SupportFile {
+	files := ManagedWAFLuaFiles()
 	runtimeConfigDir := filepath.ToSlash(strings.TrimSpace(m.RuntimeConfigDir))
 	for index := range files {
 		files[index].Content = strings.ReplaceAll(files[index].Content, RuntimeConfigDirPlaceholder, runtimeConfigDir)

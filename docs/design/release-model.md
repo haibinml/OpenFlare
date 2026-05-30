@@ -17,11 +17,12 @@ Server 发布时必须：
 1. 读取全部启用的 `proxy_routes`。
 2. 读取 Server 侧 OpenResty 主配置、性能参数、缓存参数和必要 Lua 资源。
 3. 读取域名与证书绑定关系。
-4. 渲染完整 OpenResty 配置。
-5. 计算 `checksum`。
-6. 写入 `config_versions`。
-7. 切换激活版本。
-8. 让 Agent 在后续 heartbeat 中发现并应用。
+4. 读取 WAF 全局规则组、自定义规则组与网站绑定关系。
+5. 渲染完整 OpenResty 配置与 WAF 运行时配置。
+6. 计算 `checksum`。
+7. 写入 `config_versions`。
+8. 切换激活版本。
+9. 让 Agent 在后续 heartbeat 中发现并应用。
 
 版本号格式固定为 `YYYYMMDD-NNN`。
 
@@ -53,7 +54,7 @@ Agent 发现新版本后会：
 
 1. 拉取目标版本详情。
 2. 备份旧文件。
-3. 写入主配置、路由配置、证书与必要 Lua 资源。
+3. 写入主配置、路由配置、证书、必要 Lua 资源与 WAF/PoW 运行时配置。
 4. 执行 OpenResty 配置校验。
 5. reload；如果运行时未启动，则尝试用当前配置启动 OpenResty。
 6. 上报成功、警告或失败。
@@ -69,3 +70,4 @@ Agent 发现新版本后会：
 * Agent API 固定使用节点专属 `agent_token`，首次接入可使用 `discovery_token`。
 * Server 不提供远程 shell 或任意命令执行入口。
 * 配置版本必须保存完整快照、渲染结果和 `checksum`。
+* WAF 规则组和网站绑定关系必须随完整配置版本进入快照与 checksum，回滚时不得依赖当前可变 WAF 配置。

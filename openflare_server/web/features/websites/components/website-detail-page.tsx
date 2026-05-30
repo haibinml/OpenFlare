@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { EmptyState } from '@/components/feedback/empty-state';
 import { ErrorState } from '@/components/feedback/error-state';
@@ -21,6 +21,10 @@ import {
   deleteTlsCertificate,
   getTlsCertificates,
 } from '@/features/tls-certificates/api/tls-certificates';
+import {
+  getWAFSiteRuleGroups,
+  replaceWAFSiteRuleGroups,
+} from '@/features/waf/api/waf';
 import { CertificateDetailModal } from '@/features/websites/components/certificate-detail-modal';
 import { CertificateEditorModal } from '@/features/websites/components/certificate-editor-modal';
 import { CertificateImportModal } from '@/features/websites/components/certificate-import-modal';
@@ -38,6 +42,7 @@ import {
   DangerButton,
   PrimaryButton,
   SecondaryButton,
+  ToggleField,
 } from '@/features/shared/components/resource-primitives';
 import { formatDateTime } from '@/lib/utils/date';
 
@@ -54,6 +59,7 @@ export function WebsiteDetailPage({ websiteId }: { websiteId: string }) {
   const [isCertificateImportOpen, setIsCertificateImportOpen] = useState(false);
   const [isCertificateDetailOpen, setIsCertificateDetailOpen] = useState(false);
   const [isCertificateEditorOpen, setIsCertificateEditorOpen] = useState(false);
+  const [wafSelectedIDs, setWafSelectedIDs] = useState<number[]>([]);
   const [convertCertificate, setConvertCertificate] =
     useState<TlsCertificateItem | null>(null);
   const [preferredCertificateId, setPreferredCertificateId] = useState<
@@ -130,6 +136,32 @@ export function WebsiteDetailPage({ websiteId }: { websiteId: string }) {
   const enabledRoutesCount = relatedRoutes.filter(
     (route) => route.enabled,
   ).length;
+  const wafRouteID = relatedRoutes[0]?.id ?? null;
+  const wafQuery = useQuery({
+    queryKey: ['waf', 'site-rule-groups', wafRouteID],
+    queryFn: () => getWAFSiteRuleGroups(wafRouteID ?? 0),
+    enabled: Boolean(wafRouteID),
+  });
+  const wafMutation = useMutation({
+    mutationFn: (ids: number[]) => replaceWAFSiteRuleGroups(wafRouteID ?? 0, ids),
+    onSuccess: async (view) => {
+      setWafSelectedIDs(view.applied_ids);
+      setFeedback({ tone: 'success', message: '网站 WAF 规则组已更新。' });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['waf'] }),
+        queryClient.invalidateQueries({ queryKey: ['config-versions', 'diff'] }),
+      ]);
+    },
+    onError: (error) => {
+      setFeedback({ tone: 'danger', message: getErrorMessage(error) });
+    },
+  });
+
+  useEffect(() => {
+    if (wafQuery.data) {
+      setWafSelectedIDs(wafQuery.data.applied_ids);
+    }
+  }, [wafQuery.data]);
 
   const handleDeleteWebsite = () => {
     if (!website) {
@@ -370,6 +402,89 @@ export function WebsiteDetailPage({ websiteId }: { websiteId: string }) {
             )}
           </AppCard>
         </div>
+
+        <AppCard
+          title="WAF"
+          description="全局规则组始终生效，可为当前网站叠加多个自定义规则组。"
+          action={
+            wafRouteID ? (
+              <PrimaryButton
+                type="button"
+                disabled={wafMutation.isPending}
+                onClick={() => wafMutation.mutate(wafSelectedIDs)}
+              >
+                {wafMutation.isPending ? '保存中...' : '保存 WAF'}
+              </PrimaryButton>
+            ) : null
+          }
+        >
+          {!wafRouteID ? (
+            <EmptyState
+              title="暂无可绑定规则"
+              description="当前网站还没有关联代理规则，创建规则后即可配置 WAF。"
+            />
+          ) : wafQuery.isLoading ? (
+            <LoadingState />
+          ) : wafQuery.isError ? (
+            <ErrorState
+              title="WAF 规则组加载失败"
+              description={getErrorMessage(wafQuery.error)}
+            />
+          ) : (
+            <div className="space-y-4">
+              {wafQuery.data?.global_rule_group ? (
+                <div className="rounded-2xl border border-[var(--border-default)] bg-[var(--surface-elevated)] px-4 py-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-[var(--foreground-primary)]">
+                        {wafQuery.data.global_rule_group.name}
+                      </p>
+                      <p className="mt-1 text-xs text-[var(--foreground-secondary)]">
+                        全局规则组默认应用到所有网站，不能在单站关闭。
+                      </p>
+                    </div>
+                    <StatusBadge
+                      label={
+                        wafQuery.data.global_rule_group.enabled
+                          ? '全局启用'
+                          : '全局停用'
+                      }
+                      variant={
+                        wafQuery.data.global_rule_group.enabled
+                          ? 'success'
+                          : 'warning'
+                      }
+                    />
+                  </div>
+                </div>
+              ) : null}
+              <div className="grid gap-3 md:grid-cols-2">
+                {(wafQuery.data?.rule_groups ?? []).map((group) => (
+                  <ToggleField
+                    key={group.id}
+                    label={group.name}
+                    description={`已应用 ${group.applied_site_count} 个网站，${group.enabled ? '启用中' : '已停用'}`}
+                    checked={wafSelectedIDs.includes(group.id)}
+                    onChange={(checked) => {
+                      setWafSelectedIDs((current) =>
+                        checked
+                          ? [...current, group.id].sort(
+                              (left, right) => left - right,
+                            )
+                          : current.filter((id) => id !== group.id),
+                      );
+                    }}
+                  />
+                ))}
+              </div>
+              {(wafQuery.data?.rule_groups ?? []).length === 0 ? (
+                <p className="text-sm text-[var(--foreground-secondary)]">
+                  暂无自定义规则组，可在 WAF 页面创建后再绑定。
+                </p>
+              ) : null}
+            </div>
+          )}
+        </AppCard>
 
         <AppCard title="关联规则">
           {relatedRoutes.length === 0 ? (

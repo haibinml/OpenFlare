@@ -43,6 +43,7 @@ Agent：
 | OpenResty | 本地部署需要可执行 `openresty`，或通过 `--openresty-path` 指定路径 |
 | Docker | 仅 Docker 部署 Agent 镜像时需要 |
 | 网络 | Agent 节点必须能访问 Server 地址 |
+| GeoIP | WAF 地域规则使用 Agent 本地 MaxMind mmdb；Agent 内置初始库并会定期更新 |
 
 [需要确认：生产环境推荐的最低 CPU、内存与磁盘容量]
 
@@ -224,6 +225,8 @@ export LOG_LEVEL='info'
 未配置 `openresty_path` 时，Agent 默认调用 `openresty`。
 
 默认情况下，Agent 在 HTTP 心跳成功后会尝试升级为 WebSocket。升级成功时，Server 发布或激活配置会立即通知 Agent；如果 WebSocket 无法建立或意外断开，Agent 会自动退回 HTTP 心跳同步。
+
+WAF 地域规则依赖 Agent 本地 `GeoLite2-Country.mmdb`。Agent 启动时会在 `data_dir/etc/openflare/GeoLite2-Country.mmdb` 初始化内置数据库，并按配置周期尝试更新；更新失败只记录警告，不影响配置同步与 OpenResty reload。
 
 ## 最小联调步骤
 

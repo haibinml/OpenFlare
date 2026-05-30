@@ -22,11 +22,14 @@ const (
 	defaultCertDirRelativePath             = "etc/nginx/certs"
 	defaultLuaDirRelativePath              = "etc/nginx/lua"
 	defaultRuntimeConfigDirRelativePath    = "etc/openflare"
+	defaultMMDBRelativePath                = "etc/openflare/GeoLite2-Country.mmdb"
 	defaultAccessLogRelativePath           = "var/log/openflare/access.log"
 	defaultStateRelativePath               = "var/lib/openflare/agent-state.json"
 	defaultObservabilityBufferRelativePath = "var/lib/openflare/observability-buffer.json"
 	defaultOpenRestyObservabilityPort      = 18081
 	defaultObservabilityReplayMinutes      = 15
+	defaultMMDBUpdateInterval              = 24 * time.Hour
+	defaultMMDBDownloadURL                 = "https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-Country.mmdb"
 )
 
 var (
@@ -56,6 +59,9 @@ type Config struct {
 	LuaDir                     string              `json:"lua_dir"`
 	OpenrestyLuaDir            string              `json:"openresty_lua_dir"`
 	RuntimeConfigDir           string              `json:"runtime_config_dir"`
+	MMDBPath                   string              `json:"mmdb_path"`
+	MMDBUpdateInterval         MillisecondDuration `json:"mmdb_update_interval"`
+	MMDBDownloadURL            string              `json:"mmdb_download_url"`
 	OpenrestyObservabilityPort int                 `json:"openresty_observability_port"`
 	ObservabilityBufferPath    string              `json:"observability_buffer_path"`
 	ObservabilityReplayMinutes int                 `json:"observability_replay_minutes"`
@@ -85,6 +91,9 @@ type configFile struct {
 	LuaDir                     string              `json:"lua_dir"`
 	OpenrestyLuaDir            string              `json:"openresty_lua_dir"`
 	RuntimeConfigDir           string              `json:"runtime_config_dir"`
+	MMDBPath                   string              `json:"mmdb_path"`
+	MMDBUpdateInterval         MillisecondDuration `json:"mmdb_update_interval"`
+	MMDBDownloadURL            string              `json:"mmdb_download_url"`
 	OpenrestyObservabilityPort int                 `json:"openresty_observability_port"`
 	ObservabilityBufferPath    string              `json:"observability_buffer_path"`
 	ObservabilityReplayMinutes int                 `json:"observability_replay_minutes"`
@@ -127,6 +136,9 @@ func Load(path string) (*Config, error) {
 		LuaDir:                     file.LuaDir,
 		OpenrestyLuaDir:            file.OpenrestyLuaDir,
 		RuntimeConfigDir:           file.RuntimeConfigDir,
+		MMDBPath:                   file.MMDBPath,
+		MMDBUpdateInterval:         file.MMDBUpdateInterval,
+		MMDBDownloadURL:            file.MMDBDownloadURL,
 		OpenrestyObservabilityPort: file.OpenrestyObservabilityPort,
 		ObservabilityBufferPath:    file.ObservabilityBufferPath,
 		ObservabilityReplayMinutes: file.ObservabilityReplayMinutes,
@@ -186,6 +198,15 @@ func applyDefaults(cfg *Config, baseDir string) {
 	if cfg.RuntimeConfigDir == "" {
 		cfg.RuntimeConfigDir = joinManagedPath(cfg.DataDir, defaultRuntimeConfigDirRelativePath)
 	}
+	if cfg.MMDBPath == "" {
+		cfg.MMDBPath = joinManagedPath(cfg.DataDir, defaultMMDBRelativePath)
+	}
+	if cfg.MMDBUpdateInterval <= 0 {
+		cfg.MMDBUpdateInterval = MillisecondDuration(defaultMMDBUpdateInterval)
+	}
+	if cfg.MMDBDownloadURL == "" {
+		cfg.MMDBDownloadURL = defaultMMDBDownloadURL
+	}
 	if cfg.OpenrestyObservabilityPort <= 0 {
 		cfg.OpenrestyObservabilityPort = defaultOpenRestyObservabilityPort
 	}
@@ -241,6 +262,9 @@ func normalizeManagedPaths(cfg *Config) {
 	if usesSlashPath(cfg.ObservabilityBufferPath) {
 		cfg.ObservabilityBufferPath = filepath.ToSlash(cfg.ObservabilityBufferPath)
 	}
+	if usesSlashPath(cfg.MMDBPath) {
+		cfg.MMDBPath = filepath.ToSlash(cfg.MMDBPath)
+	}
 }
 
 func hasEnvConfig() bool {
@@ -255,6 +279,9 @@ func hasEnvConfig() bool {
 		"OPENFLARE_HEARTBEAT_INTERVAL",
 		"OPENFLARE_REQUEST_TIMEOUT",
 		"OPENFLARE_OPENRESTY_OBSERVABILITY_PORT",
+		"OPENFLARE_MMDB_PATH",
+		"OPENFLARE_MMDB_UPDATE_INTERVAL",
+		"OPENFLARE_MMDB_DOWNLOAD_URL",
 	} {
 		if strings.TrimSpace(os.Getenv(key)) != "" {
 			return true
@@ -279,6 +306,8 @@ func applyEnvOverrides(cfg *Config) {
 	overrideString("OPENFLARE_NODE_IP", &cfg.NodeIP)
 	overrideString("OPENFLARE_DATA_DIR", &cfg.DataDir)
 	overrideString("OPENFLARE_OPENRESTY_PATH", &cfg.OpenrestyPath)
+	overrideString("OPENFLARE_MMDB_PATH", &cfg.MMDBPath)
+	overrideString("OPENFLARE_MMDB_DOWNLOAD_URL", &cfg.MMDBDownloadURL)
 	if value := strings.TrimSpace(os.Getenv("OPENFLARE_HEARTBEAT_INTERVAL")); value != "" {
 		if duration, err := parseDurationValue(value); err == nil {
 			cfg.HeartbeatInterval = duration
@@ -287,6 +316,11 @@ func applyEnvOverrides(cfg *Config) {
 	if value := strings.TrimSpace(os.Getenv("OPENFLARE_REQUEST_TIMEOUT")); value != "" {
 		if duration, err := parseDurationValue(value); err == nil {
 			cfg.RequestTimeout = duration
+		}
+	}
+	if value := strings.TrimSpace(os.Getenv("OPENFLARE_MMDB_UPDATE_INTERVAL")); value != "" {
+		if duration, err := parseDurationValue(value); err == nil {
+			cfg.MMDBUpdateInterval = duration
 		}
 	}
 	if value := strings.TrimSpace(os.Getenv("OPENFLARE_OPENRESTY_OBSERVABILITY_PORT")); value != "" {
@@ -341,6 +375,9 @@ func validate(cfg *Config) error {
 	}
 	if cfg.ObservabilityReplayMinutes <= 0 {
 		return errors.New("observability_replay_minutes 必须大于 0")
+	}
+	if cfg.MMDBUpdateInterval <= 0 {
+		return errors.New("mmdb_update_interval 必须大于 0")
 	}
 	return nil
 }

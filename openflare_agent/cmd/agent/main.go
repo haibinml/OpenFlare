@@ -10,6 +10,7 @@ import (
 
 	"openflare-agent/internal/agent"
 	"openflare-agent/internal/config"
+	"openflare-agent/internal/geoipupdate"
 	"openflare-agent/internal/heartbeat"
 	"openflare-agent/internal/httpclient"
 	"openflare-agent/internal/logging"
@@ -54,6 +55,7 @@ func main() {
 		"cert_dir", cfg.CertDir,
 		"lua_dir", cfg.LuaDir,
 		"runtime_config_dir", cfg.RuntimeConfigDir,
+		"mmdb_path", cfg.MMDBPath,
 	)
 
 	client := httpclient.New(cfg.ServerURL, cfg.InitialAuthToken(), cfg.RequestTimeout.Duration())
@@ -100,6 +102,12 @@ func main() {
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
+	geoIPUpdater := &geoipupdate.Updater{
+		MMDBPath:       cfg.MMDBPath,
+		DownloadURL:    cfg.MMDBDownloadURL,
+		UpdateInterval: cfg.MMDBUpdateInterval.Duration(),
+	}
+	go geoIPUpdater.Run(ctx)
 	slog.Info("agent process started")
 
 	if err = runner.Run(ctx); err != nil && err != context.Canceled {

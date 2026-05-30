@@ -148,6 +148,8 @@ tests/
 * `traffic_analytics_rollups`
 * `node_health_events`
 * `options`
+* `waf_rule_groups`
+* `waf_rule_group_bindings`
 
 通用约束：
 
@@ -161,6 +163,7 @@ tests/
 * 上游统一使用 named `upstream` + keepalive；单上游如带 base path 或 query，应在 `proxy_pass` 上补回 URI，多上游仅允许纯 `scheme://host[:port]`。
 * 流量限制、反向代理与缓存配置当前都归属站点级 `proxy_routes`。
 * HTTPS 证书绑定必须通过与 `domains` 平行的 `domain_cert_ids` 逐域名保存；未绑定证书的域名不得参与 HTTPS 渲染。
+* WAF 全局规则组默认应用到所有网站，自定义规则组通过 `waf_rule_group_bindings` 绑定到网站配置；发布时必须进入完整版本快照。
 * `config_versions` 必须保存完整快照与渲染结果。
 * 全局同时只能有一个激活版本。
 * 回滚通过重新激活旧版本实现。
@@ -237,12 +240,14 @@ Agent 必须满足：
 * WS 连接升级开启且连接成功时，Agent 可通过 WS 接收激活版本摘要并立即同步；WS 失败或断开必须退回 HTTP heartbeat。
 * 发现新版本时先备份旧文件。
 * 写入主配置、路由配置与必要证书文件。
+* 写入 WAF/PoW 运行时配置，并确保 WAF Lua 资源由 Agent 统一管理。
 * 写入新配置后执行 `openresty -t -c <main_config_path>`，再 reload；reload 发现运行时未启动时允许直接启动 OpenResty。
 * 周期性运行时健康检查不得调用 `openresty -t`，避免健康探针触发 upstream 域名同步解析；应优先请求本地 `openresty_observability_port` 上的 `/openflare/stub_status`，以 HTTP `200 OK` 作为 OpenResty 主进程和 worker 正在提供服务的判断依据。
 * 新配置激活失败时必须先尝试用目标配置恢复运行，再回滚到旧配置并重新拉起 OpenResty。
 * 回滚后 OpenResty 恢复正常时上报警告；如果本地没有历史主配置可恢复，必须允许写入内置安全兜底配置并拉起对外只监听 `80` 端口、统一返回 `503` 的 OpenResty 运行态；兜底配置仍需保留本地 `stub_status` 健康检查入口。
 * 兜底运行态不得清除失败目标的阻断状态；应用记录必须能体现目标版本失败但 fallback runtime 已启动。存在历史主配置但回滚后仍无法恢复运行时上报失败。
 * 某个目标 `version + checksum` 一旦应用失败并回退，Agent 必须在本地状态中阻断该目标的重复应用。
+* Agent 维护本地 MaxMind mmdb 时，下载或刷新失败只能记录警告，不得阻断心跳、同步、配置应用或 OpenResty 健康检查。
 
 ## 前端请求、状态与类型
 

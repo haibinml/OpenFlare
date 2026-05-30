@@ -46,6 +46,7 @@ go.work.sum
 .codex-cache
 /.gomodcache/
 *.mmdb
+!openflare_agent/internal/geoipdata/GeoLite2-Country.mmdb
 
 *-source
 *-source.*

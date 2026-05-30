@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { ShieldCheck } from 'lucide-react';
 
 import { dashboardNavigation } from '@/lib/constants/navigation';
 import { cn } from '@/lib/utils/cn';
@@ -79,6 +80,8 @@ function SidebarIcon({ icon }: { icon: NavigationIconKey }) {
           <path d="m14 15 3 2-3 2" />
         </svg>
       );
+    case 'waf':
+      return <ShieldCheck className="h-[18px] w-[18px]" strokeWidth={1.8} />;
     case 'release':
       return (
         <svg {...commonProps}>

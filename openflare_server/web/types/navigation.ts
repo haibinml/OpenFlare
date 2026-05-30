@@ -6,6 +6,7 @@ export type NavigationIconKey =
   | 'domain'
   | 'certificate'
   | 'proxy'
+  | 'waf'
   | 'release'
   | 'log'
   | 'performance'

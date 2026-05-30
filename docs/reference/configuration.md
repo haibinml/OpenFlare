@@ -148,6 +148,9 @@ OpenResty 性能参数与缓存参数继续统一保存在 `Option` 表。当前
 | `OPENFLARE_HEARTBEAT_INTERVAL` | 心跳间隔，可覆盖 `agent.json` | 空 |
 | `OPENFLARE_REQUEST_TIMEOUT` | 请求超时，可覆盖 `agent.json` | 空 |
 | `OPENFLARE_OPENRESTY_OBSERVABILITY_PORT` | 本地观测端口，可覆盖 `agent.json` | 空 |
+| `OPENFLARE_MMDB_PATH` | WAF GeoIP mmdb 路径，可覆盖 `agent.json` | 空 |
+| `OPENFLARE_MMDB_UPDATE_INTERVAL` | WAF GeoIP mmdb 更新间隔，可覆盖 `agent.json` | 空 |
+| `OPENFLARE_MMDB_DOWNLOAD_URL` | WAF GeoIP mmdb 下载地址，可覆盖 `agent.json` | 空 |
 
 ## Agent 命令行参数
 
@@ -178,6 +181,9 @@ OpenResty 性能参数与缓存参数继续统一保存在 `Option` 表。当前
 | `lua_dir` | Lua 脚本与静态资源写入目录 | 否 | `data_dir/etc/nginx/lua` |
 | `openresty_lua_dir` | OpenResty 配置中读取 Lua 的目录 | 否 | 同 `lua_dir` |
 | `runtime_config_dir` | Agent 运行时配置写入目录，如 `pow_config.json` | 否 | `data_dir/etc/openflare` |
+| `mmdb_path` | WAF GeoIP mmdb 文件路径 | 否 | `data_dir/etc/openflare/GeoLite2-Country.mmdb` |
+| `mmdb_update_interval` | WAF GeoIP mmdb 更新间隔 | 否 | `86400000` 毫秒 |
+| `mmdb_download_url` | WAF GeoIP mmdb 下载地址 | 否 | 内置 GeoLite2 Country 下载地址 |
 | `observability_buffer_path` | 观测补报缓冲文件路径 | 否 | `data_dir/var/lib/openflare/observability-buffer.json` |
 | `observability_replay_minutes` | 自动补传最近观测窗口分钟数 | 否 | `15` |
 | `state_path` | Agent 本地状态文件路径 | 否 | `data_dir/var/lib/openflare/agent-state.json` |
@@ -191,6 +197,7 @@ OpenResty 性能参数与缓存参数继续统一保存在 `Option` 表。当前
 * Server 运行时配置 `AgentWebsocketUpgradeEnabled` 开启时，Agent 会在 HTTP 心跳成功后尝试升级为 WebSocket；连接失败或断开后自动退回 HTTP 心跳。
 * 未配置 `openresty_path` 时默认调用 `openresty`。
 * Agent 周期性健康检查会请求 `http://127.0.0.1:<openresty_observability_port>/openflare/stub_status`，不再通过高频 `openresty -t` 判断运行时健康；配置应用、启动恢复和 reload 前校验仍会执行 `openresty -t -c <main_config_path>`。
+* Agent 会初始化并定期更新 `mmdb_path`，供 OpenResty WAF Lua 执行国家级地域规则；更新失败只记录警告，不阻断同步或 reload。
 * 如果 `agent.json` 不存在，但 `OPENFLARE_SERVER_URL` 与 Token 等环境变量足够，Agent 可以直接启动；两者同时存在时环境变量优先。
 * Agent 未配置 `node_ip` 时，会优先通过 `https://realip.cc` 获取真实出口公网 IP，适配 Docker/NAT 场景；该请求失败时，才退回本机网卡探测并优先选择公网 IPv4。
 * Agent 自动探测到私网 `node_ip` 时，Server 会在注册/心跳阶段优先保留 Agent 直连来源的公网地址，避免 NAT/多网卡场景误登记内网网卡地址。

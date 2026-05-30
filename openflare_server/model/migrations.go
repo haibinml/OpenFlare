@@ -1388,6 +1388,67 @@ func validateDatabaseSchemaV12(db *gorm.DB, backend string) error {
 	return nil
 }
 
+func ensureDefaultWAFRuleGroup(db *gorm.DB) error {
+	if db == nil {
+		return fmt.Errorf("database handle is nil")
+	}
+	if !db.Migrator().HasTable(&WAFRuleGroup{}) {
+		return nil
+	}
+	var count int64
+	if err := db.Model(&WAFRuleGroup{}).Where("is_global = ?", true).Count(&count).Error; err != nil {
+		return fmt.Errorf("count global waf rule groups failed: %w", err)
+	}
+	if count > 0 {
+		return nil
+	}
+	group := WAFRuleGroup{
+		Name:              "全局规则组",
+		Enabled:           true,
+		IsGlobal:          true,
+		BlockStatusCode:   418,
+		IPWhitelist:       "[]",
+		IPBlacklist:       "[]",
+		CountryWhitelist:  "[]",
+		CountryBlacklist:  "[]",
+		RegionWhitelist:   "[]",
+		RegionBlacklist:   "[]",
+		BlockResponseBody: "",
+	}
+	if err := db.Create(&group).Error; err != nil {
+		return fmt.Errorf("create default waf rule group failed: %w", err)
+	}
+	return nil
+}
+
+// migrateV13 adds WAF rule groups and website bindings.
+func migrateV13(db *gorm.DB, backend string) error {
+	if err := applyCurrentSchema(db, backend); err != nil {
+		return err
+	}
+	return ensureDefaultWAFRuleGroup(db)
+}
+
+func validateDatabaseSchemaV13(db *gorm.DB, backend string) error {
+	if err := validateDatabaseSchemaV12(db, backend); err != nil {
+		return err
+	}
+	if !db.Migrator().HasTable(&WAFRuleGroup{}) {
+		return fmt.Errorf("table waf_rule_groups is missing")
+	}
+	if !db.Migrator().HasTable(&WAFRuleGroupBinding{}) {
+		return fmt.Errorf("table waf_rule_group_bindings is missing")
+	}
+	var count int64
+	if err := db.Model(&WAFRuleGroup{}).Where("is_global = ?", true).Count(&count).Error; err != nil {
+		return fmt.Errorf("count global waf rule groups failed: %w", err)
+	}
+	if count != 1 {
+		return fmt.Errorf("expected exactly one global waf rule group, got %d", count)
+	}
+	return nil
+}
+
 func databaseSchemaMigrations() []databaseSchemaMigration {
 	return []databaseSchemaMigration{
 		{fromVersion: 1, toVersion: 2, migrate: migrateV2, validate: validateDatabaseSchemaV2},
@@ -1401,6 +1462,7 @@ func databaseSchemaMigrations() []databaseSchemaMigration {
 		{fromVersion: 9, toVersion: 10, migrate: migrateV10, validate: validateDatabaseSchemaV10},
 		{fromVersion: 10, toVersion: 11, migrate: migrateV11, validate: validateDatabaseSchemaV11},
 		{fromVersion: 11, toVersion: 12, migrate: migrateV12, validate: validateDatabaseSchemaV12},
+		{fromVersion: 12, toVersion: 13, migrate: migrateV13, validate: validateDatabaseSchemaV13},
 	}
 }
 
@@ -1486,7 +1548,10 @@ func initializeFreshDatabaseSchema(db *gorm.DB, backend string) error {
 	if err := ensureDefaultGitHubAuthSource(db); err != nil {
 		return err
 	}
-	if err := validateDatabaseSchemaV12(db, backend); err != nil {
+	if err := ensureDefaultWAFRuleGroup(db); err != nil {
+		return err
+	}
+	if err := validateDatabaseSchemaV13(db, backend); err != nil {
 		return err
 	}
 	return saveDatabaseSchemaVersion(db, currentDatabaseSchemaVersion)

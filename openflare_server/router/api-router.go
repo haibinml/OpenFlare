@@ -94,6 +94,18 @@ func SetApiRouter(router *gin.Engine) {
 			proxyRoute.POST("/:id/update", controller.UpdateProxyRoute)
 			proxyRoute.POST("/:id/delete", controller.DeleteProxyRoute)
 		}
+		wafRoute := apiRouter.Group("/waf")
+		wafRoute.Use(middleware.AdminAuth())
+		{
+			wafRoute.GET("/rule-groups", controller.ListWAFRuleGroups)
+			wafRoute.GET("/rule-groups/:id", controller.GetWAFRuleGroup)
+			wafRoute.POST("/rule-groups", controller.CreateWAFRuleGroup)
+			wafRoute.POST("/rule-groups/:id/update", controller.UpdateWAFRuleGroup)
+			wafRoute.POST("/rule-groups/:id/delete", controller.DeleteWAFRuleGroup)
+			wafRoute.POST("/rule-groups/:id/sites", controller.ReplaceWAFRuleGroupSites)
+			wafRoute.GET("/sites/:route_id/rule-groups", controller.GetWAFSiteRuleGroups)
+			wafRoute.POST("/sites/:route_id/rule-groups", controller.ReplaceWAFSiteRuleGroups)
+		}
 		originRoute := apiRouter.Group("/origins")
 		originRoute.Use(middleware.AdminAuth())
 		{

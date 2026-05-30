@@ -43,6 +43,8 @@ func registeredModels() []any {
 		&ManagedDomain{},
 		&AcmeAccount{},
 		&DnsAccount{},
+		&WAFRuleGroup{},
+		&WAFRuleGroupBinding{},
 	}
 }
 

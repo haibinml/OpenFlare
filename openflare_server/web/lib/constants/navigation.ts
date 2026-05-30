@@ -22,6 +22,11 @@ export const dashboardNavigation: NavigationItem[] = [
     icon: 'website',
   },
   {
+    href: '/waf',
+    label: 'WAF',
+    icon: 'waf',
+  },
+  {
     href: '/origin',
     label: '源站',
     icon: 'origin',

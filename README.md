@@ -38,6 +38,7 @@
 * 配置预览、发布、激活与历史回滚
 * Agent 自动注册、心跳、同步、校验、reload 与失败回滚
 * OpenResty 主配置、性能参数、缓存参数与 Lua 资源托管
+* WAF 全局/自定义规则组，支持 IP/IP 段与国家级地域黑白名单
 * TLS 证书、域名资产、节点凭证与版本状态管理
 * 请求聚合、访问分析、资源快照、健康事件与节点详情
 
@@ -173,6 +174,7 @@ curl -fsSL https://raw.githubusercontent.com/Rain-kl/OpenFlare/main/scripts/unin
 * 应用记录
 * TLS 证书
 * 域名管理
+* WAF 规则组
 * 用户管理
 * 设置
 * 版本更新

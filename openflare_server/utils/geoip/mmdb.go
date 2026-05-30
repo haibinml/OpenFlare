@@ -33,8 +33,18 @@ func (s *MaxMindGeoIPService) Name() string {
 }
 
 func NewMaxMindGeoIPService() (*MaxMindGeoIPService, error) {
+	return NewMaxMindGeoIPServiceWithConfig(GeoIpFilePath, GeoIpUrl)
+}
+
+func NewMaxMindGeoIPServiceWithConfig(dbFilePath string, downloadURL string) (*MaxMindGeoIPService, error) {
+	if dbFilePath == "" {
+		dbFilePath = GeoIpFilePath
+	}
+	if downloadURL == "" {
+		downloadURL = GeoIpUrl
+	}
 	service := &MaxMindGeoIPService{
-		dbFilePath: GeoIpFilePath,
+		dbFilePath: dbFilePath,
 	}
 
 	if err := os.MkdirAll(filepath.Dir(service.dbFilePath), os.ModePerm); err != nil {
@@ -42,7 +52,7 @@ func NewMaxMindGeoIPService() (*MaxMindGeoIPService, error) {
 	}
 
 	if _, err := os.Stat(service.dbFilePath); os.IsNotExist(err) {
-		if err := service.UpdateDatabase(); err != nil {
+		if err := DownloadMaxMindDatabase(service.dbFilePath, downloadURL); err != nil {
 			return nil, fmt.Errorf("failed to download initial MaxMind database: %w", err)
 		}
 	}
@@ -99,7 +109,20 @@ func (s *MaxMindGeoIPService) GetGeoInfo(ip net.IP) (*GeoInfo, error) {
 }
 
 func (s *MaxMindGeoIPService) UpdateDatabase() error {
-	resp, err := http.Get(GeoIpUrl)
+	if err := DownloadMaxMindDatabase(s.dbFilePath, GeoIpUrl); err != nil {
+		return err
+	}
+	return s.initialize()
+}
+
+func DownloadMaxMindDatabase(dbFilePath string, downloadURL string) error {
+	if dbFilePath == "" {
+		dbFilePath = GeoIpFilePath
+	}
+	if downloadURL == "" {
+		downloadURL = GeoIpUrl
+	}
+	resp, err := http.Get(downloadURL)
 	if err != nil {
 		return fmt.Errorf("failed to initiate MaxMind database download: %w", err)
 	}
@@ -109,11 +132,11 @@ func (s *MaxMindGeoIPService) UpdateDatabase() error {
 		return fmt.Errorf("failed to download MaxMind database: HTTP status %s", resp.Status)
 	}
 
-	if err := os.MkdirAll(filepath.Dir(s.dbFilePath), os.ModePerm); err != nil {
+	if err := os.MkdirAll(filepath.Dir(dbFilePath), os.ModePerm); err != nil {
 		return fmt.Errorf("failed to create data directory for MaxMind database update: %w", err)
 	}
 
-	tempPath := s.dbFilePath + ".download"
+	tempPath := dbFilePath + ".download"
 	out, err := os.Create(tempPath)
 	if err != nil {
 		return fmt.Errorf("failed to create MaxMind database file at %s: %w", tempPath, err)
@@ -128,11 +151,10 @@ func (s *MaxMindGeoIPService) UpdateDatabase() error {
 	if err = out.Close(); err != nil {
 		return fmt.Errorf("failed to close MaxMind database file: %w", err)
 	}
-	if err = os.Rename(tempPath, s.dbFilePath); err != nil {
+	if err = os.Rename(tempPath, dbFilePath); err != nil {
 		return fmt.Errorf("failed to move MaxMind database file into place: %w", err)
 	}
-
-	return s.initialize()
+	return nil
 }
 
 func (s *MaxMindGeoIPService) Close() error {
