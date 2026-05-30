@@ -1,3 +1,5 @@
+import type { ProxyRoutePoWConfig } from '@/features/proxy-routes/types';
+
 export interface WAFRuleGroup {
   id: number;
   name: string;
@@ -11,6 +13,8 @@ export interface WAFRuleGroup {
   country_blacklist: string[];
   region_whitelist: string[];
   region_blacklist: string[];
+  pow_enabled: boolean;
+  pow_config: ProxyRoutePoWConfig;
   remark: string;
   applied_site_ids: number[];
   applied_site_count: number;
@@ -29,6 +33,8 @@ export interface WAFRuleGroupPayload {
   country_blacklist: string[];
   region_whitelist: string[];
   region_blacklist: string[];
+  pow_enabled: boolean;
+  pow_config: ProxyRoutePoWConfig;
   remark: string;
 }
 

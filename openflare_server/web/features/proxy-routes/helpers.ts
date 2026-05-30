@@ -26,9 +26,9 @@ export const websiteConfigSections = [
     description: '配置站点缓存策略。',
   },
   {
-    key: 'pow',
-    label: 'PoW 防护',
-    description: '配置 Proof-of-Work 反爬虫策略。',
+    key: 'waf',
+    label: 'WAF',
+    description: '绑定 WAF 规则组，并查看当前站点生效策略。',
   },
   {
     key: 'auth',

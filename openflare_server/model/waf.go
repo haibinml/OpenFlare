@@ -15,6 +15,8 @@ type WAFRuleGroup struct {
 	CountryBlacklist  string    `json:"country_blacklist" gorm:"type:text;not null;default:'[]'"`
 	RegionWhitelist   string    `json:"region_whitelist" gorm:"type:text;not null;default:'[]'"`
 	RegionBlacklist   string    `json:"region_blacklist" gorm:"type:text;not null;default:'[]'"`
+	PoWEnabled        bool      `json:"pow_enabled" gorm:"not null;default:false"`
+	PoWConfig         string    `json:"pow_config" gorm:"type:text;not null;default:'{}'"`
 	Remark            string    `json:"remark" gorm:"size:255"`
 	CreatedAt         time.Time `json:"created_at"`
 	UpdatedAt         time.Time `json:"updated_at"`
@@ -62,6 +64,8 @@ func (group *WAFRuleGroup) Update() error {
 		"country_blacklist":   group.CountryBlacklist,
 		"region_whitelist":    group.RegionWhitelist,
 		"region_blacklist":    group.RegionBlacklist,
+		"pow_enabled":         group.PoWEnabled,
+		"pow_config":          group.PoWConfig,
 		"remark":              group.Remark,
 	}).Error
 }

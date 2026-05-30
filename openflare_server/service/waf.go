@@ -20,37 +20,41 @@ const (
 )
 
 type WAFRuleGroupInput struct {
-	Name              string   `json:"name"`
-	Enabled           bool     `json:"enabled"`
-	BlockStatusCode   int      `json:"block_status_code"`
-	BlockResponseBody string   `json:"block_response_body"`
-	IPWhitelist       []string `json:"ip_whitelist"`
-	IPBlacklist       []string `json:"ip_blacklist"`
-	CountryWhitelist  []string `json:"country_whitelist"`
-	CountryBlacklist  []string `json:"country_blacklist"`
-	RegionWhitelist   []string `json:"region_whitelist"`
-	RegionBlacklist   []string `json:"region_blacklist"`
-	Remark            string   `json:"remark"`
+	Name              string          `json:"name"`
+	Enabled           bool            `json:"enabled"`
+	BlockStatusCode   int             `json:"block_status_code"`
+	BlockResponseBody string          `json:"block_response_body"`
+	IPWhitelist       []string        `json:"ip_whitelist"`
+	IPBlacklist       []string        `json:"ip_blacklist"`
+	CountryWhitelist  []string        `json:"country_whitelist"`
+	CountryBlacklist  []string        `json:"country_blacklist"`
+	RegionWhitelist   []string        `json:"region_whitelist"`
+	RegionBlacklist   []string        `json:"region_blacklist"`
+	Remark            string          `json:"remark"`
+	PoWEnabled        bool            `json:"pow_enabled"`
+	PoWConfig         json.RawMessage `json:"pow_config"`
 }
 
 type WAFRuleGroupView struct {
-	ID                uint     `json:"id"`
-	Name              string   `json:"name"`
-	Enabled           bool     `json:"enabled"`
-	IsGlobal          bool     `json:"is_global"`
-	BlockStatusCode   int      `json:"block_status_code"`
-	BlockResponseBody string   `json:"block_response_body"`
-	IPWhitelist       []string `json:"ip_whitelist"`
-	IPBlacklist       []string `json:"ip_blacklist"`
-	CountryWhitelist  []string `json:"country_whitelist"`
-	CountryBlacklist  []string `json:"country_blacklist"`
-	RegionWhitelist   []string `json:"region_whitelist"`
-	RegionBlacklist   []string `json:"region_blacklist"`
-	Remark            string   `json:"remark"`
-	AppliedSiteIDs    []uint   `json:"applied_site_ids"`
-	AppliedSiteCount  int      `json:"applied_site_count"`
-	CreatedAt         string   `json:"created_at"`
-	UpdatedAt         string   `json:"updated_at"`
+	ID                uint                 `json:"id"`
+	Name              string               `json:"name"`
+	Enabled           bool                 `json:"enabled"`
+	IsGlobal          bool                 `json:"is_global"`
+	BlockStatusCode   int                  `json:"block_status_code"`
+	BlockResponseBody string               `json:"block_response_body"`
+	IPWhitelist       []string             `json:"ip_whitelist"`
+	IPBlacklist       []string             `json:"ip_blacklist"`
+	CountryWhitelist  []string             `json:"country_whitelist"`
+	CountryBlacklist  []string             `json:"country_blacklist"`
+	RegionWhitelist   []string             `json:"region_whitelist"`
+	RegionBlacklist   []string             `json:"region_blacklist"`
+	Remark            string               `json:"remark"`
+	PoWEnabled        bool                 `json:"pow_enabled"`
+	PoWConfig         *ProxyRoutePoWConfig `json:"pow_config"`
+	AppliedSiteIDs    []uint               `json:"applied_site_ids"`
+	AppliedSiteCount  int                  `json:"applied_site_count"`
+	CreatedAt         string               `json:"created_at"`
+	UpdatedAt         string               `json:"updated_at"`
 }
 
 type WAFSiteRuleGroupsView struct {
@@ -275,6 +279,8 @@ func EnsureDefaultWAFRuleGroup() error {
 		CountryBlacklist:  "[]",
 		RegionWhitelist:   "[]",
 		RegionBlacklist:   "[]",
+		PoWEnabled:        false,
+		PoWConfig:         "{}",
 		BlockResponseBody: "",
 	}
 	return group.Insert()
@@ -313,6 +319,15 @@ func buildWAFRuleGroup(group *model.WAFRuleGroup, input WAFRuleGroupInput) (*mod
 	}
 	regionWhitelist := normalizeStringList(input.RegionWhitelist)
 	regionBlacklist := normalizeStringList(input.RegionBlacklist)
+	powConfigRaw := strings.TrimSpace(string(input.PoWConfig))
+	if powConfigRaw == "" {
+		powConfigRaw = "{}"
+	}
+	powConfig, err := normalizePoWConfig(input.PoWEnabled, powConfigRaw)
+	if err != nil {
+		return nil, err
+	}
+	powConfigJSON, _ := json.Marshal(powConfig)
 
 	ipWhitelistJSON, _ := json.Marshal(ipWhitelist)
 	ipBlacklistJSON, _ := json.Marshal(ipBlacklist)
@@ -334,6 +349,8 @@ func buildWAFRuleGroup(group *model.WAFRuleGroup, input WAFRuleGroupInput) (*mod
 	group.CountryBlacklist = string(countryBlacklistJSON)
 	group.RegionWhitelist = string(regionWhitelistJSON)
 	group.RegionBlacklist = string(regionBlacklistJSON)
+	group.PoWEnabled = input.PoWEnabled
+	group.PoWConfig = string(powConfigJSON)
 	group.Remark = strings.TrimSpace(input.Remark)
 	return group, nil
 }
@@ -351,6 +368,7 @@ func buildWAFRuleGroupView(group *model.WAFRuleGroup, appliedSiteIDs []uint) (WA
 		BlockStatusCode:   group.BlockStatusCode,
 		BlockResponseBody: group.BlockResponseBody,
 		Remark:            group.Remark,
+		PoWEnabled:        group.PoWEnabled,
 		AppliedSiteIDs:    appliedSiteIDs,
 		AppliedSiteCount:  len(appliedSiteIDs),
 		CreatedAt:         group.CreatedAt.Format(time.RFC3339),
@@ -373,6 +391,9 @@ func buildWAFRuleGroupView(group *model.WAFRuleGroup, appliedSiteIDs []uint) (WA
 		return view, err
 	}
 	if view.RegionBlacklist, err = decodeStringList(group.RegionBlacklist); err != nil {
+		return view, err
+	}
+	if view.PoWConfig, err = decodeStoredPoWConfig(group.PoWEnabled, group.PoWConfig); err != nil {
 		return view, err
 	}
 	return view, nil

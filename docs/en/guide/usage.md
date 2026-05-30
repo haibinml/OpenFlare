@@ -74,6 +74,16 @@ HTTPS is bound per domain, not forced for the whole site.
 
 If a site contains multiple domains, the Server groups HTTPS output by certificate while keeping all domains in the same site snapshot.
 
+## Configure WAF and PoW
+
+Security controls are managed from the **WAF** sidebar entry:
+
+* The WAF page manages the global rule group and custom rule groups. The global rule group always applies to every site. Custom rule groups can be applied to selected sites from the rule group drawer or bound from the site detail `WAF` section.
+* `PoW` is a tab inside the selected rule group, between `Allow / Block Lists` and `Block Response`. It reuses the existing per-site PoW execution logic and can apply the current PoW policy to every site or the sites bound to the current rule group.
+* Site details no longer edit PoW directly. They show the always-on global WAF group and let you bind custom WAF rule groups. PoW rule content and scope should be maintained from the WAF page.
+
+After changing WAF or PoW settings, publish and activate a new configuration version so Agents can apply the updated OpenResty runtime.
+
 ## Release, Activate, and Roll Back
 
 Standard flow:
