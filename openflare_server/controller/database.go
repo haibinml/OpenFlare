@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"net/http"
 	"openflare/service"
 
 	"github.com/gin-gonic/gin"
@@ -18,11 +17,7 @@ import (
 func CleanupDatabaseObservability(c *gin.Context) {
 	var input service.DatabaseCleanupInput
 	if err := decodeOptionalJSONBody(c.Request.Body, &input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "参数错误",
-			"error":   err.Error(),
-		})
+		respondBadRequest(c, "")
 		return
 	}
 	result, err := service.CleanupDatabaseObservability(input)

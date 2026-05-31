@@ -5,11 +5,12 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
-const invalidParamsMessage = "鏃犳晥鐨勫弬鏁?"
+const invalidParamsMessage = "参数错误"
 
 func respondSuccess(c *gin.Context, data any) {
 	c.JSON(http.StatusOK, gin.H{
@@ -71,4 +72,21 @@ func decodeOptionalJSONBody(body io.Reader, target any) error {
 		return err
 	}
 	return nil
+}
+
+func parseIDParam(c *gin.Context) (uint, bool) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil || id == 0 {
+		respondBadRequest(c, "")
+		return 0, false
+	}
+	return uint(id), true
+}
+
+func bindJSON(c *gin.Context, target any) bool {
+	if err := decodeJSONBody(c.Request.Body, target); err != nil {
+		respondBadRequest(c, "")
+		return false
+	}
+	return true
 }

@@ -452,7 +452,7 @@ func TestTLSCertificateConvertAcmeAPI(t *testing.T) {
 	}
 
 	invalidResp := performJSONRequestNoFatal(t, engine, token, http.MethodPost, "/api/tls-certificates/not-a-number/convert-acme", map[string]any{})
-	if invalidResp.Success || !strings.Contains(invalidResp.Message, "invalid request") {
+	if invalidResp.Success || !strings.Contains(invalidResp.Message, "参数错误") {
 		t.Fatalf("expected invalid id to fail, got %+v", invalidResp)
 	}
 

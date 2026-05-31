@@ -2,7 +2,6 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
-	"net/http"
 	"openflare/model"
 )
 
@@ -16,15 +15,8 @@ import (
 func GetDefaultAcmeAccount(c *gin.Context) {
 	account, err := model.GetDefaultAcmeAccount()
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"success": false,
-			"message": err.Error(),
-		})
+		respondFailure(c, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "",
-		"data":    account,
-	})
+	respondSuccess(c, account)
 }

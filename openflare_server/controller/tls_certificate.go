@@ -1,11 +1,8 @@
 package controller
 
 import (
-	"encoding/json"
 	"github.com/gin-gonic/gin"
-	"net/http"
 	"openflare/service"
-	"strconv"
 )
 
 // GetTLSCertificates godoc
@@ -18,17 +15,10 @@ import (
 func GetTLSCertificates(c *gin.Context) {
 	certificates, err := service.ListTLSCertificates()
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"success": false,
-			"message": err.Error(),
-		})
+		respondFailure(c, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "",
-		"data":    certificates,
-	})
+	respondSuccess(c, certificates)
 }
 
 // GetTLSCertificate godoc
@@ -41,28 +31,17 @@ func GetTLSCertificates(c *gin.Context) {
 // @Failure 400 {object} map[string]interface{}
 // @Router /api/tls-certificates/{id} [get]
 func GetTLSCertificate(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil || id == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "invalid request",
-		})
+	id, ok := parseIDParam(c)
+	if !ok {
 		return
 	}
 
-	certificate, err := service.GetTLSCertificate(uint(id))
+	certificate, err := service.GetTLSCertificate(id)
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"success": false,
-			"message": err.Error(),
-		})
+		respondFailure(c, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "",
-		"data":    certificate,
-	})
+	respondSuccess(c, certificate)
 }
 
 // GetTLSCertificateContent godoc
@@ -75,28 +54,17 @@ func GetTLSCertificate(c *gin.Context) {
 // @Failure 400 {object} map[string]interface{}
 // @Router /api/tls-certificates/{id}/content [get]
 func GetTLSCertificateContent(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil || id == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "invalid request",
-		})
+	id, ok := parseIDParam(c)
+	if !ok {
 		return
 	}
 
-	content, err := service.GetTLSCertificateContent(uint(id))
+	content, err := service.GetTLSCertificateContent(id)
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"success": false,
-			"message": err.Error(),
-		})
+		respondFailure(c, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "",
-		"data":    content,
-	})
+	respondSuccess(c, content)
 }
 
 // CreateTLSCertificate godoc
@@ -111,26 +79,15 @@ func GetTLSCertificateContent(c *gin.Context) {
 // @Router /api/tls-certificates/ [post]
 func CreateTLSCertificate(c *gin.Context) {
 	var input service.TLSCertificateInput
-	if err := json.NewDecoder(c.Request.Body).Decode(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "无效的参数",
-		})
+	if !bindJSON(c, &input) {
 		return
 	}
 	certificate, err := service.CreateTLSCertificate(input)
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"success": false,
-			"message": err.Error(),
-		})
+		respondFailure(c, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "",
-		"data":    certificate,
-	})
+	respondSuccess(c, certificate)
 }
 
 // UpdateTLSCertificate godoc
@@ -145,37 +102,22 @@ func CreateTLSCertificate(c *gin.Context) {
 // @Failure 400 {object} map[string]interface{}
 // @Router /api/tls-certificates/{id}/update [post]
 func UpdateTLSCertificate(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil || id == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "invalid request",
-		})
+	id, ok := parseIDParam(c)
+	if !ok {
 		return
 	}
 
 	var input service.TLSCertificateInput
-	if err = json.NewDecoder(c.Request.Body).Decode(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "invalid request",
-		})
+	if !bindJSON(c, &input) {
 		return
 	}
 
-	certificate, err := service.UpdateTLSCertificate(uint(id), input)
+	certificate, err := service.UpdateTLSCertificate(id, input)
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"success": false,
-			"message": err.Error(),
-		})
+		respondFailure(c, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "",
-		"data":    certificate,
-	})
+	respondSuccess(c, certificate)
 }
 
 // ImportTLSCertificateFile godoc
@@ -196,33 +138,20 @@ func ImportTLSCertificateFile(c *gin.Context) {
 	remark := c.PostForm("remark")
 	certFile, err := c.FormFile("cert_file")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "缺少证书文件",
-		})
+		respondBadRequest(c, "缺少证书文件")
 		return
 	}
 	keyFile, err := c.FormFile("key_file")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "缺少私钥文件",
-		})
+		respondBadRequest(c, "缺少私钥文件")
 		return
 	}
 	certificate, err := service.CreateTLSCertificateFromFiles(name, certFile, keyFile, remark)
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"success": false,
-			"message": err.Error(),
-		})
+		respondFailure(c, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "",
-		"data":    certificate,
-	})
+	respondSuccess(c, certificate)
 }
 
 // DeleteTLSCertificate godoc
@@ -235,25 +164,15 @@ func ImportTLSCertificateFile(c *gin.Context) {
 // @Failure 400 {object} map[string]interface{}
 // @Router /api/tls-certificates/{id}/delete [post]
 func DeleteTLSCertificate(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil || id == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "无效的参数",
-		})
+	id, ok := parseIDParam(c)
+	if !ok {
 		return
 	}
-	if err = service.DeleteTLSCertificate(uint(id)); err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"success": false,
-			"message": err.Error(),
-		})
+	if err := service.DeleteTLSCertificate(id); err != nil {
+		respondFailure(c, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "",
-	})
+	respondSuccess(c, nil)
 }
 
 // ApplyTLSCertificate godoc
@@ -268,26 +187,15 @@ func DeleteTLSCertificate(c *gin.Context) {
 // @Router /api/tls-certificates/apply [post]
 func ApplyTLSCertificate(c *gin.Context) {
 	var input service.TLSApplyInput
-	if err := json.NewDecoder(c.Request.Body).Decode(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "无效的参数",
-		})
+	if !bindJSON(c, &input) {
 		return
 	}
 	certificate, err := service.ApplyTLSCertificate(input)
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"success": false,
-			"message": err.Error(),
-		})
+		respondFailure(c, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "",
-		"data":    certificate,
-	})
+	respondSuccess(c, certificate)
 }
 
 // UpdateAcmeCertificate godoc
@@ -302,36 +210,21 @@ func ApplyTLSCertificate(c *gin.Context) {
 // @Failure 400 {object} map[string]interface{}
 // @Router /api/tls-certificates/{id}/update-acme [post]
 func UpdateAcmeCertificate(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil || id == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "invalid request",
-		})
+	id, ok := parseIDParam(c)
+	if !ok {
 		return
 	}
 
 	var input service.TLSApplyInput
-	if err := json.NewDecoder(c.Request.Body).Decode(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "无效的参数",
-		})
+	if !bindJSON(c, &input) {
 		return
 	}
-	certificate, err := service.UpdateAcmeCertificate(uint(id), input)
+	certificate, err := service.UpdateAcmeCertificate(id, input)
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"success": false,
-			"message": err.Error(),
-		})
+		respondFailure(c, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "",
-		"data":    certificate,
-	})
+	respondSuccess(c, certificate)
 }
 
 // ConvertTLSCertificateToAcme godoc
@@ -346,36 +239,21 @@ func UpdateAcmeCertificate(c *gin.Context) {
 // @Failure 400 {object} map[string]interface{}
 // @Router /api/tls-certificates/{id}/convert-acme [post]
 func ConvertTLSCertificateToAcme(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil || id == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "invalid request",
-		})
+	id, ok := parseIDParam(c)
+	if !ok {
 		return
 	}
 
 	var input service.TLSApplyInput
-	if err := json.NewDecoder(c.Request.Body).Decode(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "无效的参数",
-		})
+	if !bindJSON(c, &input) {
 		return
 	}
-	certificate, err := service.ConvertTLSCertificateToAcme(uint(id), input)
+	certificate, err := service.ConvertTLSCertificateToAcme(id, input)
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"success": false,
-			"message": err.Error(),
-		})
+		respondFailure(c, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "",
-		"data":    certificate,
-	})
+	respondSuccess(c, certificate)
 }
 
 // RenewTLSCertificate godoc
@@ -388,25 +266,14 @@ func ConvertTLSCertificateToAcme(c *gin.Context) {
 // @Failure 400 {object} map[string]interface{}
 // @Router /api/tls-certificates/{id}/renew [post]
 func RenewTLSCertificate(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil || id == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "无效的参数",
-		})
+	id, ok := parseIDParam(c)
+	if !ok {
 		return
 	}
-	certificate, err := service.RenewTLSCertificate(uint(id))
+	certificate, err := service.RenewTLSCertificate(id)
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"success": false,
-			"message": err.Error(),
-		})
+		respondFailure(c, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "",
-		"data":    certificate,
-	})
+	respondSuccess(c, certificate)
 }

@@ -1,12 +1,8 @@
 package controller
 
 import (
-	"encoding/json"
-	"net/http"
-	"openflare/service"
-	"strconv"
-
 	"github.com/gin-gonic/gin"
+	"openflare/service"
 )
 
 // GetProxyRoutes godoc
@@ -19,17 +15,10 @@ import (
 func GetProxyRoutes(c *gin.Context) {
 	routes, err := service.ListProxyRoutes()
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"success": false,
-			"message": err.Error(),
-		})
+		respondFailure(c, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "",
-		"data":    routes,
-	})
+	respondSuccess(c, routes)
 }
 
 // GetProxyRoute godoc
@@ -42,27 +31,16 @@ func GetProxyRoutes(c *gin.Context) {
 // @Failure 400 {object} map[string]interface{}
 // @Router /api/proxy-routes/{id} [get]
 func GetProxyRoute(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil || id == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "invalid id",
-		})
+	id, ok := parseIDParam(c)
+	if !ok {
 		return
 	}
-	route, err := service.GetProxyRoute(uint(id))
+	route, err := service.GetProxyRoute(id)
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"success": false,
-			"message": err.Error(),
-		})
+		respondFailure(c, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "",
-		"data":    route,
-	})
+	respondSuccess(c, route)
 }
 
 // CreateProxyRoute godoc
@@ -77,26 +55,15 @@ func GetProxyRoute(c *gin.Context) {
 // @Router /api/proxy-routes/ [post]
 func CreateProxyRoute(c *gin.Context) {
 	var input service.ProxyRouteInput
-	if err := json.NewDecoder(c.Request.Body).Decode(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "invalid payload",
-		})
+	if !bindJSON(c, &input) {
 		return
 	}
 	route, err := service.CreateProxyRoute(input)
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"success": false,
-			"message": err.Error(),
-		})
+		respondFailure(c, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "",
-		"data":    route,
-	})
+	respondSuccess(c, route)
 }
 
 // UpdateProxyRoute godoc
@@ -111,35 +78,20 @@ func CreateProxyRoute(c *gin.Context) {
 // @Failure 400 {object} map[string]interface{}
 // @Router /api/proxy-routes/{id}/update [post]
 func UpdateProxyRoute(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil || id == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "invalid id",
-		})
+	id, ok := parseIDParam(c)
+	if !ok {
 		return
 	}
 	var input service.ProxyRouteInput
-	if err = json.NewDecoder(c.Request.Body).Decode(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "invalid payload",
-		})
+	if !bindJSON(c, &input) {
 		return
 	}
-	route, err := service.UpdateProxyRoute(uint(id), input)
+	route, err := service.UpdateProxyRoute(id, input)
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"success": false,
-			"message": err.Error(),
-		})
+		respondFailure(c, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "",
-		"data":    route,
-	})
+	respondSuccess(c, route)
 }
 
 // DeleteProxyRoute godoc
@@ -152,23 +104,13 @@ func UpdateProxyRoute(c *gin.Context) {
 // @Failure 400 {object} map[string]interface{}
 // @Router /api/proxy-routes/{id}/delete [post]
 func DeleteProxyRoute(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil || id == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"message": "invalid id",
-		})
+	id, ok := parseIDParam(c)
+	if !ok {
 		return
 	}
-	if err = service.DeleteProxyRoute(uint(id)); err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"success": false,
-			"message": err.Error(),
-		})
+	if err := service.DeleteProxyRoute(id); err != nil {
+		respondFailure(c, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "",
-	})
+	respondSuccess(c, nil)
 }

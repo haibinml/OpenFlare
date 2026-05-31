@@ -22,8 +22,7 @@ type geoIPLookupRequest struct {
 // @Router /api/option/geoip/lookup [post]
 func LookupGeoIP(c *gin.Context) {
 	var request geoIPLookupRequest
-	if err := decodeJSONBody(c.Request.Body, &request); err != nil {
-		respondBadRequest(c, "")
+	if !bindJSON(c, &request) {
 		return
 	}
 
