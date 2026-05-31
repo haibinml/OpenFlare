@@ -9,9 +9,9 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"openflare/utils"
 	"os"
 	"runtime"
-	"strconv"
 	"strings"
 	"time"
 
@@ -360,146 +360,6 @@ func buildReleaseCheckKey(options agent.UpdateOptions, remoteVersion string) str
 	return channel + ":" + remoteVersion
 }
 
-type versionInfo struct {
-	valid      bool
-	isDev      bool
-	numbers    []int
-	prerelease []string
-}
-
-func parseVersionInfo(version string) versionInfo {
-	normalized := normalizeVersion(version)
-	if normalized == "" || strings.EqualFold(normalized, "dev") {
-		return versionInfo{isDev: strings.EqualFold(normalized, "dev")}
-	}
-	base := normalized
-	prerelease := ""
-	if index := strings.IndexRune(normalized, '-'); index >= 0 {
-		base = normalized[:index]
-		prerelease = normalized[index+1:]
-	}
-	segments := strings.Split(base, ".")
-	parts := make([]int, 0, len(segments))
-	for _, segment := range segments {
-		segment = strings.TrimSpace(segment)
-		if segment == "" {
-			parts = append(parts, 0)
-			continue
-		}
-		numeric := strings.Builder{}
-		for _, r := range segment {
-			if r < '0' || r > '9' {
-				break
-			}
-			numeric.WriteRune(r)
-		}
-		if numeric.Len() == 0 {
-			return versionInfo{}
-		}
-		value, err := strconv.Atoi(numeric.String())
-		if err != nil {
-			return versionInfo{}
-		}
-		parts = append(parts, value)
-	}
-	info := versionInfo{valid: len(parts) > 0, numbers: parts}
-	if prerelease != "" {
-		info.prerelease = splitPrereleaseIdentifiers(prerelease)
-	}
-	return info
-}
-
-func splitPrereleaseIdentifiers(value string) []string {
-	parts := strings.FieldsFunc(strings.TrimSpace(value), func(r rune) bool {
-		return r == '.' || r == '-'
-	})
-	filtered := make([]string, 0, len(parts))
-	for _, part := range parts {
-		part = strings.TrimSpace(part)
-		if part != "" {
-			filtered = append(filtered, part)
-		}
-	}
-	return filtered
-}
-
 func compareVersions(local string, remote string) int {
-	left := parseVersionInfo(local)
-	right := parseVersionInfo(remote)
-	if left.isDev {
-		if right.valid {
-			return -1
-		}
-		return 0
-	}
-	if !left.valid || !right.valid {
-		return 0
-	}
-
-	maxLen := len(left.numbers)
-	if len(right.numbers) > maxLen {
-		maxLen = len(right.numbers)
-	}
-	for index := 0; index < maxLen; index++ {
-		leftValue := 0
-		rightValue := 0
-		if index < len(left.numbers) {
-			leftValue = left.numbers[index]
-		}
-		if index < len(right.numbers) {
-			rightValue = right.numbers[index]
-		}
-		if leftValue < rightValue {
-			return -1
-		}
-		if leftValue > rightValue {
-			return 1
-		}
-	}
-	if len(left.prerelease) == 0 && len(right.prerelease) == 0 {
-		return 0
-	}
-	if len(left.prerelease) == 0 {
-		return 1
-	}
-	if len(right.prerelease) == 0 {
-		return -1
-	}
-	maxLen = len(left.prerelease)
-	if len(right.prerelease) > maxLen {
-		maxLen = len(right.prerelease)
-	}
-	for index := 0; index < maxLen; index++ {
-		if index >= len(left.prerelease) {
-			return -1
-		}
-		if index >= len(right.prerelease) {
-			return 1
-		}
-		leftPart := left.prerelease[index]
-		rightPart := right.prerelease[index]
-		leftNumber, leftErr := strconv.Atoi(leftPart)
-		rightNumber, rightErr := strconv.Atoi(rightPart)
-		switch {
-		case leftErr == nil && rightErr == nil:
-			if leftNumber < rightNumber {
-				return -1
-			}
-			if leftNumber > rightNumber {
-				return 1
-			}
-		case leftErr == nil:
-			return -1
-		case rightErr == nil:
-			return 1
-		default:
-			if leftPart < rightPart {
-				return -1
-			}
-			if leftPart > rightPart {
-				return 1
-			}
-		}
-	}
-	return 0
+	return utils.CompareVersions(local, remote)
 }
