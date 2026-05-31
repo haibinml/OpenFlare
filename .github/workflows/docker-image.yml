@@ -172,9 +172,15 @@ jobs:
             exit 1
           fi
 
+          if [[ "${VERSION}" =~ (alpha|beta|rc) ]]; then
+            FLOATING_TAG="beta"
+          else
+            FLOATING_TAG="latest"
+          fi
+
           docker buildx imagetools create \
             -t "${IMAGE}:${VERSION}" \
-            -t "${IMAGE}:latest" \
+            -t "${IMAGE}:${FLOATING_TAG}" \
             "${references[@]}"
 
       - name: Inspect image
@@ -335,9 +341,15 @@ jobs:
             exit 1
           fi
 
+          if [[ "${VERSION}" =~ (alpha|beta|rc) ]]; then
+            FLOATING_TAG="beta"
+          else
+            FLOATING_TAG="latest"
+          fi
+
           docker buildx imagetools create \
             -t "${IMAGE}:${VERSION}" \
-            -t "${IMAGE}:latest" \
+            -t "${IMAGE}:${FLOATING_TAG}" \
             "${references[@]}"
 
       - name: Inspect image
