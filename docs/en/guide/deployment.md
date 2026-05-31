@@ -2,7 +2,7 @@
 
 You will learn: The recommended OpenFlare deployment model, Server and Agent requirements, source startup workflow, integration steps, upgrade paths, and uninstall entry points.
 
-For production, use PostgreSQL for the Server database and set `SESSION_SECRET` explicitly. Agent controls OpenResty through the OpenResty binary; Docker deployments run the Agent image that already includes OpenResty.
+For production, use PostgreSQL for the Server database and set `SESSION_SECRET` explicitly. The recommended deployment method for the Agent is Docker deployment (i.e., running the Agent image that already includes OpenResty); it also supports shell-script installation or running manually.
 
 ## Topology
 
@@ -129,7 +129,37 @@ Default port is `3000`. You can also set it explicitly:
 go run . --port 3000 --log-dir ./logs
 ```
 
-## Connect Agent
+## Run Agent in Docker (Recommended)
+
+Docker deployment is the recommended deployment method for the Agent. In Docker deployments, directly run the Agent image. This image is built on top of the OpenResty image and includes both the Agent controller and the OpenResty binary. When `node_ip` is not explicitly configured, the Agent prioritizes obtaining the real public egress IP via a third-party API, avoiding registering the Docker bridge address as the node IP.
+
+Mounting the configuration file:
+
+```bash
+docker pull ghcr.io/rain-kl/openflare-agent:latest
+docker rm -f openflare-agent 2>/dev/null || true
+docker run -d --name openflare-agent --restart unless-stopped \
+  -p 80:80 -p 443:443 \
+  -v openflare-agent-data:/data \
+  -v ./agent.json:/etc/openflare/agent.json:ro \
+  ghcr.io/rain-kl/openflare-agent:latest
+```
+
+Using environment variables:
+
+```bash
+docker pull ghcr.io/rain-kl/openflare-agent:latest
+docker rm -f openflare-agent 2>/dev/null || true
+docker run -d --name openflare-agent --restart unless-stopped \
+  -p 80:80 -p 443:443 \
+  -e OPENFLARE_SERVER_URL=http://your-server:3000 \
+  -e OPENFLARE_AGENT_TOKEN=YOUR_AGENT_TOKEN \
+  ghcr.io/rain-kl/openflare-agent:latest
+```
+
+## Connect Agent (Script Installation)
+
+In addition to Docker deployment, you can also deploy the Agent on the local host using our installation script.
 
 With `discovery_token`:
 
@@ -164,34 +194,6 @@ Check status:
 ```bash
 systemctl status openflare-agent
 journalctl -u openflare-agent -f
-```
-
-## Run Agent in Docker
-
-In Docker deployments, directly run the Agent image. This image is built on top of the OpenResty image and includes both the Agent controller and the OpenResty binary. When `node_ip` is not explicitly configured, the Agent prioritizes obtaining the real public egress IP via a third-party API, avoiding registering the Docker bridge address as the node IP.
-
-Mounting the configuration file:
-
-```bash
-docker pull ghcr.io/rain-kl/openflare-agent:latest
-docker rm -f openflare-agent 2>/dev/null || true
-docker run -d --name openflare-agent --restart unless-stopped \
-  -p 80:80 -p 443:443 \
-  -v openflare-agent-data:/data \
-  -v ./agent.json:/etc/openflare/agent.json:ro \
-  ghcr.io/rain-kl/openflare-agent:latest
-```
-
-Using environment variables:
-
-```bash
-docker pull ghcr.io/rain-kl/openflare-agent:latest
-docker rm -f openflare-agent 2>/dev/null || true
-docker run -d --name openflare-agent --restart unless-stopped \
-  -p 80:80 -p 443:443 \
-  -e OPENFLARE_SERVER_URL=http://your-server:3000 \
-  -e OPENFLARE_AGENT_TOKEN=YOUR_AGENT_TOKEN \
-  ghcr.io/rain-kl/openflare-agent:latest
 ```
 
 ## Run Agent Manually

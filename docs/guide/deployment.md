@@ -2,7 +2,7 @@
 
 你会学到：OpenFlare 的推荐部署方式、Server 与 Agent 的运行要求、源码启动方式、联调步骤、升级与卸载入口。
 
-生产环境建议使用 PostgreSQL 作为 Server 数据库，并为 Server 显式配置 `SESSION_SECRET`。Agent 统一通过 OpenResty 二进制控制运行时；Docker 部署请直接使用内置 OpenResty 的 Agent 镜像。
+生产环境建议使用 PostgreSQL 作为 Server 数据库，并为 Server 显式配置 `SESSION_SECRET`。Agent 部署方式推荐为 Docker 部署（即直接使用内置 OpenResty 的 Agent 镜像）；亦支持通过安装脚本或手动本地运行。
 
 ## 部署拓扑
 
@@ -129,7 +129,37 @@ go run .
 go run . --port 3000 --log-dir ./logs
 ```
 
-## Agent 接入
+## Docker 运行 Agent（推荐）
+
+Docker 部署是 Agent 推荐的部署方式。Docker 部署时直接运行 Agent 镜像，该镜像基于 OpenResty 镜像制作，内置 Agent 控制器与 OpenResty 二进制。未显式配置 `node_ip` 时，Agent 会优先通过第三方 API 获取真实出口 IP，避免把 Docker 网桥地址登记为节点 IP。
+
+挂载配置文件：
+
+```bash
+docker pull ghcr.io/rain-kl/openflare-agent:latest
+docker rm -f openflare-agent 2>/dev/null || true
+docker run -d --name openflare-agent --restart unless-stopped \
+  -p 80:80 -p 443:443 \
+  -v openflare-agent-data:/data \
+  -v ./agent.json:/etc/openflare/agent.json:ro \
+  ghcr.io/rain-kl/openflare-agent:latest
+```
+
+使用环境变量：
+
+```bash
+docker pull ghcr.io/rain-kl/openflare-agent:latest
+docker rm -f openflare-agent 2>/dev/null || true
+docker run -d --name openflare-agent --restart unless-stopped \
+  -p 80:80 -p 443:443 \
+  -e OPENFLARE_SERVER_URL=http://your-server:3000 \
+  -e OPENFLARE_AGENT_TOKEN=YOUR_AGENT_TOKEN \
+  ghcr.io/rain-kl/openflare-agent:latest
+```
+
+## Agent 接入（脚本安装）
+
+除了 Docker 部署外，也支持通过安装脚本将 Agent 部署在本地宿主机上。
 
 使用 `discovery_token` 自动注册：
 
@@ -164,34 +194,6 @@ curl -fsSL https://raw.githubusercontent.com/Rain-kl/OpenFlare/main/scripts/inst
 ```bash
 systemctl status openflare-agent
 journalctl -u openflare-agent -f
-```
-
-## Docker 运行 Agent
-
-Docker 部署时直接运行 Agent 镜像。该镜像基于 OpenResty 镜像制作，内置 Agent 控制器与 OpenResty 二进制。未显式配置 `node_ip` 时，Agent 会优先通过第三方 API 获取真实出口 IP，避免把 Docker 网桥地址登记为节点 IP。
-
-挂载配置文件：
-
-```bash
-docker pull ghcr.io/rain-kl/openflare-agent:latest
-docker rm -f openflare-agent 2>/dev/null || true
-docker run -d --name openflare-agent --restart unless-stopped \
-  -p 80:80 -p 443:443 \
-  -v openflare-agent-data:/data \
-  -v ./agent.json:/etc/openflare/agent.json:ro \
-  ghcr.io/rain-kl/openflare-agent:latest
-```
-
-使用环境变量：
-
-```bash
-docker pull ghcr.io/rain-kl/openflare-agent:latest
-docker rm -f openflare-agent 2>/dev/null || true
-docker run -d --name openflare-agent --restart unless-stopped \
-  -p 80:80 -p 443:443 \
-  -e OPENFLARE_SERVER_URL=http://your-server:3000 \
-  -e OPENFLARE_AGENT_TOKEN=YOUR_AGENT_TOKEN \
-  ghcr.io/rain-kl/openflare-agent:latest
 ```
 
 ## 手动运行 Agent

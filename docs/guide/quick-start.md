@@ -102,7 +102,26 @@ Agent 可以用两类凭证接入：
 
 [需要确认：当前管理端中创建或查看 `discovery_token` 与节点 `agent_token` 的准确菜单路径]
 
-## 3. 安装 Agent
+## 3. 安装/运行 Agent
+
+Agent 部署方式推荐使用 Docker 部署（即直接运行内置 OpenResty 的 Agent 镜像）；亦支持通过安装脚本将 Agent 部署在本地宿主机上。
+
+### 方式 A：Docker 运行 Agent（推荐）
+
+在代理节点上直接运行 Agent 镜像：
+
+```bash
+docker pull ghcr.io/rain-kl/openflare-agent:latest
+docker rm -f openflare-agent 2>/dev/null || true
+docker run -d --name openflare-agent --restart unless-stopped \
+  -p 80:80 -p 443:443 \
+  -v openflare-agent-data:/data \
+  -e OPENFLARE_SERVER_URL=http://your-server:3000 \
+  -e OPENFLARE_AGENT_TOKEN=YOUR_AGENT_TOKEN \
+  ghcr.io/rain-kl/openflare-agent:latest
+```
+
+### 方式 B：执行安装脚本（本地部署）
 
 在代理节点上执行安装脚本。
 

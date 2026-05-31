@@ -102,7 +102,26 @@ Prepare one of them in the management UI before continuing.
 
 [Needs confirmation: exact UI menu path for creating or viewing `discovery_token` and node `agent_token`]
 
-## 3. Install Agent
+## 3. Install/Run Agent
+
+The recommended deployment method for the Agent is Docker deployment (i.e., running the Agent image that already includes OpenResty); it also supports shell-script installation on the local host.
+
+### Option A: Run Agent in Docker (Recommended)
+
+Run the Agent Docker image on the proxy node:
+
+```bash
+docker pull ghcr.io/rain-kl/openflare-agent:latest
+docker rm -f openflare-agent 2>/dev/null || true
+docker run -d --name openflare-agent --restart unless-stopped \
+  -p 80:80 -p 443:443 \
+  -v openflare-agent-data:/data \
+  -e OPENFLARE_SERVER_URL=http://your-server:3000 \
+  -e OPENFLARE_AGENT_TOKEN=YOUR_AGENT_TOKEN \
+  ghcr.io/rain-kl/openflare-agent:latest
+```
+
+### Option B: Run the Installation Script (Local Host)
 
 Run the install script on the proxy node.
 
