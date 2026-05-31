@@ -2994,6 +2994,9 @@ const docTemplate = `{
                 "ip": {
                     "type": "string"
                 },
+                "ip_manual_override": {
+                    "type": "boolean"
+                },
                 "name": {
                     "type": "string"
                 }

@@ -198,6 +198,7 @@ Description:
 * If `agent.json` does not exist but environment variables such as `OPENFLARE_SERVER_URL` and tokens are sufficient, the Agent can start directly; environment variables take precedence when both exist.
 * When the Agent is not configured with `node_ip`, it first queries `https://realip.cc` for the real public egress IP, adapting to Docker/NAT scenarios; it falls back to local interface detection on failure, preferring a public IPv4 address.
 * When the Agent automatically detects a private `node_ip`, the Server prioritizes retaining the public address of the Agent's direct connection during registration/heartbeat phases, avoiding misregistering internal interface addresses in NAT or multi-interface scenarios.
+* When "Lock node IP" is enabled in the admin UI, the Server keeps the manually configured node IP and Agent registration, HTTP heartbeat, or WebSocket status reports will not overwrite that field; after unlocking, the next report can fill it again.
 
 ## Common Configuration Combinations
 

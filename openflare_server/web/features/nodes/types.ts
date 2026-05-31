@@ -5,6 +5,7 @@ export interface NodeItem {
   node_id: string;
   name: string;
   ip: string;
+  ip_manual_override: boolean;
   geo_name: string;
   geo_latitude?: number | null;
   geo_longitude?: number | null;
@@ -41,6 +42,7 @@ export interface NodeBootstrapToken {
 export interface NodeMutationPayload {
   name: string;
   ip: string;
+  ip_manual_override: boolean;
   auto_update_enabled: boolean;
   geo_name: string;
   geo_latitude?: number | null;

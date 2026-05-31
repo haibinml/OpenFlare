@@ -115,6 +115,7 @@ type NodeView struct {
 	NodeID                    string     `json:"node_id"`
 	Name                      string     `json:"name"`
 	IP                        string     `json:"ip"`
+	IPManualOverride          bool       `json:"ip_manual_override"`
 	GeoName                   string     `json:"geo_name"`
 	GeoLatitude               *float64   `json:"geo_latitude"`
 	GeoLongitude              *float64   `json:"geo_longitude"`

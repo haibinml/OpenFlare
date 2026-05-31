@@ -84,6 +84,10 @@ func geoipFloat(value float64) *float64 {
 	return &value
 }
 
+func boolValue(value bool) *bool {
+	return &value
+}
+
 func TestRequestNodeAgentPreviewUpdate(t *testing.T) {
 	setupServiceTestDB(t)
 
@@ -450,6 +454,192 @@ func TestHeartbeatNodePreservesManualGeoOverride(t *testing.T) {
 	}
 	if resp.Node.GeoLatitude == nil || *resp.Node.GeoLatitude != latitude {
 		t.Fatalf("expected manual latitude to be preserved, got %+v", resp.Node.GeoLatitude)
+	}
+}
+
+func TestHeartbeatNodePreservesManualIPOverride(t *testing.T) {
+	setupServiceTestDB(t)
+
+	node := &model.Node{
+		NodeID:           "node-ip-manual",
+		Name:             "ip-manual",
+		IP:               "203.0.113.10",
+		IPManualOverride: true,
+		AgentToken:       "agent-token",
+		AgentVersion:     "v0.4.0",
+		NginxVersion:     "1.27.1.2",
+		Status:           NodeStatusOnline,
+	}
+	if err := node.Insert(); err != nil {
+		t.Fatalf("failed to seed node: %v", err)
+	}
+
+	resp, err := HeartbeatNode(node, AgentNodePayload{
+		NodeID:          node.NodeID,
+		Name:            node.Name,
+		IP:              "10.0.0.8",
+		AgentVersion:    "v0.5.0",
+		NginxVersion:    "1.27.1.3",
+		OpenrestyStatus: OpenrestyStatusHealthy,
+	})
+	if err != nil {
+		t.Fatalf("expected heartbeat to succeed: %v", err)
+	}
+	if resp.Node.IP != "203.0.113.10" {
+		t.Fatalf("expected manual ip to be preserved, got %s", resp.Node.IP)
+	}
+	if resp.Node.AgentVersion != "v0.5.0" || resp.Node.NginxVersion != "1.27.1.3" {
+		t.Fatalf("expected runtime metadata to update despite locked ip, got %+v", resp.Node)
+	}
+
+	stored, err := model.GetNodeByNodeID(node.NodeID)
+	if err != nil {
+		t.Fatalf("failed to reload node: %v", err)
+	}
+	if stored.IP != "203.0.113.10" {
+		t.Fatalf("expected stored manual ip to be preserved, got %s", stored.IP)
+	}
+}
+
+func TestHeartbeatNodeUpdatesIPWhenManualOverrideDisabled(t *testing.T) {
+	setupServiceTestDB(t)
+
+	node := &model.Node{
+		NodeID:       "node-ip-auto",
+		Name:         "ip-auto",
+		IP:           "10.0.0.8",
+		AgentToken:   "agent-token",
+		AgentVersion: "v0.4.0",
+		NginxVersion: "1.27.1.2",
+		Status:       NodeStatusOnline,
+	}
+	if err := node.Insert(); err != nil {
+		t.Fatalf("failed to seed node: %v", err)
+	}
+
+	resp, err := HeartbeatNode(node, AgentNodePayload{
+		NodeID:       node.NodeID,
+		Name:         node.Name,
+		IP:           "8.8.8.8",
+		AgentVersion: node.AgentVersion,
+		NginxVersion: node.NginxVersion,
+	})
+	if err != nil {
+		t.Fatalf("expected heartbeat to succeed: %v", err)
+	}
+	if resp.Node.IP != "8.8.8.8" {
+		t.Fatalf("expected heartbeat ip to update unlocked node, got %s", resp.Node.IP)
+	}
+}
+
+func TestUpdateNodeCanLockAndUnlockManualIP(t *testing.T) {
+	setupServiceTestDB(t)
+
+	node, err := CreateNode(NodeInput{Name: "manual-ip-edge"})
+	if err != nil {
+		t.Fatalf("failed to create node: %v", err)
+	}
+
+	locked, err := UpdateNode(node.ID, NodeInput{
+		Name:             "manual-ip-edge",
+		IP:               "203.0.113.10",
+		IPManualOverride: boolValue(true),
+	})
+	if err != nil {
+		t.Fatalf("expected lock update to succeed: %v", err)
+	}
+	if !locked.IPManualOverride || locked.IP != "203.0.113.10" {
+		t.Fatalf("expected node ip to be locked, got %+v", locked)
+	}
+
+	stored, err := model.GetNodeByID(node.ID)
+	if err != nil {
+		t.Fatalf("failed to reload node: %v", err)
+	}
+	if _, err = HeartbeatNode(stored, AgentNodePayload{
+		NodeID:       stored.NodeID,
+		Name:         stored.Name,
+		IP:           "8.8.8.8",
+		AgentVersion: "v0.5.0",
+		NginxVersion: "1.27.1.3",
+	}); err != nil {
+		t.Fatalf("expected heartbeat to succeed: %v", err)
+	}
+
+	lockedStored, err := model.GetNodeByID(node.ID)
+	if err != nil {
+		t.Fatalf("failed to reload locked node: %v", err)
+	}
+	if lockedStored.IP != "203.0.113.10" {
+		t.Fatalf("expected heartbeat to preserve locked ip, got %s", lockedStored.IP)
+	}
+
+	unlocked, err := UpdateNode(node.ID, NodeInput{
+		Name:             "manual-ip-edge",
+		IP:               "203.0.113.10",
+		IPManualOverride: boolValue(false),
+	})
+	if err != nil {
+		t.Fatalf("expected unlock update to succeed: %v", err)
+	}
+	if unlocked.IPManualOverride {
+		t.Fatalf("expected node ip lock to be disabled, got %+v", unlocked)
+	}
+
+	unlockedStored, err := model.GetNodeByID(node.ID)
+	if err != nil {
+		t.Fatalf("failed to reload unlocked node: %v", err)
+	}
+	if _, err = HeartbeatNode(unlockedStored, AgentNodePayload{
+		NodeID:       unlockedStored.NodeID,
+		Name:         unlockedStored.Name,
+		IP:           "8.8.4.4",
+		AgentVersion: "v0.5.1",
+		NginxVersion: "1.27.1.4",
+	}); err != nil {
+		t.Fatalf("expected heartbeat to succeed after unlock: %v", err)
+	}
+
+	reloaded, err := model.GetNodeByID(node.ID)
+	if err != nil {
+		t.Fatalf("failed to reload updated node: %v", err)
+	}
+	if reloaded.IP != "8.8.4.4" {
+		t.Fatalf("expected heartbeat to update unlocked ip, got %s", reloaded.IP)
+	}
+}
+
+func TestNodeManualIPOverrideDefaultsForManualInput(t *testing.T) {
+	setupServiceTestDB(t)
+
+	created, err := CreateNode(NodeInput{
+		Name: "precreated-edge",
+		IP:   "203.0.113.20",
+	})
+	if err != nil {
+		t.Fatalf("expected create to succeed: %v", err)
+	}
+	if !created.IPManualOverride {
+		t.Fatalf("expected precreated node with explicit ip to default to manual override, got %+v", created)
+	}
+
+	empty, err := CreateNode(NodeInput{Name: "auto-edge"})
+	if err != nil {
+		t.Fatalf("expected empty-ip create to succeed: %v", err)
+	}
+	if empty.IPManualOverride {
+		t.Fatalf("expected empty-ip node to stay unlocked, got %+v", empty)
+	}
+
+	updated, err := UpdateNode(empty.ID, NodeInput{
+		Name: "auto-edge",
+		IP:   "203.0.113.21",
+	})
+	if err != nil {
+		t.Fatalf("expected update to succeed: %v", err)
+	}
+	if !updated.IPManualOverride {
+		t.Fatalf("expected manual ip edit to default to locked, got %+v", updated)
 	}
 }
 

@@ -58,6 +58,8 @@ The Server does not directly SSH into nodes, nor does it modify node files onlin
 
 The Agent uniformly executes validations, reloads, starts, and restarts via the OpenResty binary pointed to by `openresty_path`; it falls back to calling `openresty` by default when not configured. In Docker deployments, the Agent image includes the OpenResty binary and follows the same binary control logic.
 
+Node IPs are maintained by Agent registration and heartbeat reports by default; when the admin UI locks a node IP, the Server continues updating runtime fields such as status, versions, and observability, but no longer accepts Agent reports to overwrite that IP.
+
 ## Frontend
 
 `openflare_server/web` is the official management console frontend:

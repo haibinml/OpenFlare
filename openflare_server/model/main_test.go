@@ -883,3 +883,43 @@ func TestRunDatabaseSchemaMigrationDoesNotAdvanceVersionWhenValidationFails(t *t
 		t.Fatal("expected schema version to remain unset after failed validation")
 	}
 }
+
+func TestEnsureDatabaseSchemaUpToDateAddsNodeIPManualOverride(t *testing.T) {
+	db := openBareTestSQLiteDB(t, "node-ip-manual-override-migration.db")
+	if err := registerSharding(db, "sqlite"); err != nil {
+		t.Fatalf("register sharding: %v", err)
+	}
+	if err := applyCurrentSchema(db, "sqlite"); err != nil {
+		t.Fatalf("apply current schema: %v", err)
+	}
+	if err := ensureDefaultWAFRuleGroup(db); err != nil {
+		t.Fatalf("ensure default waf rule group: %v", err)
+	}
+	if err := db.Migrator().DropColumn(&Node{}, "ip_manual_override"); err != nil {
+		t.Fatalf("drop ip_manual_override column: %v", err)
+	}
+	if db.Migrator().HasColumn(&Node{}, "ip_manual_override") {
+		t.Fatal("expected test database to simulate schema v14 without ip_manual_override")
+	}
+	if err := saveDatabaseSchemaVersion(db, 14); err != nil {
+		t.Fatalf("save schema version: %v", err)
+	}
+
+	if err := ensureDatabaseSchemaUpToDate(db, "sqlite"); err != nil {
+		t.Fatalf("ensureDatabaseSchemaUpToDate: %v", err)
+	}
+
+	if !db.Migrator().HasColumn(&Node{}, "ip_manual_override") {
+		t.Fatal("expected migration to add nodes.ip_manual_override")
+	}
+	version, exists, err := loadDatabaseSchemaVersion(db)
+	if err != nil {
+		t.Fatalf("loadDatabaseSchemaVersion: %v", err)
+	}
+	if !exists {
+		t.Fatal("expected schema version record to exist")
+	}
+	if version != currentDatabaseSchemaVersion {
+		t.Fatalf("unexpected schema version: got %d want %d", version, currentDatabaseSchemaVersion)
+	}
+}

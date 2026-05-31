@@ -309,6 +309,7 @@ export function NodesPage() {
                             </p>
                             <p className="text-xs text-[var(--foreground-secondary)]">
                               IP：{node.ip || 'null'}
+                              {node.ip_manual_override ? '（已锁定）' : ''}
                             </p>
                             <p className="text-xs text-[var(--foreground-secondary)]">
                               位置：{node.geo_name || '未配置地图点位'}

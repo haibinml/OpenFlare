@@ -18,6 +18,7 @@ import (
 type NodeInput struct {
 	Name              string   `json:"name"`
 	IP                string   `json:"ip"`
+	IPManualOverride  *bool    `json:"ip_manual_override"`
 	AutoUpdateEnabled bool     `json:"auto_update_enabled"`
 	GeoName           string   `json:"geo_name"`
 	GeoLatitude       *float64 `json:"geo_latitude"`
@@ -59,9 +60,11 @@ func CreateNode(input NodeInput) (*NodeView, error) {
 	if name == "" {
 		return nil, errors.New("节点名不能为空")
 	}
+	ipManualOverride := resolveNodeIPManualOverride(input, nil, ip)
 	node := &model.Node{
 		Name:              name,
 		IP:                ip,
+		IPManualOverride:  ipManualOverride,
 		GeoName:           geoName,
 		GeoLatitude:       geoLatitude,
 		GeoLongitude:      geoLongitude,
@@ -102,8 +105,10 @@ func UpdateNode(id uint, input NodeInput) (*NodeView, error) {
 	if err != nil {
 		return nil, err
 	}
+	ipManualOverride := resolveNodeIPManualOverride(input, node, ip)
 	node.Name = name
 	node.IP = ip
+	node.IPManualOverride = ipManualOverride
 	node.GeoName = geoName
 	node.GeoLatitude = geoLatitude
 	node.GeoLongitude = geoLongitude
@@ -283,6 +288,7 @@ func buildNodeView(node *model.Node) *NodeView {
 		NodeID:                    node.NodeID,
 		Name:                      node.Name,
 		IP:                        node.IP,
+		IPManualOverride:          node.IPManualOverride,
 		GeoName:                   strings.TrimSpace(node.GeoName),
 		GeoLatitude:               node.GeoLatitude,
 		GeoLongitude:              node.GeoLongitude,
@@ -331,6 +337,9 @@ func normalizeNodeInput(input NodeInput) (string, string, string, *float64, *flo
 	if ip != "" && net.ParseIP(ip) == nil {
 		return "", "", "", nil, nil, false, errors.New("节点 IP 格式无效")
 	}
+	if input.IPManualOverride != nil && *input.IPManualOverride && ip == "" {
+		return "", "", "", nil, nil, false, errors.New("锁定节点 IP 时必须填写节点 IP")
+	}
 	if len(geoName) > 128 {
 		return "", "", "", nil, nil, false, errors.New("节点位置名不能超过 128 个字符")
 	}
@@ -355,6 +364,19 @@ func normalizeNodeInput(input NodeInput) (string, string, string, *float64, *flo
 	}
 
 	return name, ip, geoName, geoLatitude, geoLongitude, true, nil
+}
+
+func resolveNodeIPManualOverride(input NodeInput, existing *model.Node, normalizedIP string) bool {
+	if input.IPManualOverride != nil {
+		return *input.IPManualOverride
+	}
+	if existing == nil {
+		return strings.TrimSpace(normalizedIP) != ""
+	}
+	if existing.IPManualOverride {
+		return true
+	}
+	return strings.TrimSpace(normalizedIP) != "" && strings.TrimSpace(normalizedIP) != strings.TrimSpace(existing.IP)
 }
 
 func cloneCoordinate(value *float64) *float64 {
@@ -499,7 +521,9 @@ func applyNodeRuntime(node *model.Node, payload AgentNodePayload, preserveName b
 			node.Name = strings.TrimSpace(payload.Name)
 		}
 	}
-	node.IP = strings.TrimSpace(payload.IP)
+	if !node.IPManualOverride {
+		node.IP = strings.TrimSpace(payload.IP)
+	}
 	node.AgentVersion = strings.TrimSpace(payload.AgentVersion)
 	node.NginxVersion = strings.TrimSpace(payload.NginxVersion)
 	node.OpenrestyStatus = normalizeOpenrestyStatus(payload.OpenrestyStatus)

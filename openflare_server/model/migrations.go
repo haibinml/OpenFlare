@@ -1472,6 +1472,21 @@ func validateDatabaseSchemaV14(db *gorm.DB, backend string) error {
 	return nil
 }
 
+// migrateV15 adds the node IP manual override flag.
+func migrateV15(db *gorm.DB, backend string) error {
+	return applyCurrentSchema(db, backend)
+}
+
+func validateDatabaseSchemaV15(db *gorm.DB, backend string) error {
+	if err := validateDatabaseSchemaV14(db, backend); err != nil {
+		return err
+	}
+	if !db.Migrator().HasColumn(&Node{}, "ip_manual_override") {
+		return fmt.Errorf("column nodes.ip_manual_override is missing")
+	}
+	return nil
+}
+
 func databaseSchemaMigrations() []databaseSchemaMigration {
 	return []databaseSchemaMigration{
 		{fromVersion: 1, toVersion: 2, migrate: migrateV2, validate: validateDatabaseSchemaV2},
@@ -1487,6 +1502,7 @@ func databaseSchemaMigrations() []databaseSchemaMigration {
 		{fromVersion: 11, toVersion: 12, migrate: migrateV12, validate: validateDatabaseSchemaV12},
 		{fromVersion: 12, toVersion: 13, migrate: migrateV13, validate: validateDatabaseSchemaV13},
 		{fromVersion: 13, toVersion: 14, migrate: migrateV14, validate: validateDatabaseSchemaV14},
+		{fromVersion: 14, toVersion: 15, migrate: migrateV15, validate: validateDatabaseSchemaV15},
 	}
 }
 
@@ -1575,7 +1591,7 @@ func initializeFreshDatabaseSchema(db *gorm.DB, backend string) error {
 	if err := ensureDefaultWAFRuleGroup(db); err != nil {
 		return err
 	}
-	if err := validateDatabaseSchemaV13(db, backend); err != nil {
+	if err := validateDatabaseSchemaV15(db, backend); err != nil {
 		return err
 	}
 	return saveDatabaseSchemaVersion(db, currentDatabaseSchemaVersion)

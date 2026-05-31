@@ -43,6 +43,7 @@ const nodeEditorSchema = z
       .min(1, '请输入节点名')
       .max(128, '节点名不能超过 128 个字符'),
     ip: z.string().trim().max(64, '节点 IP 不能超过 64 个字符'),
+    ip_manual_override: z.boolean(),
     auto_update_enabled: z.boolean(),
     geo_manual_override: z.boolean(),
     geo_region: z.string(),
@@ -51,6 +52,14 @@ const nodeEditorSchema = z
     geo_longitude: z.string().trim(),
   })
   .superRefine((values, ctx) => {
+    if (values.ip_manual_override && values.ip.trim() === '') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['ip'],
+        message: '锁定节点 IP 时必须填写节点 IP',
+      });
+    }
+
     if (!values.geo_manual_override) {
       return;
     }
@@ -100,6 +109,7 @@ type NodeEditorValues = z.infer<typeof nodeEditorSchema>;
 const defaultValues: NodeEditorValues = {
   name: '',
   ip: '',
+  ip_manual_override: false,
   auto_update_enabled: false,
   geo_manual_override: false,
   geo_region: '',
@@ -184,6 +194,7 @@ function buildFormValues(node?: Partial<NodeItem> | null): NodeEditorValues {
   return {
     name: node.name ?? '',
     ip: node.ip ?? '',
+    ip_manual_override: node.ip_manual_override ?? false,
     auto_update_enabled: node.auto_update_enabled ?? false,
     geo_manual_override: node.geo_manual_override ?? false,
     geo_region: node.geo_manual_override ? (node.geo_name ?? '') : '',
@@ -204,6 +215,7 @@ function toPayload(values: NodeEditorValues): NodeMutationPayload {
     return {
       name: values.name.trim(),
       ip: values.ip.trim(),
+      ip_manual_override: values.ip_manual_override,
       auto_update_enabled: values.auto_update_enabled,
       geo_manual_override: false,
       geo_name: '',
@@ -215,6 +227,7 @@ function toPayload(values: NodeEditorValues): NodeMutationPayload {
   return {
     name: values.name.trim(),
     ip: values.ip.trim(),
+    ip_manual_override: values.ip_manual_override,
     auto_update_enabled: values.auto_update_enabled,
     geo_manual_override: true,
     geo_name: values.geo_name.trim(),
@@ -253,6 +266,10 @@ export function NodeEditorModal({
     control: form.control,
     name: 'auto_update_enabled',
   });
+  const watchedIPManualOverride = useWatch({
+    control: form.control,
+    name: 'ip_manual_override',
+  });
   const watchedGeoManualOverride = useWatch({
     control: form.control,
     name: 'geo_manual_override',
@@ -266,6 +283,7 @@ export function NodeEditorModal({
     form.reset(buildFormValues(node));
   }, [form, isOpen, node]);
 
+  const ipField = form.register('ip');
   const handleSubmit = form.handleSubmit((values) => {
     onSubmit(toPayload(values));
   });
@@ -309,11 +327,41 @@ export function NodeEditorModal({
 
         <ResourceField
           label="节点 IP"
-          hint="可手动维护节点当前对外 IP；留空则等待 Agent 注册或心跳自动回填。"
+          hint={
+            watchedIPManualOverride
+              ? '已锁定为指定值，不会被更新。'
+              : '留空或关闭锁定时，等待 Agent 自动更新。'
+          }
           error={form.formState.errors.ip?.message}
         >
-          <ResourceInput placeholder="203.0.113.10" {...form.register('ip')} />
+          <ResourceInput
+            placeholder="203.0.113.10"
+            {...ipField}
+            onChange={(event) => {
+              ipField.onChange(event);
+              const nextIP = event.target.value.trim();
+              const previousIP = (node?.ip ?? '').trim();
+              if (nextIP !== '' && nextIP !== previousIP) {
+                form.setValue('ip_manual_override', true, {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                });
+              }
+            }}
+          />
         </ResourceField>
+
+        <ToggleField
+          label="锁定节点 IP"
+          description="开启后以管理端填写的 IP 为准，Agent 后续上报不会覆盖该字段。"
+          checked={watchedIPManualOverride}
+          onChange={(checked) =>
+            form.setValue('ip_manual_override', checked, {
+              shouldDirty: true,
+              shouldValidate: true,
+            })
+          }
+        />
 
         <ToggleField
           label="启用自动更新"

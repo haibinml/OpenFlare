@@ -1654,7 +1654,10 @@ export function NodeDetailPage({ nodeId }: { nodeId: string }) {
                     <p className="font-medium text-[var(--foreground-primary)]">
                       IP 地址
                     </p>
-                    <p className="mt-1">{node.ip || '暂无'}</p>
+                    <p className="mt-1">
+                      {node.ip || '暂无'}
+                      {node.ip_manual_override ? '（管理端锁定）' : ''}
+                    </p>
                   </div>
                   <div>
                     <p className="font-medium text-[var(--foreground-primary)]">

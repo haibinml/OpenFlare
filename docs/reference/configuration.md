@@ -198,6 +198,7 @@ OpenResty 性能参数与缓存参数继续统一保存在 `Option` 表。当前
 * 如果 `agent.json` 不存在，但 `OPENFLARE_SERVER_URL` 与 Token 等环境变量足够，Agent 可以直接启动；两者同时存在时环境变量优先。
 * Agent 未配置 `node_ip` 时，会优先通过 `https://realip.cc` 获取真实出口公网 IP，适配 Docker/NAT 场景；该请求失败时，才退回本机网卡探测并优先选择公网 IPv4。
 * Agent 自动探测到私网 `node_ip` 时，Server 会在注册/心跳阶段优先保留 Agent 直连来源的公网地址，避免 NAT/多网卡场景误登记内网网卡地址。
+* 在管理端开启“锁定节点 IP”后，Server 会保留管理端填写的节点 IP，后续 Agent 注册、HTTP 心跳或 WebSocket 状态上报不会覆盖该字段；关闭锁定后，下一次上报可重新回填。
 
 ## 常见配置组合
 

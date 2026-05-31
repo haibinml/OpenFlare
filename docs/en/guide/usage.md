@@ -106,6 +106,8 @@ Node pages answer three questions:
 | Which version is running? | Current version on the node detail page |
 | Did the last apply succeed? | Apply logs |
 
+Node IPs are filled automatically by Agent registration and subsequent heartbeats by default. When you enter or change an IP in the admin UI, the node editor enables "Lock node IP" by default; Agent reports will not overwrite the IP while the lock is enabled. After unlocking, the next Agent heartbeat or WebSocket status report can update it again.
+
 Access analytics and resource snapshots provide basic observability. OpenFlare only keeps access details for a controlled time window; it is not a general-purpose log platform. Use a dedicated logging system for long-term log search.
 
 ## Common Scenarios

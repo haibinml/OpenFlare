@@ -7,6 +7,7 @@ type Node struct {
 	NodeID                    string    `json:"node_id" gorm:"uniqueIndex;size:64;not null"`
 	Name                      string    `json:"name" gorm:"size:128;not null"`
 	IP                        string    `json:"ip" gorm:"size:64;not null"`
+	IPManualOverride          bool      `json:"ip_manual_override" gorm:"not null;default:false"`
 	GeoName                   string    `json:"geo_name" gorm:"size:128"`
 	GeoLatitude               *float64  `json:"geo_latitude"`
 	GeoLongitude              *float64  `json:"geo_longitude"`
