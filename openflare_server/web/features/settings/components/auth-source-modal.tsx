@@ -387,12 +387,18 @@ export function AuthSourceModal({
               />
             </ResourceField>
             <div className="rounded-2xl border border-[var(--status-info-border)] bg-[var(--status-info-soft)] px-4 py-3 text-sm leading-6 text-[var(--status-info-foreground)] md:col-span-2">
-              第三方平台的 Redirect URI / Callback URL 请填写：
-              <span className="font-medium">
-                {' '}
-                {buildCallbackURL(browserOrigin, form.name)}
-              </span>
-              。末尾路径使用上方填写的认证源名称，保存后如修改认证源名称，也需要同步更新第三方平台中的回调地址。
+              {form.name.trim() ? (
+                <>
+                  第三方平台的 Redirect URI / Callback URL 请填写：
+                  <span className="font-medium">
+                    {' '}
+                    {buildCallbackURL(browserOrigin, form.name)}
+                  </span>
+                  。末尾路径使用上方填写的认证源名称，保存后如修改认证源名称，也需要同步更新第三方平台中的回调地址。
+                </>
+              ) : (
+                '请先输入认证源名称获取回调地址'
+              )}
             </div>
             {form.type === 'oidc' ? (
               <ResourceField
