@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"openflare/utils"
 	"openflare/utils/geoip"
 	"openflare/utils/geoip/iputil"
 	"os"
@@ -149,7 +150,7 @@ func Load(path string) (*Config, error) {
 func applyDefaults(cfg *Config, baseDir string) {
 	baseDir = filepath.Clean(baseDir)
 	cfg.AgentVersion = AgentVersion
-	cfg.OpenrestyResolvers = normalizeResolverList(cfg.OpenrestyResolvers)
+	cfg.OpenrestyResolvers = utils.UniqueAndCleanStringSlice(cfg.OpenrestyResolvers)
 	if cfg.OpenrestyPath == "" {
 		cfg.OpenrestyPath = "openresty"
 	}
@@ -403,29 +404,6 @@ func detectHostname() string {
 		return ""
 	}
 	return strings.TrimSpace(host)
-}
-
-func normalizeResolverList(values []string) []string {
-	if len(values) == 0 {
-		return nil
-	}
-	result := make([]string, 0, len(values))
-	seen := make(map[string]struct{}, len(values))
-	for _, value := range values {
-		trimmed := strings.TrimSpace(value)
-		if trimmed == "" {
-			continue
-		}
-		if _, ok := seen[trimmed]; ok {
-			continue
-		}
-		seen[trimmed] = struct{}{}
-		result = append(result, trimmed)
-	}
-	if len(result) == 0 {
-		return nil
-	}
-	return result
 }
 
 func firstNonEmpty(values ...string) string {

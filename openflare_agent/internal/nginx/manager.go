@@ -19,6 +19,7 @@ import (
 	"strings"
 	"time"
 
+	"openflare/utils"
 	openrestyrender "openflare/utils/render/openresty"
 
 	"openflare-agent/internal/protocol"
@@ -1110,7 +1111,7 @@ func ResolverDirective(openrestyPath string, explicitResolvers []string) string 
 }
 
 func resolverAddresses(openrestyPath string, explicitResolvers []string) []string {
-	if resolvers := normalizeResolverAddresses(explicitResolvers); len(resolvers) > 0 {
+	if resolvers := utils.UniqueAndCleanStringSlice(explicitResolvers); len(resolvers) > 0 {
 		return resolvers
 	}
 	data, err := os.ReadFile("/etc/resolv.conf")
@@ -1151,29 +1152,6 @@ func isUsableDockerResolver(addr string) bool {
 		return false
 	}
 	return !ip.IsLoopback() && !ip.IsUnspecified()
-}
-
-func normalizeResolverAddresses(values []string) []string {
-	if len(values) == 0 {
-		return nil
-	}
-	resolvers := make([]string, 0, len(values))
-	seen := make(map[string]struct{}, len(values))
-	for _, value := range values {
-		addr := strings.TrimSpace(value)
-		if addr == "" {
-			continue
-		}
-		if _, ok := seen[addr]; ok {
-			continue
-		}
-		seen[addr] = struct{}{}
-		resolvers = append(resolvers, addr)
-	}
-	if len(resolvers) == 0 {
-		return nil
-	}
-	return resolvers
 }
 
 func RequiresRuntimeResolver(originURL string) bool {
