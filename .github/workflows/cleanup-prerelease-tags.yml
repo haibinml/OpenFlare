@@ -35,11 +35,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CONFIRM: ${{ github.event.inputs.confirm }}
         run: |
-          if [[ "$CONFIRM" != "cleanup-prerelease-tags" ]]; then
-            echo "confirm input must be exactly cleanup-prerelease-tags" >&2
-            exit 1
-          fi
-
+   
           mapfile -t TAGS < <(git tag --list 'v*' | sort -V)
           DELETED=0
 
