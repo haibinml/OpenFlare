@@ -35,6 +35,7 @@ OpenFlare is currently not positioned as a general-purpose log platform, service
 | Agent Synchronization | Supports registration, heartbeat, synchronization, application result reporting, and self-updating |
 | OpenResty Hosting | Manages main configuration templates, performance parameters, cache parameters, and Lua resources |
 | HTTPS/TLS | Hosts certificates and domain assets, and binds certificates on a per-domain basis |
+| WAF | Maintains IP/IP ranges black/whitelists and country-level geographical black/whitelists with global and website-customized rule groups |
 | Basic Observability | Aggregates node requests, resource snapshots, health events, and access analytics |
 | Node Management | Node status, token systems, deployment, and update links |
 | Console Frontend | Next.js-based official management console |
@@ -76,6 +77,8 @@ Currently active entities:
 * `node_metric_snapshots`
 * `traffic_analytics_rollups`
 * `node_health_events`
+* `waf_rule_groups`
+* `waf_rule_group_bindings`
 
 ## Site Configuration Constraints
 
@@ -115,6 +118,24 @@ During publishing rendering:
 * Domains with certificates are output as separate `443 ssl` `server` blocks grouped by certificate.
 * Domains not bound to a certificate must not be automatically brought into HTTPS.
 * All domains in `proxy_routes.domains` must be included in the same site configuration to avoid the same site being split in version snapshots.
+
+## WAF Constraints
+
+WAF uses rule groups as configuration boundaries. The system fixes a global rule group, which is applied to all websites by default; websites can overlay multiple custom rule groups.
+
+Phase 1 supports:
+
+* IP / IP range whitelists and blacklists.
+* Country-level region whitelists and blacklists.
+* Rule group-level blocking status codes and response pages, defaulting to `418` and an empty page.
+
+Evaluation order:
+
+* Whitelists are bypass exceptions; if any enabled rule group matches a whitelist, the request is allowed.
+* If no whitelist is matched, blacklists continue to be evaluated.
+* When multiple blacklists match, the global rule group takes precedence, followed by custom rule groups in ascending order of their IDs.
+
+Region recognition is based on the MaxMind mmdb maintained locally on the node by the Agent, and the OpenResty Lua reads the local database during the request path. When GeoIP dependencies are unavailable, region rules must be skipped, without affecting IP rules and the reverse proxy main link.
 
 ## Authentication Source Constraints
 

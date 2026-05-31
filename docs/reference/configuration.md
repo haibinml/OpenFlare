@@ -168,10 +168,7 @@ OpenResty 性能参数与缓存参数继续统一保存在 `Option` 表。当前
 | `node_name` | 节点名称 | 否 | 自动使用主机名 |
 | `node_ip` | 节点 IP | 否 | 自动探测，优先通过第三方 API 获取真实出口公网 IP；失败时退回本机网卡探测 |
 | `openresty_path` | OpenResty 二进制路径 | 否 | `openresty` |
-| `openresty_container_name` | 旧 Docker 控制字段，仅兼容读取 | 否 | 空 |
-| `openresty_docker_image` | 旧 Docker 控制字段，仅兼容读取 | 否 | 空 |
 | `openresty_observability_port` | 本地观测与 OpenResty 健康检查端口 | 否 | `18081` |
-| `docker_binary` | 旧 Docker 控制字段，仅兼容读取 | 否 | 空 |
 | `data_dir` | Agent 数据目录 | 否 | 配置文件所在目录下的 `data` |
 | `main_config_path` | OpenResty 主配置写入路径 | 否 | `data_dir/etc/nginx/nginx.conf` |
 | `route_config_path` | 路由配置写入路径 | 否 | `data_dir/etc/nginx/conf.d/openflare_routes.conf` |

@@ -15,13 +15,14 @@ Modify rules -> Preview / View diff -> Publish -> Generate complete configuratio
 When publishing, the Server must:
 
 1. Read all enabled `proxy_routes`.
-2. Read the OpenResty main configuration template, performance parameters, cache parameters, and necessary Lua resources on the Server side.
+2. Read the Server side OpenResty main configuration template, performance parameters, cache parameters, and necessary Lua resources.
 3. Read domain and certificate binding relationships.
-4. Render the complete OpenResty configuration.
-5. Calculate the `checksum`.
-6. Write to `config_versions`.
-7. Switch the activated version.
-8. Let the Agent discover and apply it in subsequent heartbeats.
+4. Read the WAF global rule group, custom rule groups, and website binding relationships.
+5. Render the complete OpenResty configuration and WAF runtime configuration.
+6. Calculate the `checksum`.
+7. Write to `config_versions`.
+8. Switch the activated version.
+9. Let the Agent discover and apply it in subsequent heartbeats.
 
 The version number format is fixed as `YYYYMMDD-NNN`.
 
@@ -33,9 +34,9 @@ Publishing generates a new complete configuration version. The version must cont
 
 ## Activating Version
 
-There can only be one activated version globally at a time.Differentiated versions grouped by nodes are currently not supported.
+There can only be one activated version globally at a time. Differentiated versions grouped by nodes are currently not supported.
 
-The Agent obtains the activated version summary through the heartbeat; only when the remote version or checksum is inconsistent with the local state does the Agent enter the synchronization flow.
+The Agent obtains the activated version summary through the heartbeat; only when the remote version or checksum is inconsistent with the local state does the Agent enter the synchronization flow. When Agent WS connection upgrade is enabled and the connection is available, the Server will broadcast the latest active version summary after successfully publishing or activating a version. Upon receiving it, the Agent immediately pulls and applies the configuration using the ordinary synchronization flow. When WS is unavailable, changes are still discovered at HTTP heartbeat intervals.
 
 ## Immutable History
 
@@ -53,12 +54,12 @@ When discovering a new version, the Agent will:
 
 1. Pull the details of the target version.
 2. Back up old files.
-3. Write the main configuration, route configurations, certificates, and necessary Lua resources.
+3. Write the main configuration, route configurations, certificates, necessary Lua resources, and WAF/PoW runtime configurations.
 4. Execute OpenResty configuration verification.
 5. reload; if it is not started during runtime, try to start OpenResty with the current configuration.
 6. Report success, warning, or failure.
 
-If the activation of the new configuration fails, the Agent must try to restore execution; report a warning when the rollback succeeds, and report a failure when it still cannot recover after rollback.
+If the activation of the new configuration fails, the Agent must try to restore execution; report a warning when the rollback succeeds. If there is no historical main configuration to roll back to locally, the Agent will write the built-in safe fallback configuration and try to pull up OpenResty: this configuration only listens to port `80` externally, contains no user routes, uniformly returns `503 Service Unavailable` and `OpenFlare: No Valid Configuration`, and retains the local `stub_status` health check entry. If fallback startup is successful, it still blocks the failed target version and reports a warning; report a failure when there is a historical main configuration but it still cannot recover after rollback.
 
 Once a target `version + checksum` application fails and rolls back, the Agent will block repeated applications of this target in its local state. Only when the remote activated version or checksum changes is it allowed to try again.
 
@@ -69,3 +70,4 @@ Once a target `version + checksum` application fails and rolls back, the Agent w
 * The Agent API is fixed to use the node-exclusive `agent_token`; the first access can use the `discovery_token`.
 * The Server does not provide remote shell or arbitrary command execution entries.
 * The configuration version must save complete snapshots, rendering results, and `checksum`.
+* WAF rule groups and website binding relationships must enter the snapshot and checksum along with the complete configuration version, and must not rely on the current mutable WAF configuration when rolling back.

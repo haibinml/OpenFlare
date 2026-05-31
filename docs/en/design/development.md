@@ -148,6 +148,8 @@ Currently active entities:
 * `traffic_analytics_rollups`
 * `node_health_events`
 * `options`
+* `waf_rule_groups`
+* `waf_rule_group_bindings`
 
 General constraints:
 
@@ -161,6 +163,7 @@ General constraints:
 * Upstreams uniformly use named `upstream` + keepalive; for a single upstream carrying a base path or query, the original URI should be added back to `proxy_pass`. For multiple upstreams, only pure `scheme://host[:port]` is allowed.
 * Rate limits, reverse proxy, and cache configurations currently belong to the site-level `proxy_routes`.
 * HTTPS certificate binding must be saved on a per-domain basis through `domain_cert_ids` parallel to `domains`; domains not bound to a certificate must not participate in HTTPS rendering.
+* WAF global rule groups are applied to all websites by default, while custom rule groups are bound to site configurations via `waf_rule_group_bindings`; they must be included in the complete configuration version snapshot during publishing.
 * `config_versions` must save complete snapshots and rendering results.
 * There can only be one activated version globally at a time.
 * Rollback is achieved by reactivating older versions.
@@ -232,14 +235,18 @@ Version constraints:
 The Agent must satisfy:
 
 * Read or generate local `node_id` after startup.
-* Periodic heartbeat and synchronization.
+* Periodic heartbeats and synchronization.
 * Conventional synchronization prioritizes judging based on the version summary returned by the heartbeat.
+* When WS connection upgrade is enabled and the connection is successful, the Agent can receive active version summaries via WS and immediately synchronize; WS failure or disconnection must fall back to HTTP heartbeats.
 * Back up old files first when discovering a new version.
 * Write main configurations, route configurations, and necessary certificate files.
+* Write WAF/PoW runtime configurations, and ensure WAF Lua resources are managed uniformly by the Agent.
 * Execute `openresty -t -c <main_config_path>` after writing the new configuration, and then reload; direct startup of OpenResty is allowed when reload finds that it is not running.
+* Periodic runtime health checks must not call `openresty -t`, preventing health probes from triggering synchronous upstream domain name resolutions; they should prioritize requesting `/openflare/stub_status` on the local `openresty_observability_port`, using HTTP `200 OK` as the basis for judging that the OpenResty main process and workers are serving.
 * If the activation of the new configuration fails, the Agent must first try to restore execution with the target configuration, then roll back to the old configuration and pull up OpenResty again.
-* Report warning when OpenResty recovers normally after rollback; report failure when it still cannot recover after rollback.
-* Once a target `version + checksum` fails to apply and rolls back, the Agent must block repeated applications of this target in its local state.
+* Report warning when OpenResty recovers normally after rollback; if there is no historical main configuration to restore locally, it must be allowed to write the built-in safe fallback configuration and pull up an OpenResty runtime state that only listens to port `80` externally and uniformly returns `503 Service Unavailable` and `OpenFlare: No Valid Configuration`, while retaining the local `stub_status` health check entry. The fallback runtime state must not clear the blocked status of the failed target; the application logs must reflect that the target version failed but the fallback runtime has started. Report failure when there is a historical main configuration but it still cannot recover after rollback.
+* Once a target `version + checksum` application fails and rolls back, the Agent must block repeated applications of this target in its local state.
+* When the Agent maintains the local MaxMind mmdb, download or refresh failures can only record warnings, and must not block heartbeats, synchronization, configuration application, or OpenResty health checks.
 
 ## Frontend Requests, State, and Types
 

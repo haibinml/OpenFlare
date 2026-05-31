@@ -1,6 +1,6 @@
 # Deployment
 
-You will learn the recommended OpenFlare deployment model, Server and Agent requirements, source startup workflow, integration steps, upgrade paths, and uninstall entry points.
+You will learn: The recommended OpenFlare deployment model, Server and Agent requirements, source startup workflow, integration steps, upgrade paths, and uninstall entry points.
 
 For production, use PostgreSQL for the Server database and set `SESSION_SECRET` explicitly. Agent controls OpenResty through the OpenResty binary; Docker deployments run the Agent image that already includes OpenResty.
 
@@ -40,9 +40,10 @@ Agent:
 | --- | --- |
 | OS | Install script supports Linux and macOS. systemd service is created only on Linux + systemd. |
 | Architecture | `amd64` or `arm64` |
-| OpenResty | Required for local Agent installs |
+| OpenResty | Required for local Agent installs, or specified via `--openresty-path` |
 | Docker | Required only when running the Agent Docker image |
 | Network | Agent node must reach the Server URL |
+| GeoIP | WAF regional rules use local MaxMind mmdb; Agent initializes a built-in library and updates it periodically |
 
 [Needs confirmation: recommended production CPU, memory, and disk size]
 
@@ -165,6 +166,34 @@ systemctl status openflare-agent
 journalctl -u openflare-agent -f
 ```
 
+## Run Agent in Docker
+
+In Docker deployments, directly run the Agent image. This image is built on top of the OpenResty image and includes both the Agent controller and the OpenResty binary. When `node_ip` is not explicitly configured, the Agent prioritizes obtaining the real public egress IP via a third-party API, avoiding registering the Docker bridge address as the node IP.
+
+Mounting the configuration file:
+
+```bash
+docker pull ghcr.io/rain-kl/openflare-agent:latest
+docker rm -f openflare-agent 2>/dev/null || true
+docker run -d --name openflare-agent --restart unless-stopped \
+  -p 80:80 -p 443:443 \
+  -v openflare-agent-data:/data \
+  -v ./agent.json:/etc/openflare/agent.json:ro \
+  ghcr.io/rain-kl/openflare-agent:latest
+```
+
+Using environment variables:
+
+```bash
+docker pull ghcr.io/rain-kl/openflare-agent:latest
+docker rm -f openflare-agent 2>/dev/null || true
+docker run -d --name openflare-agent --restart unless-stopped \
+  -p 80:80 -p 443:443 \
+  -e OPENFLARE_SERVER_URL=http://your-server:3000 \
+  -e OPENFLARE_AGENT_TOKEN=YOUR_AGENT_TOKEN \
+  ghcr.io/rain-kl/openflare-agent:latest
+```
+
 ## Run Agent Manually
 
 From source:
@@ -199,6 +228,10 @@ Minimal `agent.json`:
 
 When `openresty_path` is not configured, Agent runs `openresty`.
 
+By default, the Agent will attempt to upgrade to a WebSocket after a successful HTTP heartbeat. When the upgrade succeeds, the Server immediately notifies the Agent of any configuration publications or activations; if the WebSocket cannot be established or is unexpectedly disconnected, the Agent automatically falls back to HTTP heartbeat synchronization.
+
+WAF regional rules rely on the Agent's local `GeoLite2-Country.mmdb`. Upon startup, the Agent initializes a built-in database at `data_dir/etc/openflare/GeoLite2-Country.mmdb` and attempts to update it periodically based on configuration; update failures only record warnings, and do not affect configuration synchronization or OpenResty reload.
+
 ## Minimal Integration Flow
 
 1. Start Server and sign in.
@@ -220,6 +253,7 @@ Server:
 Agent:
 
 * Agents follow stable releases by default.
+* Agent autoupdate requires the GitHub Release to include both the target binary and a matching `.sha256` checksum file; the download must pass SHA-256 validation before the local executable is replaced.
 * The install script can be rerun to reinstall or upgrade.
 * Preview upgrades require manual action.
 
