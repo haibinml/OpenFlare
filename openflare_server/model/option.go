@@ -25,10 +25,6 @@ func AllOption() ([]*Option, error) {
 func InitOptionMap() {
 	common.OptionMapRWMutex.Lock()
 	common.OptionMap = make(map[string]string)
-	common.OptionMap["FileUploadPermission"] = strconv.Itoa(common.FileUploadPermission)
-	common.OptionMap["FileDownloadPermission"] = strconv.Itoa(common.FileDownloadPermission)
-	common.OptionMap["ImageUploadPermission"] = strconv.Itoa(common.ImageUploadPermission)
-	common.OptionMap["ImageDownloadPermission"] = strconv.Itoa(common.ImageDownloadPermission)
 	common.OptionMap["PasswordLoginEnabled"] = strconv.FormatBool(common.PasswordLoginEnabled)
 	common.OptionMap["PasswordRegisterEnabled"] = strconv.FormatBool(common.PasswordRegisterEnabled)
 	common.OptionMap["EmailVerificationEnabled"] = strconv.FormatBool(common.EmailVerificationEnabled)
@@ -95,10 +91,6 @@ func InitOptionMap() {
 	common.OptionMap["GlobalApiRateLimitDuration"] = strconv.FormatInt(common.GlobalApiRateLimitDuration, 10)
 	common.OptionMap["GlobalWebRateLimitNum"] = strconv.Itoa(common.GlobalWebRateLimitNum)
 	common.OptionMap["GlobalWebRateLimitDuration"] = strconv.FormatInt(common.GlobalWebRateLimitDuration, 10)
-	common.OptionMap["UploadRateLimitNum"] = strconv.Itoa(common.UploadRateLimitNum)
-	common.OptionMap["UploadRateLimitDuration"] = strconv.FormatInt(common.UploadRateLimitDuration, 10)
-	common.OptionMap["DownloadRateLimitNum"] = strconv.Itoa(common.DownloadRateLimitNum)
-	common.OptionMap["DownloadRateLimitDuration"] = strconv.FormatInt(common.DownloadRateLimitDuration, 10)
 	common.OptionMap["CriticalRateLimitNum"] = strconv.Itoa(common.CriticalRateLimitNum)
 	common.OptionMap["CriticalRateLimitDuration"] = strconv.FormatInt(common.CriticalRateLimitDuration, 10)
 	common.OptionMapRWMutex.Unlock()
@@ -151,19 +143,6 @@ func updateOptionMap(key string, value string) {
 		common.OptionMap = make(map[string]string)
 	}
 	common.OptionMap[key] = value
-	if strings.HasSuffix(key, "Permission") {
-		intValue, _ := strconv.Atoi(value)
-		switch key {
-		case "FileUploadPermission":
-			common.FileUploadPermission = intValue
-		case "FileDownloadPermission":
-			common.FileDownloadPermission = intValue
-		case "ImageUploadPermission":
-			common.ImageUploadPermission = intValue
-		case "ImageDownloadPermission":
-			common.ImageDownloadPermission = intValue
-		}
-	}
 	if strings.HasSuffix(key, "Enabled") {
 		boolValue := value == "true"
 		switch key {
@@ -369,22 +348,6 @@ func updateOptionMap(key string, value string) {
 	case "GlobalWebRateLimitDuration":
 		if v, err := strconv.ParseInt(value, 10, 64); err == nil && v > 0 {
 			common.GlobalWebRateLimitDuration = v
-		}
-	case "UploadRateLimitNum":
-		if v, err := strconv.Atoi(value); err == nil && v > 0 {
-			common.UploadRateLimitNum = v
-		}
-	case "UploadRateLimitDuration":
-		if v, err := strconv.ParseInt(value, 10, 64); err == nil && v > 0 {
-			common.UploadRateLimitDuration = v
-		}
-	case "DownloadRateLimitNum":
-		if v, err := strconv.Atoi(value); err == nil && v > 0 {
-			common.DownloadRateLimitNum = v
-		}
-	case "DownloadRateLimitDuration":
-		if v, err := strconv.ParseInt(value, 10, 64); err == nil && v > 0 {
-			common.DownloadRateLimitDuration = v
 		}
 	case "CriticalRateLimitNum":
 		if v, err := strconv.Atoi(value); err == nil && v > 0 {

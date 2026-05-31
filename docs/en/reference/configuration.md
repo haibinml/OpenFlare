@@ -80,8 +80,6 @@ The following options are maintained on the settings page of the management cons
 | `DatabaseAutoCleanupRetentionDays` | In-database retention days, at least 1 day | `30` |
 | `GlobalApiRateLimitNum` / `GlobalApiRateLimitDuration` | Global API rate limit count / window | `300` / `180` |
 | `GlobalWebRateLimitNum` / `GlobalWebRateLimitDuration` | Global Web rate limit count / window | `300` / `180` |
-| `UploadRateLimitNum` / `UploadRateLimitDuration` | Upload API rate limit count / window | `50` / `60` |
-| `DownloadRateLimitNum` / `DownloadRateLimitDuration` | Download API rate limit count / window | `50` / `60` |
 | `CriticalRateLimitNum` / `CriticalRateLimitDuration` | Sensitive API rate limit count / window | `100` / `1200` |
 
 Description:

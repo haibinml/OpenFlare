@@ -29,13 +29,13 @@ func validateRateLimitOption(key string, value string) error {
 	maxDurationSeconds := int(common.RateLimitKeyExpirationDuration.Seconds())
 
 	switch key {
-	case "GlobalApiRateLimitNum", "GlobalWebRateLimitNum", "UploadRateLimitNum", "DownloadRateLimitNum", "CriticalRateLimitNum":
+	case "GlobalApiRateLimitNum", "GlobalWebRateLimitNum", "CriticalRateLimitNum":
 		intValue, err := strconv.Atoi(value)
 		if err != nil || intValue <= 0 {
 			return fmt.Errorf("%s 必须为大于 0 的整数", key)
 		}
 		return nil
-	case "GlobalApiRateLimitDuration", "GlobalWebRateLimitDuration", "UploadRateLimitDuration", "DownloadRateLimitDuration", "CriticalRateLimitDuration":
+	case "GlobalApiRateLimitDuration", "GlobalWebRateLimitDuration", "CriticalRateLimitDuration":
 		intValue, err := strconv.Atoi(value)
 		if err != nil || intValue <= 0 {
 			return fmt.Errorf("%s 必须为大于 0 的整数秒", key)

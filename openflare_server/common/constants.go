@@ -139,13 +139,6 @@ const (
 	RoleRootUser   = 100
 )
 
-var (
-	FileUploadPermission    = RoleGuestUser
-	FileDownloadPermission  = RoleGuestUser
-	ImageUploadPermission   = RoleGuestUser
-	ImageDownloadPermission = RoleGuestUser
-)
-
 // All duration's unit is seconds
 // Shouldn't larger then RateLimitKeyExpirationDuration
 var (
@@ -154,12 +147,6 @@ var (
 
 	GlobalWebRateLimitNum            = 300
 	GlobalWebRateLimitDuration int64 = 3 * 60
-
-	UploadRateLimitNum            = 50
-	UploadRateLimitDuration int64 = 60
-
-	DownloadRateLimitNum            = 50
-	DownloadRateLimitDuration int64 = 60
 
 	CriticalRateLimitNum            = 100
 	CriticalRateLimitDuration int64 = 20 * 60

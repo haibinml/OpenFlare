@@ -121,10 +121,6 @@ const defaultOperationFields = {
   GlobalApiRateLimitDuration: '180',
   GlobalWebRateLimitNum: '300',
   GlobalWebRateLimitDuration: '180',
-  UploadRateLimitNum: '50',
-  UploadRateLimitDuration: '60',
-  DownloadRateLimitNum: '50',
-  DownloadRateLimitDuration: '60',
   CriticalRateLimitNum: '100',
   CriticalRateLimitDuration: '1200',
   ServerAddress: '',
@@ -428,10 +424,6 @@ export function SettingsPage() {
       GlobalApiRateLimitDuration: optionMap.GlobalApiRateLimitDuration ?? '180',
       GlobalWebRateLimitNum: optionMap.GlobalWebRateLimitNum ?? '300',
       GlobalWebRateLimitDuration: optionMap.GlobalWebRateLimitDuration ?? '180',
-      UploadRateLimitNum: optionMap.UploadRateLimitNum ?? '50',
-      UploadRateLimitDuration: optionMap.UploadRateLimitDuration ?? '60',
-      DownloadRateLimitNum: optionMap.DownloadRateLimitNum ?? '50',
-      DownloadRateLimitDuration: optionMap.DownloadRateLimitDuration ?? '60',
       CriticalRateLimitNum: optionMap.CriticalRateLimitNum ?? '100',
       CriticalRateLimitDuration: optionMap.CriticalRateLimitDuration ?? '1200',
       ServerAddress: resolvedServerAddress,
@@ -1729,22 +1721,6 @@ export function SettingsPage() {
                         operationFields.GlobalWebRateLimitDuration,
                       ],
                       [
-                        'UploadRateLimitNum',
-                        operationFields.UploadRateLimitNum,
-                      ],
-                      [
-                        'UploadRateLimitDuration',
-                        operationFields.UploadRateLimitDuration,
-                      ],
-                      [
-                        'DownloadRateLimitNum',
-                        operationFields.DownloadRateLimitNum,
-                      ],
-                      [
-                        'DownloadRateLimitDuration',
-                        operationFields.DownloadRateLimitDuration,
-                      ],
-                      [
                         'CriticalRateLimitNum',
                         operationFields.CriticalRateLimitNum,
                       ],
@@ -1856,68 +1832,6 @@ export function SettingsPage() {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-[var(--border-default)] bg-[var(--surface-elevated)] p-5">
-                <p className="text-sm font-semibold text-[var(--foreground-primary)]">
-                  上传 / 下载限流
-                </p>
-                <p className="mt-1 text-sm text-[var(--foreground-muted)]">
-                  用于文件上传与下载接口，建议保留相对严格的阈值。
-                </p>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  <ResourceField label="上传请求次数">
-                    <ResourceInput
-                      type="number"
-                      value={operationFields.UploadRateLimitNum}
-                      onChange={(event) =>
-                        setOperationFields((previous) => ({
-                          ...previous,
-                          UploadRateLimitNum: event.target.value,
-                        }))
-                      }
-                    />
-                  </ResourceField>
-                  <ResourceField
-                    label={`上传窗口 (${formatSecondsLabel(operationFields.UploadRateLimitDuration)})`}
-                  >
-                    <ResourceInput
-                      type="number"
-                      value={operationFields.UploadRateLimitDuration}
-                      onChange={(event) =>
-                        setOperationFields((previous) => ({
-                          ...previous,
-                          UploadRateLimitDuration: event.target.value,
-                        }))
-                      }
-                    />
-                  </ResourceField>
-                  <ResourceField label="下载请求次数">
-                    <ResourceInput
-                      type="number"
-                      value={operationFields.DownloadRateLimitNum}
-                      onChange={(event) =>
-                        setOperationFields((previous) => ({
-                          ...previous,
-                          DownloadRateLimitNum: event.target.value,
-                        }))
-                      }
-                    />
-                  </ResourceField>
-                  <ResourceField
-                    label={`下载窗口 (${formatSecondsLabel(operationFields.DownloadRateLimitDuration)})`}
-                  >
-                    <ResourceInput
-                      type="number"
-                      value={operationFields.DownloadRateLimitDuration}
-                      onChange={(event) =>
-                        setOperationFields((previous) => ({
-                          ...previous,
-                          DownloadRateLimitDuration: event.target.value,
-                        }))
-                      }
-                    />
-                  </ResourceField>
-                </div>
-              </div>
 
               <div className="rounded-2xl border border-[var(--border-default)] bg-[var(--surface-elevated)] p-5">
                 <p className="text-sm font-semibold text-[var(--foreground-primary)]">
