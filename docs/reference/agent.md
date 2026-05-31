@@ -89,7 +89,7 @@ curl -fsSL https://raw.githubusercontent.com/Rain-kl/OpenFlare/main/scripts/inst
 }
 ```
 
-如果不配置 `openresty_path`，Agent 默认调用 `openresty`。完整字段见 [配置项参考](../reference/configuration.md#agent-配置字段)。
+如果不配置 `openresty_path`，Agent 默认调用 `openresty`。完整字段见 [配置项参考](./configuration.md#agent-配置字段)。
 
 ## Docker 运行
 

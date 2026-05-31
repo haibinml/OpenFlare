@@ -69,13 +69,8 @@ function sidebarGuide(): DefaultTheme.SidebarItem[] {
         { text: '概览', link: '' },
         { text: '快速开始', link: 'quick-start' },
         { text: '基础使用', link: 'usage' },
-        { text: '部署说明', link: 'deployment' },
         { text: 'SSO 登录配置', link: 'sso' },
-        { text: '启动 Server', link: 'server' },
-        { text: '接入 Agent', link: 'agent' },
         { text: '发布第一份配置', link: 'first-site' },
-        { text: '升级与维护', link: 'upgrade' },
-        { text: '本地开发', link: 'development' },
         { text: '故障排查', link: 'troubleshooting' }
       ]
     }
@@ -88,10 +83,14 @@ function sidebarReference(): DefaultTheme.SidebarItem[] {
       text: '参考',
       items: [
         { text: '概览', link: '' },
+        { text: '系统架构', link: '../design/architecture' },
+        { text: '启动 Server', link: 'server' },
+        { text: '接入 Agent', link: 'agent' },
+        { text: '部署说明', link: 'deployment' },
+        { text: '升级与维护', link: 'upgrade' },
         { text: '配置项', link: 'configuration' },
         { text: '命令与脚本', link: 'cli' },
-        { text: 'API 约定', link: 'api' },
-        { text: '仓库结构', link: 'repository' }
+        { text: 'API 约定', link: 'api' }
       ]
     }
   ]
@@ -105,7 +104,8 @@ function sidebarDesign(): DefaultTheme.SidebarItem[] {
         { text: '产品边界', link: '' },
         { text: '系统架构', link: 'architecture' },
         { text: '发布模型', link: 'release-model' },
-        { text: '开发约束', link: 'development' }
+        { text: '本地开发', link: 'development' },
+        { text: '仓库结构', link: 'repository' }
       ]
     }
   ]
