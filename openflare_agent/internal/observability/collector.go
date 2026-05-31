@@ -40,7 +40,7 @@ func BuildProfile(cfg *config.Config, stateStore *state.Store) *protocol.NodeSys
 	return profile
 }
 
-func BuildSnapshot(cfg *config.Config, stateStore *state.Store, managed *managedOpenRestyMetrics) *protocol.NodeMetricSnapshot {
+func BuildSnapshot(cfg *config.Config, stateStore *state.Store, managed *ManagedOpenRestyMetrics) *protocol.NodeMetricSnapshot {
 	now := time.Now().UTC()
 	metric := &protocol.NodeMetricSnapshot{
 		CapturedAtUnix: now.Unix(),

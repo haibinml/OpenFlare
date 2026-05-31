@@ -18,7 +18,7 @@ const openRestyStubStatusPath = "/openflare/stub_status"
 
 var stubStatusActivePattern = regexp.MustCompile(`Active connections:\s+(\d+)`)
 
-type managedOpenRestyMetrics struct {
+type ManagedOpenRestyMetrics struct {
 	TrafficReport        *protocol.NodeTrafficReport
 	OpenrestyRxBytes     int64
 	OpenrestyTxBytes     int64
@@ -38,7 +38,7 @@ type openRestyObservabilityResponse struct {
 	OpenrestyTxBytes    int64            `json:"openresty_tx_bytes"`
 }
 
-func CollectManagedOpenRestyMetrics(cfg *config.Config) *managedOpenRestyMetrics {
+func CollectManagedOpenRestyMetrics(cfg *config.Config) *ManagedOpenRestyMetrics {
 	if cfg == nil || cfg.OpenrestyObservabilityPort <= 0 {
 		return nil
 	}
@@ -51,7 +51,7 @@ func CollectManagedOpenRestyMetrics(cfg *config.Config) *managedOpenRestyMetrics
 		return nil
 	}
 
-	result := &managedOpenRestyMetrics{
+	result := &ManagedOpenRestyMetrics{
 		TrafficReport: &protocol.NodeTrafficReport{
 			WindowStartedAtUnix: observabilityResp.WindowStartedAtUnix,
 			WindowEndedAtUnix:   observabilityResp.WindowEndedAtUnix,

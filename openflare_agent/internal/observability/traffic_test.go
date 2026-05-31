@@ -167,7 +167,7 @@ func TestBuildTrafficReportParsesCombinedAccessLog(t *testing.T) {
 }
 
 func TestBuildTrafficReportReturnsManagedWindowEvenWhenRequestCountZero(t *testing.T) {
-	report := BuildTrafficReport(nil, nil, &managedOpenRestyMetrics{
+	report := BuildTrafficReport(nil, nil, &ManagedOpenRestyMetrics{
 		TrafficReport: &protocol.NodeTrafficReport{
 			WindowStartedAtUnix: 1710403200,
 			WindowEndedAtUnix:   1710403260,

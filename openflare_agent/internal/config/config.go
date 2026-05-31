@@ -221,41 +221,24 @@ func normalizeManagedPaths(cfg *Config) {
 	if cfg == nil {
 		return
 	}
-	if usesSlashPath(cfg.DataDir) {
-		cfg.DataDir = filepath.ToSlash(cfg.DataDir)
+	paths := []*string{
+		&cfg.DataDir,
+		&cfg.MainConfigPath,
+		&cfg.RouteConfigPath,
+		&cfg.AccessLogPath,
+		&cfg.CertDir,
+		&cfg.OpenrestyCertDir,
+		&cfg.LuaDir,
+		&cfg.OpenrestyLuaDir,
+		&cfg.RuntimeConfigDir,
+		&cfg.StatePath,
+		&cfg.ObservabilityBufferPath,
+		&cfg.MMDBPath,
 	}
-	if usesSlashPath(cfg.MainConfigPath) {
-		cfg.MainConfigPath = filepath.ToSlash(cfg.MainConfigPath)
-	}
-	if usesSlashPath(cfg.RouteConfigPath) {
-		cfg.RouteConfigPath = filepath.ToSlash(cfg.RouteConfigPath)
-	}
-	if usesSlashPath(cfg.AccessLogPath) {
-		cfg.AccessLogPath = filepath.ToSlash(cfg.AccessLogPath)
-	}
-	if usesSlashPath(cfg.CertDir) {
-		cfg.CertDir = filepath.ToSlash(cfg.CertDir)
-	}
-	if usesSlashPath(cfg.OpenrestyCertDir) {
-		cfg.OpenrestyCertDir = filepath.ToSlash(cfg.OpenrestyCertDir)
-	}
-	if usesSlashPath(cfg.LuaDir) {
-		cfg.LuaDir = filepath.ToSlash(cfg.LuaDir)
-	}
-	if usesSlashPath(cfg.OpenrestyLuaDir) {
-		cfg.OpenrestyLuaDir = filepath.ToSlash(cfg.OpenrestyLuaDir)
-	}
-	if usesSlashPath(cfg.RuntimeConfigDir) {
-		cfg.RuntimeConfigDir = filepath.ToSlash(cfg.RuntimeConfigDir)
-	}
-	if usesSlashPath(cfg.StatePath) {
-		cfg.StatePath = filepath.ToSlash(cfg.StatePath)
-	}
-	if usesSlashPath(cfg.ObservabilityBufferPath) {
-		cfg.ObservabilityBufferPath = filepath.ToSlash(cfg.ObservabilityBufferPath)
-	}
-	if usesSlashPath(cfg.MMDBPath) {
-		cfg.MMDBPath = filepath.ToSlash(cfg.MMDBPath)
+	for _, p := range paths {
+		if usesSlashPath(*p) {
+			*p = filepath.ToSlash(*p)
+		}
 	}
 }
 
@@ -404,15 +387,6 @@ func detectHostname() string {
 		return ""
 	}
 	return strings.TrimSpace(host)
-}
-
-func firstNonEmpty(values ...string) string {
-	for _, value := range values {
-		if strings.TrimSpace(value) != "" {
-			return value
-		}
-	}
-	return ""
 }
 
 func detectNodeIP() string {

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log/slog"
 	"openflare-agent/internal/config"
 	"openflare-agent/internal/protocol"
 	"openflare-agent/internal/state"
@@ -26,7 +27,7 @@ type accessLogRecord struct {
 	RequestLength int64  `json:"request_length"`
 }
 
-var combinedAccessLogPattern = regexp.MustCompile(`^(\S+)\s+\S+\s+\S+\s+\[([^\]]+)\]\s+"(?:\S+)\s+(\S+)(?:\s+[^"]*)?"\s+(\d{3})\s+\S+`)
+var combinedAccessLogPattern = regexp.MustCompile(`^(\S+)\s+\S+\s+\S+\s+\[([^]]+)]\s+"\S+\s+(\S+)(?:\s+[^"]*)?"\s+(\d{3})\s+\S+`)
 
 type trafficAggregate struct {
 	windowStartedAt  time.Time
@@ -41,12 +42,12 @@ type trafficAggregate struct {
 	logs             []protocol.NodeAccessLog
 }
 
-func BuildTrafficReport(cfg *config.Config, stateStore *state.Store, managed *managedOpenRestyMetrics) *protocol.NodeTrafficReport {
+func BuildTrafficReport(cfg *config.Config, stateStore *state.Store, managed *ManagedOpenRestyMetrics) *protocol.NodeTrafficReport {
 	report, _, _ := BuildTrafficObservability(cfg, stateStore, managed)
 	return report
 }
 
-func BuildTrafficObservability(cfg *config.Config, stateStore *state.Store, managed *managedOpenRestyMetrics) (*protocol.NodeTrafficReport, []protocol.NodeAccessLog, *managedOpenRestyMetrics) {
+func BuildTrafficObservability(cfg *config.Config, stateStore *state.Store, managed *ManagedOpenRestyMetrics) (*protocol.NodeTrafficReport, []protocol.NodeAccessLog, *ManagedOpenRestyMetrics) {
 	if cfg == nil || stateStore == nil {
 		if managed != nil && managed.TrafficReport != nil {
 			return managed.TrafficReport, nil, managed
@@ -55,7 +56,7 @@ func BuildTrafficObservability(cfg *config.Config, stateStore *state.Store, mana
 	}
 
 	aggregate := readAccessLogDelta(cfg, stateStore)
-	accessLogs := []protocol.NodeAccessLog{}
+	var accessLogs []protocol.NodeAccessLog
 	if aggregate != nil {
 		accessLogs = aggregate.accessLogs()
 	}
@@ -87,7 +88,12 @@ func readAccessLogDelta(cfg *config.Config, stateStore *state.Store) *trafficAgg
 		}
 		return nil
 	}
-	defer file.Close()
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			slog.Error("failed to close access log file", "error", err)
+		}
+	}(file)
 
 	info, err := file.Stat()
 	if err != nil {
@@ -270,7 +276,7 @@ func (aggregate *trafficAggregate) accessLogs() []protocol.NodeAccessLog {
 	return append([]protocol.NodeAccessLog(nil), aggregate.logs...)
 }
 
-func (aggregate *trafficAggregate) managedMetrics() *managedOpenRestyMetrics {
+func (aggregate *trafficAggregate) managedMetrics() *ManagedOpenRestyMetrics {
 	if aggregate == nil {
 		return nil
 	}
@@ -278,7 +284,7 @@ func (aggregate *trafficAggregate) managedMetrics() *managedOpenRestyMetrics {
 	if report == nil && aggregate.openrestyRxBytes <= 0 && aggregate.openrestyTxBytes <= 0 {
 		return nil
 	}
-	return &managedOpenRestyMetrics{
+	return &ManagedOpenRestyMetrics{
 		TrafficReport:    report,
 		OpenrestyRxBytes: aggregate.openrestyRxBytes,
 		OpenrestyTxBytes: aggregate.openrestyTxBytes,

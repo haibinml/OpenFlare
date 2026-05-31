@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -107,7 +108,12 @@ func (c *Client) do(req *http.Request, target any) error {
 		slog.Error("http request failed", "method", req.Method, "path", req.URL.Path, "error", err)
 		return err
 	}
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			slog.Error("failed to close response body", "error", err)
+		}
+	}(res.Body)
 	if res.StatusCode != http.StatusOK {
 		slog.Warn("http request returned non-200", "method", req.Method, "path", req.URL.Path, "status", res.Status)
 		return errors.New(res.Status)
