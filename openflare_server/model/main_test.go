@@ -2,7 +2,13 @@ package model
 
 import (
 	"encoding/json"
+	"go/ast"
+	"go/parser"
+	"go/token"
+	"os"
 	"path/filepath"
+	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -513,5 +519,75 @@ func TestEnsureDatabaseSchemaUpToDateAddsNodeIPManualOverride(t *testing.T) {
 	}
 	if version != currentDatabaseSchemaVersion {
 		t.Fatalf("unexpected schema version: got %d want %d", version, currentDatabaseSchemaVersion)
+	}
+}
+
+func TestAllRegisteredMigrationsHaveValidationDefined(t *testing.T) {
+	ctx := databaseSchemaMigrationContext{}
+	for _, migration := range databaseSchemaMigrations() {
+		err := ctx.ValidateDatabaseSchemaVersion(nil, "sqlite", migration.toVersion)
+		if err != nil && strings.Contains(err.Error(), "is not defined") {
+			t.Fatalf("Validation is not defined in migrations.go for registered migration version v%d: %v", migration.toVersion, err)
+		}
+	}
+}
+
+func TestAllGORMModelsAreRegistered(t *testing.T) {
+	// 1. Gather all registered model names
+	registeredNames := make(map[string]bool)
+	for _, item := range registeredModels() {
+		name := reflect.TypeOf(item).Elem().Name()
+		registeredNames[name] = true
+	}
+	for _, item := range schemaMetadataModels() {
+		name := reflect.TypeOf(item).Elem().Name()
+		registeredNames[name] = true
+	}
+
+	// 2. Parse all .go files in model/ package
+	fset := token.NewFileSet()
+	pkgs, err := parser.ParseDir(fset, ".", func(info os.FileInfo) bool {
+		// Only parse .go files, exclude _test.go files and subdirectories
+		return !info.IsDir() && strings.HasSuffix(info.Name(), ".go") && !strings.HasSuffix(info.Name(), "_test.go")
+	}, 0)
+	if err != nil {
+		t.Fatalf("failed to parse directory: %v", err)
+	}
+
+	for _, pkg := range pkgs {
+		for _, file := range pkg.Files {
+			for _, decl := range file.Decls {
+				genDecl, ok := decl.(*ast.GenDecl)
+				if !ok || genDecl.Tok != token.TYPE {
+					continue
+				}
+				for _, spec := range genDecl.Specs {
+					typeSpec, ok := spec.(*ast.TypeSpec)
+					if !ok {
+						continue
+					}
+					structType, ok := typeSpec.Type.(*ast.StructType)
+					if !ok {
+						continue
+					}
+
+					// Verify if this struct has any field with a `gorm:"..."` tag
+					isGORMModel := false
+					for _, field := range structType.Fields.List {
+						if field.Tag != nil && strings.Contains(field.Tag.Value, "gorm:") {
+							isGORMModel = true
+							break
+						}
+					}
+
+					if isGORMModel {
+						structName := typeSpec.Name.Name
+						if !registeredNames[structName] {
+							t.Errorf("Model struct %q is defined with GORM tags but is NOT registered in registeredModels() or schemaMetadataModels() in model/main.go!", structName)
+						}
+					}
+				}
+			}
+		}
 	}
 }
