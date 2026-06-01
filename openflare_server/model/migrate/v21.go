@@ -32,9 +32,20 @@ func migrateV21(ctx Context, db *gorm.DB, backend string) error {
 
 	migrator := db.Migrator()
 
+	// Rename agent_token → access_token (target may already exist if AutoMigrate ran earlier)
 	if migrator.HasColumn(&nodeV21{}, "agent_token") {
-		if err := migrator.RenameColumn(&nodeV21{}, "agent_token", "access_token"); err != nil {
-			return fmt.Errorf("failed to rename agent_token to access_token: %w", err)
+		if migrator.HasColumn(&nodeV21{}, "access_token") {
+			slog.Info("v21: access_token column already exists, backfilling from agent_token")
+			if err := db.Exec(`UPDATE nodes SET access_token = agent_token WHERE access_token IS NULL OR access_token = ''`).Error; err != nil {
+				return fmt.Errorf("failed to backfill access_token from agent_token: %w", err)
+			}
+			if err := migrator.DropColumn(&nodeV21{}, "agent_token"); err != nil {
+				slog.Warn("failed to drop agent_token after backfill", "error", err)
+			}
+		} else {
+			if err := migrator.RenameColumn(&nodeV21{}, "agent_token", "access_token"); err != nil {
+				return fmt.Errorf("failed to rename agent_token to access_token: %w", err)
+			}
 		}
 	}
 
