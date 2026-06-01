@@ -77,6 +77,9 @@ func migrateV16(ctx Context, db *gorm.DB, backend string) error {
 			return fmt.Errorf("backfill nodes.ext_version from nginx_version: %w", err)
 		}
 	}
+	if err := ctx.DropLegacyNodeColumns(db, backend); err != nil {
+		return err
+	}
 
 	if err := db.Exec("UPDATE nodes SET node_type = 'edge_node' WHERE node_type = '' OR node_type IS NULL").Error; err != nil {
 		return fmt.Errorf("backfill nodes.node_type: %w", err)
@@ -144,6 +147,19 @@ func validateV16(ctx Context, db *gorm.DB, backend string) error {
 	}
 	if migrator.HasTable(&tunnelV16{}) {
 		return fmt.Errorf("table tunnels should not exist in v16")
+	}
+	for _, column := range []string{
+		"agent_token",
+		"agent_version",
+		"nginx_version",
+		"relay_version",
+		"relay_frp_version",
+		"relay_frps_connections",
+		"relay_frps_proxy_count",
+	} {
+		if migrator.HasColumn(&nodeV16{}, column) {
+			return fmt.Errorf("column nodes.%s should not exist in v16", column)
+		}
 	}
 	if !migrator.HasTable(&wafIPGroupV16{}) {
 		return fmt.Errorf("table waf_ip_groups is missing")

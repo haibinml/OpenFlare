@@ -18,6 +18,7 @@ type Context interface {
 	BackfillProxyRouteDomainCertificateFields(db *gorm.DB) error
 	EnsureDefaultGitHubAuthSource(db *gorm.DB) error
 	EnsureDefaultWAFRuleGroup(db *gorm.DB) error
+	DropLegacyNodeColumns(db *gorm.DB, backend string) error
 	ValidateDatabaseSchemaVersion(db *gorm.DB, backend string, version int) error
 }
 

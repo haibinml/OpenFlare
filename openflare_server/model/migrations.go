@@ -60,6 +60,10 @@ func (databaseSchemaMigrationContext) EnsureDefaultWAFRuleGroup(db *gorm.DB) err
 	return ensureDefaultWAFRuleGroup(db)
 }
 
+func (databaseSchemaMigrationContext) DropLegacyNodeColumns(db *gorm.DB, backend string) error {
+	return dropLegacyNodeColumns(db, backend)
+}
+
 func (databaseSchemaMigrationContext) ValidateDatabaseSchemaVersion(db *gorm.DB, backend string, version int) error {
 	switch version {
 	case 7:
@@ -179,6 +183,50 @@ func migrateObservabilityLegacyColumns(db *gorm.DB) error {
 
 func applyCurrentSchema(db *gorm.DB, backend string) error {
 	return applyCurrentSchemaExcept(db, backend)
+}
+
+func databaseColumnExists(db *gorm.DB, tableName string, columnName string) (bool, error) {
+	columnTypes, err := db.Migrator().ColumnTypes(tableName)
+	if err != nil {
+		return false, err
+	}
+	for _, columnType := range columnTypes {
+		if strings.EqualFold(columnType.Name(), columnName) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func dropLegacyNodeColumns(db *gorm.DB, backend string) error {
+	if db == nil || !db.Migrator().HasTable(&Node{}) {
+		return nil
+	}
+	legacyColumns := []struct {
+		column string
+	}{
+		{column: "agent_token"},
+		{column: "agent_version"},
+		{column: "nginx_version"},
+		{column: "relay_version"},
+		{column: "relay_frp_version"},
+		{column: "relay_frps_connections"},
+		{column: "relay_frps_proxy_count"},
+	}
+	for _, item := range legacyColumns {
+		exists, err := databaseColumnExists(db, "nodes", item.column)
+		if err != nil {
+			return fmt.Errorf("inspect legacy nodes.%s failed: %w", item.column, err)
+		}
+		if !exists {
+			continue
+		}
+		if err := db.Exec(fmt.Sprintf(`ALTER TABLE "nodes" DROP COLUMN "%s"`, item.column)).Error; err != nil {
+			return fmt.Errorf("drop legacy nodes.%s failed: %w", item.column, err)
+		}
+	}
+	_ = backend
+	return nil
 }
 
 func applyCurrentSchemaExcept(db *gorm.DB, backend string, excludedTables ...string) error {
@@ -1221,6 +1269,23 @@ func validateDatabaseSchemaV16(db *gorm.DB, backend string) error {
 	if db.Migrator().HasColumn(&ProxyRoute{}, "tunnel_id") {
 		return fmt.Errorf("column proxy_routes.tunnel_id should not exist in v16")
 	}
+	for _, column := range []string{
+		"agent_token",
+		"agent_version",
+		"nginx_version",
+		"relay_version",
+		"relay_frp_version",
+		"relay_frps_connections",
+		"relay_frps_proxy_count",
+	} {
+		exists, err := databaseColumnExists(db, "nodes", column)
+		if err != nil {
+			return fmt.Errorf("inspect legacy nodes.%s failed: %w", column, err)
+		}
+		if exists {
+			return fmt.Errorf("column nodes.%s should not exist in v16", column)
+		}
+	}
 	if !db.Migrator().HasTable(&WAFIPGroup{}) {
 		return fmt.Errorf("table waf_ip_groups is missing")
 	}
@@ -1372,7 +1437,10 @@ func ensureDatabaseSchemaUpToDate(db *gorm.DB, backend string) error {
 		return err
 	}
 	if exists {
-		return upgradeDatabaseSchema(db, backend, version)
+		if err := upgradeDatabaseSchema(db, backend, version); err != nil {
+			return err
+		}
+		return dropLegacyNodeColumns(db, backend)
 	}
 	empty, err := isDatabaseEmpty(db)
 	if err != nil {

@@ -592,8 +592,22 @@ func TestEnsureDatabaseSchemaUpToDateV16BackfillsNodeColumnsWhenNewColumnsAlread
 	if node.ExtVersion != "openresty/1.25.3" {
 		t.Fatalf("unexpected ext_version: got %q", node.ExtVersion)
 	}
-	if !db.Migrator().HasColumn(&Node{}, "agent_token") {
-		t.Fatal("expected migration to keep legacy nodes.agent_token column")
+	for _, column := range []string{
+		"agent_token",
+		"agent_version",
+		"nginx_version",
+		"relay_version",
+		"relay_frp_version",
+		"relay_frps_connections",
+		"relay_frps_proxy_count",
+	} {
+		exists, err := databaseColumnExists(db, "nodes", column)
+		if err != nil {
+			t.Fatalf("inspect legacy nodes.%s: %v", column, err)
+		}
+		if exists {
+			t.Fatalf("expected migration to drop legacy nodes.%s column", column)
+		}
 	}
 	version, exists, err := loadDatabaseSchemaVersion(db)
 	if err != nil {
@@ -604,6 +618,42 @@ func TestEnsureDatabaseSchemaUpToDateV16BackfillsNodeColumnsWhenNewColumnsAlread
 	}
 	if version != currentDatabaseSchemaVersion {
 		t.Fatalf("unexpected schema version: got %d want %d", version, currentDatabaseSchemaVersion)
+	}
+}
+
+func TestEnsureDatabaseSchemaUpToDateV16DropsLegacyNodeColumnsWhenAlreadyCurrent(t *testing.T) {
+	db := openBareTestSQLiteDB(t, "node-v16-current-legacy-columns.db")
+	if err := registerSharding(db, "sqlite"); err != nil {
+		t.Fatalf("register sharding: %v", err)
+	}
+	if err := applyCurrentSchema(db, "sqlite"); err != nil {
+		t.Fatalf("apply current schema: %v", err)
+	}
+	for _, stmt := range []string{
+		`ALTER TABLE nodes ADD COLUMN agent_token text`,
+		`ALTER TABLE nodes ADD COLUMN agent_version text`,
+		`ALTER TABLE nodes ADD COLUMN nginx_version text`,
+	} {
+		if err := db.Exec(stmt).Error; err != nil {
+			t.Fatalf("prepare legacy node column with %q: %v", stmt, err)
+		}
+	}
+	if err := saveDatabaseSchemaVersion(db, currentDatabaseSchemaVersion); err != nil {
+		t.Fatalf("save schema version: %v", err)
+	}
+
+	if err := ensureDatabaseSchemaUpToDate(db, "sqlite"); err != nil {
+		t.Fatalf("ensureDatabaseSchemaUpToDate: %v", err)
+	}
+
+	for _, column := range []string{"agent_token", "agent_version", "nginx_version"} {
+		exists, err := databaseColumnExists(db, "nodes", column)
+		if err != nil {
+			t.Fatalf("inspect legacy nodes.%s: %v", column, err)
+		}
+		if exists {
+			t.Fatalf("expected current-schema cleanup to drop legacy nodes.%s column", column)
+		}
 	}
 }
 
