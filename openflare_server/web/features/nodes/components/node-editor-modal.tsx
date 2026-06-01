@@ -143,7 +143,7 @@ const defaultValues: NodeEditorValues = {
   relay_client_access_addr: '',
   relay_agent_access_addr: '',
   relay_client_proxy_url: '',
-  relay_web_server_enabled: false,
+  relay_web_server_enabled: true,
   geo_manual_override: false,
   geo_region: '',
   geo_name: '',

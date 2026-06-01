@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -152,20 +151,13 @@ func persistRelayHeartbeatObservability(nodeID string, payload RelayHeartbeatPay
 		HealthEvents: payload.HealthEvents,
 	}, reportedAt)
 
-	var proxiesJSON string
-	if len(payload.FrpsProxies) > 0 {
-		if data, err := json.Marshal(payload.FrpsProxies); err == nil {
-			proxiesJSON = string(data)
-		}
-	}
-
 	frpsObs := &model.NodeObservationFrps{
 		NodeID:          nodeID,
 		CapturedAt:      reportedAt,
-		FrpsConnections: payload.FrpsConnCount,
-		FrpsProxyCount:  payload.FrpsProxyCount,
-		FrpsClientCount: payload.FrpsClientCount,
-		FrpsProxies:     proxiesJSON,
+		FrpsConnections: 0,
+		FrpsProxyCount:  0,
+		FrpsClientCount: 0,
+		FrpsProxies:     "",
 	}
 	_ = frpsObs.Insert()
 }

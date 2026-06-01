@@ -461,53 +461,6 @@ export function RelayDetailPage({ node }: { node: NodeItem }) {
 
         {activeTab === 'dashboard' ? (
           <>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <SummaryStat
-                label="运行诊断"
-                value={
-                  activeHealthEvents.length
-                    ? `${activeHealthEvents.length} 个活动异常`
-                    : '运行稳定'
-                }
-                hint={
-                  latestHealthEvent
-                    ? `${getHealthEventLabel(latestHealthEvent)} · ${latestHealthEvent.message || '等待处理'}`
-                    : '当前没有活动中的健康事件'
-                }
-              />
-              <SummaryStat
-                label="中继代理总数"
-                value={
-                  observability?.relay_dashboard
-                    ? `${observability.relay_dashboard.total_proxies}`
-                    : '—'
-                }
-                hint={
-                  observability?.relay_dashboard
-                    ? `${observability.relay_dashboard.online_proxies} 个在线，${observability.relay_dashboard.offline_proxies} 个离线`
-                    : '暂无代理通道统计'
-                }
-              />
-              <SummaryStat
-                label="活动并发连接数"
-                value={
-                  observability?.relay_dashboard
-                    ? `${observability.relay_dashboard.total_connections}`
-                    : '—'
-                }
-                hint="中继代理网络承载的当前活动连接总数"
-              />
-              <SummaryStat
-                label="活动客户端"
-                value={
-                  observability?.relay_dashboard
-                    ? `${observability.relay_dashboard.client_counts}`
-                    : '—'
-                }
-                hint="已注册连接到该中继的主动客户端数量"
-              />
-            </div>
-
             <div className="grid gap-6 xl:grid-cols-3">
               <AppCard title="系统画像">
                 {observabilityQuery.isLoading ? (
@@ -780,65 +733,7 @@ export function RelayDetailPage({ node }: { node: NodeItem }) {
               </AppCard>
             </div>
 
-            <div className="grid gap-6 xl:grid-cols-1">
-              <AppCard
-                title="隧道活跃通道状态"
-                description="展示中继节点上活跃并连接的 frps 网络隧道代理。"
-              >
-                {observability?.relay_dashboard?.proxies?.length ? (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm text-[var(--foreground-secondary)]">
-                      <thead className="border-b border-[var(--border-default)]">
-                        <tr>
-                          <th className="px-4 py-3 font-medium">
-                            代理名称 (Proxy Name)
-                          </th>
-                          <th className="px-4 py-3 font-medium">代理类型</th>
-                          <th className="px-4 py-3 font-medium">在线状态</th>
-                          <th className="px-4 py-3 font-medium">
-                            客户端接入地址
-                          </th>
-                          <th className="px-4 py-3 font-medium">
-                            最近连接时间
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[var(--border-default)]">
-                        {observability.relay_dashboard.proxies.map((proxy) => (
-                          <tr key={proxy.name}>
-                            <td className="px-4 py-3 font-medium text-[var(--foreground-primary)]">
-                              {proxy.name}
-                            </td>
-                            <td className="px-4 py-3">{proxy.type}</td>
-                            <td className="px-4 py-3">
-                              <StatusBadge
-                                label={
-                                  proxy.status === 'online' ? '在线' : '离线'
-                                }
-                                variant={
-                                  proxy.status === 'online' ? 'success' : 'info'
-                                }
-                              />
-                            </td>
-                            <td className="px-4 py-3">{proxy.client_addr}</td>
-                            <td className="px-4 py-3">
-                              {isMeaningfulTime(proxy.last_start_time)
-                                ? formatRelativeTime(proxy.last_start_time)
-                                : '—'}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <EmptyState
-                    title="暂无通道活动"
-                    description="当前没有隧道客户端连接到该中继节点。"
-                  />
-                )}
-              </AppCard>
-            </div>
+
           </>
         ) : null}
 

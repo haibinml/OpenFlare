@@ -93,7 +93,8 @@ func TestHeartbeatRelayPersistsRuntimeAndObservability(t *testing.T) {
 	if observability.RelayDashboard == nil {
 		t.Fatal("expected relay dashboard snapshot")
 	}
-	if observability.RelayDashboard.TotalConnections != 7 || observability.RelayDashboard.TotalProxies != 3 {
+	if observability.RelayDashboard.TotalConnections != 0 || observability.RelayDashboard.TotalProxies != 0 {
+		// Frps telemetry collection is disabled; dashboard values are always zero.
 		t.Fatalf("unexpected relay dashboard: %+v", observability.RelayDashboard)
 	}
 }
