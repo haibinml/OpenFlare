@@ -191,6 +191,7 @@ func normalizeRelayStatus(status string) string {
 type FlaredHeartbeatPayload struct {
 	ClientVersion   string                 `json:"client_version"`
 	FrpVersion      string                 `json:"frp_version"`
+	IP              string                 `json:"ip"`
 	TunnelStatus    string                 `json:"tunnel_status"`
 	ConnectedRelays []FlaredConnectedRelay `json:"connected_relays"`
 	CurrentVersion  string                 `json:"current_version"`
@@ -200,6 +201,7 @@ type FlaredHeartbeatPayload struct {
 func normalizeFlaredHeartbeatPayload(payload FlaredHeartbeatPayload) FlaredHeartbeatPayload {
 	payload.ClientVersion = strings.TrimSpace(payload.ClientVersion)
 	payload.FrpVersion = strings.TrimSpace(payload.FrpVersion)
+	payload.IP = strings.TrimSpace(payload.IP)
 	payload.TunnelStatus = strings.ToLower(strings.TrimSpace(payload.TunnelStatus))
 	payload.CurrentVersion = strings.TrimSpace(payload.CurrentVersion)
 	payload.CurrentChecksum = strings.TrimSpace(payload.CurrentChecksum)
@@ -255,8 +257,23 @@ func HeartbeatFlared(node *model.Node, payload FlaredHeartbeatPayload) (*FlaredH
 	node.CurrentVersion = payload.CurrentVersion
 	node.LastSeenAt = now
 	node.Status = NodeStatusOnline
+
+	if !node.IPManualOverride && payload.IP != "" && previous.IP != payload.IP {
+		changes["ip"] = payload.IP
+		node.IP = payload.IP
+	}
+
 	if !node.GeoManualOverride {
 		applyGeoInfoFromIP(node, node.IP)
+		if previous.GeoName != node.GeoName {
+			changes["geo_name"] = node.GeoName
+		}
+		if !coordinatesEqual(previous.GeoLatitude, node.GeoLatitude) {
+			changes["geo_latitude"] = node.GeoLatitude
+		}
+		if !coordinatesEqual(previous.GeoLongitude, node.GeoLongitude) {
+			changes["geo_longitude"] = node.GeoLongitude
+		}
 	}
 
 	if len(changes) > 0 {

@@ -3,12 +3,20 @@ package heartbeat
 import (
 	"context"
 	"log/slog"
+	"net"
 	"time"
 
 	"openflare-flared/internal/config"
 	"openflare-flared/internal/frpc"
 	"openflare-flared/internal/httpclient"
 	"openflare/service"
+	"openflare/utils/geoip"
+	"openflare/utils/geoip/iputil"
+)
+
+var (
+	lookupOutboundIP = geoip.GetOutboundIP
+	lookupLocalIP    = detectLocalNodeIP
 )
 
 type Service struct {
@@ -45,9 +53,12 @@ func (s *Service) Run(ctx context.Context) {
 func (s *Service) doHeartbeat(ctx context.Context) {
 	slog.Debug("sending flared heartbeat")
 
+	ip := detectNodeIP()
+
 	payload := service.FlaredHeartbeatPayload{
 		ClientVersion:   config.Version,
 		FrpVersion:      s.frpcManager.GetVersion(),
+		IP:              ip,
 		TunnelStatus:    "running", // TODO implement proper status tracking
 		ConnectedRelays: s.frpcManager.GetConnectedRelays(),
 		CurrentVersion:  s.frpcManager.GetCurrentConfigVersion(),
@@ -60,4 +71,58 @@ func (s *Service) doHeartbeat(ctx context.Context) {
 		return
 	}
 	slog.Debug("flared heartbeat succeeded")
+}
+
+func detectNodeIP() string {
+	if ip := detectOutboundNodeIP(); ip != "" {
+		return ip
+	}
+	return lookupLocalIP()
+}
+
+func detectOutboundNodeIP() string {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	ip, err := lookupOutboundIP(ctx)
+	if err != nil || ip == nil {
+		return ""
+	}
+	return ip.String()
+}
+
+func detectLocalNodeIP() string {
+	interfaces, err := net.Interfaces()
+	if err != nil {
+		return ""
+	}
+	bestIP := ""
+	bestPriority := -1
+	for _, iface := range interfaces {
+		if iface.Flags&net.FlagUp == 0 || iface.Flags&net.FlagLoopback != 0 {
+			continue
+		}
+		addrs, err := iface.Addrs()
+		if err != nil {
+			continue
+		}
+		for _, addr := range addrs {
+			ipNet, ok := addr.(*net.IPNet)
+			if !ok || ipNet.IP == nil || ipNet.IP.IsLoopback() {
+				continue
+			}
+			ipv4 := ipNet.IP.To4()
+			if ipv4 == nil {
+				continue
+			}
+			priority := iputil.Score(ipv4)
+			if priority > bestPriority {
+				bestIP = ipv4.String()
+				bestPriority = priority
+			}
+			if bestPriority == 2 {
+				return bestIP
+			}
+		}
+	}
+	return bestIP
 }

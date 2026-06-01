@@ -150,6 +150,7 @@ func TestHeartbeatFlaredPersistsRuntime(t *testing.T) {
 	resp, err := HeartbeatFlared(node, FlaredHeartbeatPayload{
 		ClientVersion: "  v0.2.0  ",
 		FrpVersion:    "  0.61.1  ",
+		IP:            "  192.168.1.10  ",
 		TunnelStatus:  "  RUNNING ",
 		ConnectedRelays: []FlaredConnectedRelay{
 			{RelayNodeID: "  node-relay-1 ", Status: "  HEALTHY ", ProxyCount: 3},
@@ -185,11 +186,38 @@ func TestHeartbeatFlaredPersistsRuntime(t *testing.T) {
 	if updated.ExtVersion != "0.61.1" {
 		t.Fatalf("expected frp_version to be trimmed and stored, got %q", updated.ExtVersion)
 	}
+	if updated.IP != "192.168.1.10" {
+		t.Fatalf("expected IP to be trimmed and stored, got %q", updated.IP)
+	}
 	if updated.CurrentVersion != "v1" {
 		t.Fatalf("expected current_version to be stored, got %q", updated.CurrentVersion)
 	}
 	if updated.LastSeenAt.IsZero() {
 		t.Fatal("expected last_seen_at to be updated")
+	}
+
+	// Test IPManualOverride
+	updated.IPManualOverride = true
+	if err := updated.Update(); err != nil {
+		t.Fatalf("failed to lock IP: %v", err)
+	}
+
+	_, err = HeartbeatFlared(updated, FlaredHeartbeatPayload{
+		ClientVersion: "v0.2.0",
+		FrpVersion:    "0.61.1",
+		IP:            "10.0.0.99",
+		TunnelStatus:  "running",
+	})
+	if err != nil {
+		t.Fatalf("second HeartbeatFlared failed: %v", err)
+	}
+
+	lockedNode, err := model.GetNodeByNodeID(node.NodeID)
+	if err != nil {
+		t.Fatalf("failed to reload locked node: %v", err)
+	}
+	if lockedNode.IP != "192.168.1.10" {
+		t.Fatalf("expected IP to stay locked at 192.168.1.10, but got %q", lockedNode.IP)
 	}
 }
 
