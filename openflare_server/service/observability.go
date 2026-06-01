@@ -276,11 +276,20 @@ func persistNodeAccessLogs(tx *gorm.DB, nodeID string, logs []AgentNodeAccessLog
 }
 
 func reconcileNodeHealthEvents(tx *gorm.DB, nodeID string, events []AgentNodeHealthEvent, reportedAt time.Time) error {
+	return reconcileScopedNodeHealthEvents(tx, nodeID, events, reportedAt, nil)
+}
+
+func reconcileScopedNodeHealthEvents(tx *gorm.DB, nodeID string, events []AgentNodeHealthEvent, reportedAt time.Time, managedEventTypes map[string]struct{}) error {
 	activeTypes := make(map[string]AgentNodeHealthEvent, len(events))
 	for _, event := range events {
 		eventType := normalizeHealthEventType(event.EventType)
 		if eventType == "" {
 			continue
+		}
+		if len(managedEventTypes) > 0 {
+			if _, ok := managedEventTypes[eventType]; !ok {
+				continue
+			}
 		}
 		event.EventType = eventType
 		event.Severity = normalizeHealthSeverity(event.Severity)
@@ -291,7 +300,21 @@ func reconcileNodeHealthEvents(tx *gorm.DB, nodeID string, events []AgentNodeHea
 	}
 
 	var activeEvents []*model.NodeHealthEvent
-	if err := tx.Where("node_id = ? AND status = ?", nodeID, NodeHealthEventStatusActive).Find(&activeEvents).Error; err != nil {
+	query := tx.Where("node_id = ? AND status = ?", nodeID, NodeHealthEventStatusActive)
+	if len(managedEventTypes) > 0 {
+		scopedTypes := make([]string, 0, len(managedEventTypes))
+		for eventType := range managedEventTypes {
+			eventType = normalizeHealthEventType(eventType)
+			if eventType != "" {
+				scopedTypes = append(scopedTypes, eventType)
+			}
+		}
+		if len(scopedTypes) == 0 {
+			return nil
+		}
+		query = query.Where("event_type IN ?", scopedTypes)
+	}
+	if err := query.Find(&activeEvents).Error; err != nil {
 		return err
 	}
 

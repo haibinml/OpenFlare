@@ -7,6 +7,8 @@ import (
 	"openflare/model"
 	"strings"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 // RelayHeartbeatPayload is the payload sent by OpenFlareRelay in each heartbeat.
@@ -22,6 +24,8 @@ type RelayHeartbeatPayload struct {
 	Snapshot       *AgentNodeMetricSnapshot `json:"snapshot,omitempty"`
 	HealthEvents   []AgentNodeHealthEvent   `json:"health_events,omitempty"`
 }
+
+const relayFrpsUnhealthyEventType = "frps_unhealthy"
 
 // RelayConfig is the frps configuration sent to the Relay.
 type RelayConfig struct {
@@ -98,6 +102,9 @@ func HeartbeatRelay(node *model.Node, payload RelayHeartbeatPayload) (*RelayHear
 			return nil, fmt.Errorf("update relay heartbeat: %w", err)
 		}
 	}
+	if err := reconcileRelayHealthEvents(node.NodeID, payload.RelayStatus, now); err != nil {
+		return nil, fmt.Errorf("reconcile relay health events: %w", err)
+	}
 	refreshAccessTokenCache(node)
 	persistRelayHeartbeatObservability(node.NodeID, payload, node.LastSeenAt)
 
@@ -140,6 +147,30 @@ func buildRelaySettings() *RelaySettings {
 		HeartbeatInterval:       common.AgentHeartbeatInterval,
 		WebsocketUpgradeEnabled: common.AgentWebsocketUpgradeEnabled,
 	}
+}
+
+func reconcileRelayHealthEvents(nodeID string, relayStatus string, reportedAt time.Time) error {
+	if relayStatus == "unknown" {
+		return nil
+	}
+	managedTypes := map[string]struct{}{
+		relayFrpsUnhealthyEventType: {},
+	}
+	events := []AgentNodeHealthEvent{}
+	if relayStatus == "unhealthy" {
+		events = append(events, AgentNodeHealthEvent{
+			EventType:       relayFrpsUnhealthyEventType,
+			Severity:        NodeHealthSeverityCritical,
+			Message:         "frps runtime is not healthy",
+			TriggeredAtUnix: reportedAt.Unix(),
+			Metadata: map[string]string{
+				"relay_status": relayStatus,
+			},
+		})
+	}
+	return model.DB.Transaction(func(tx *gorm.DB) error {
+		return reconcileScopedNodeHealthEvents(tx, nodeID, events, reportedAt, managedTypes)
+	})
 }
 
 func normalizeRelayStatus(status string) string {
