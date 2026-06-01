@@ -61,12 +61,8 @@ func (s *Service) doSync(ctx context.Context) {
 		return
 	}
 
-	if s.frpcManager.GetCurrentConfigVersion() == configResp.Version &&
-		s.frpcManager.GetCurrentConfigChecksum() == configResp.Checksum {
-		slog.Debug("tunnel config is up to date", "version", configResp.Version)
-		return
-	}
-
+	// 不在 sync 层做版本早退，由 frpcManager.UpdateConfig 负责判断。
+	// 原因：重启后进程全部消失，即使版本/checksum 未变，仍需重新拉起 frpc 进程。
 	err = s.frpcManager.UpdateConfig(ctx, configResp)
 
 	result := "success"

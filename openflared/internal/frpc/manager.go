@@ -85,11 +85,13 @@ func (m *Manager) UpdateConfig(ctx context.Context, newConfig *service.FlaredTun
 	if newConfig == nil {
 		return nil
 	}
-	if newConfig.Version == m.currentVersion && newConfig.Checksum == m.currentChecksum {
-		return nil
-	}
 
-	slog.Info("applying new tunnel config", "version", newConfig.Version)
+	versionChanged := newConfig.Version != m.currentVersion || newConfig.Checksum != m.currentChecksum
+	if versionChanged {
+		slog.Info("applying new tunnel config", "version", newConfig.Version)
+	} else {
+		slog.Debug("tunnel config version unchanged, ensuring processes are running", "version", newConfig.Version)
+	}
 
 	if err := os.MkdirAll(m.cfg.DataDir, 0o755); err != nil {
 		return fmt.Errorf("create data dir failed: %w", err)
@@ -102,10 +104,11 @@ func (m *Manager) UpdateConfig(ctx context.Context, newConfig *service.FlaredTun
 		tomlContent := buildFrpcToml(relay, newConfig.Proxies)
 		configPath := filepath.Join(m.cfg.DataDir, fmt.Sprintf("frpc_%s.toml", relay.RelayNodeID))
 
-		needsRestart := true
+		needsRestart := false
 		existingData, err := os.ReadFile(configPath)
-		if err == nil && string(existingData) == tomlContent {
-			needsRestart = false
+		if err != nil || string(existingData) != tomlContent {
+			// 配置文件不存在或内容有变化，需要写入并重启
+			needsRestart = true
 		}
 
 		if needsRestart {
@@ -115,6 +118,8 @@ func (m *Manager) UpdateConfig(ctx context.Context, newConfig *service.FlaredTun
 			}
 			m.restartProcess(ctx, relay.RelayNodeID, configPath)
 		} else if _, ok := m.processes[relay.RelayNodeID]; !ok {
+			// 配置未变但进程不存在（如重启后），直接启动进程
+			slog.Info("frpc process missing, starting", "relay_id", relay.RelayNodeID)
 			m.restartProcess(ctx, relay.RelayNodeID, configPath)
 		}
 	}
@@ -128,10 +133,12 @@ func (m *Manager) UpdateConfig(ctx context.Context, newConfig *service.FlaredTun
 		}
 	}
 
-	m.currentVersion = newConfig.Version
-	m.currentChecksum = newConfig.Checksum
-
-	return m.saveState()
+	if versionChanged {
+		m.currentVersion = newConfig.Version
+		m.currentChecksum = newConfig.Checksum
+		return m.saveState()
+	}
+	return nil
 }
 
 func (m *Manager) restartProcess(ctx context.Context, relayID string, configPath string) {

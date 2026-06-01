@@ -45,7 +45,7 @@ func NewManager(frpsPath string, dataDir string, agentToken string) *Manager {
 		frpsPath:   frpsPath,
 		dataDir:    dataDir,
 		configPath: filepath.Join(dataDir, "frps.toml"),
-		status:     "unhealthy",
+		status:     "unknown", // 启动阶段尚未获取配置，状态未知；避免首次 heartbeat 误报 frps_unhealthy
 		agentToken: agentToken,
 	}
 }
