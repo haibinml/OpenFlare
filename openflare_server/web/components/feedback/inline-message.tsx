@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils/cn';
 
@@ -27,9 +27,15 @@ export function InlineMessage({
   className,
   onClear,
 }: InlineMessageProps) {
+  const onClearRef = useRef(onClear);
+
+  useEffect(() => {
+    onClearRef.current = onClear;
+  }, [onClear]);
+
   useEffect(() => {
     // Only trigger toast if onClear is provided (dynamic feedback)
-    if (!onClear || !message) return;
+    if (!onClearRef.current || !message) return;
 
     const options = {
       position: 'bottom-right' as const,
@@ -44,10 +50,10 @@ export function InlineMessage({
     }
 
     const timer = setTimeout(() => {
-      onClear();
+      onClearRef.current?.();
     }, 0);
     return () => clearTimeout(timer);
-  }, [tone, message, onClear]);
+  }, [tone, message]);
 
   // If onClear is provided, this is a toast feedback notice, so render nothing inline
   if (onClear) {
