@@ -171,6 +171,7 @@ type NodeView struct {
 	RelayClientAccessAddr string `json:"relay_client_access_addr"`
 	RelayClientProxyURL   string `json:"relay_client_proxy_url"`
 	RelayStatus           string `json:"relay_status"`
+	RelayWebServerEnabled bool   `json:"relay_web_server_enabled"`
 }
 
 func HeartbeatNode(node *model.Node, payload AgentNodePayload) (*HeartbeatResponse, error) {

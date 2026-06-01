@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"errors"
 	"openflare/model"
 	"time"
@@ -146,24 +147,44 @@ func buildRelayDashboardSnapshot(node *model.Node, obs *model.NodeObservationFrp
 	}
 	totalProxies := 0
 	totalConnections := 0
+	clientCounts := 0
+	proxies := []RelayProxyStat{}
+
 	if obs != nil {
 		totalProxies = obs.FrpsProxyCount
 		totalConnections = obs.FrpsConnections
+		clientCounts = obs.FrpsClientCount
+		if obs.FrpsProxies != "" {
+			var decoded []RelayProxyStat
+			if err := json.Unmarshal([]byte(obs.FrpsProxies), &decoded); err == nil {
+				proxies = decoded
+			}
+		}
 	}
 	if totalProxies < 0 {
 		totalProxies = 0
 	}
-	onlineProxies := totalProxies
-	if node.RelayStatus != "healthy" {
-		onlineProxies = 0
+	onlineProxies := 0
+	for _, p := range proxies {
+		if p.Status == "online" {
+			onlineProxies++
+		}
 	}
+	// Fallback for backward compatibility
+	if len(proxies) == 0 {
+		onlineProxies = totalProxies
+		if node.RelayStatus != "healthy" {
+			onlineProxies = 0
+		}
+	}
+
 	return &RelayDashboardSnapshot{
 		TotalProxies:     totalProxies,
 		OnlineProxies:    onlineProxies,
 		OfflineProxies:   totalProxies - onlineProxies,
-		Proxies:          []RelayProxyStat{},
+		Proxies:          proxies,
 		TotalConnections: maxInt(totalConnections, 0),
-		ClientCounts:     0,
+		ClientCounts:     maxInt(clientCounts, 0),
 	}
 }
 

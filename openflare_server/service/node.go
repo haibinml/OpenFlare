@@ -31,6 +31,7 @@ type NodeInput struct {
 	RelayAgentAccessAddr  string `json:"relay_agent_access_addr"`
 	RelayClientAccessAddr string `json:"relay_client_access_addr"`
 	RelayClientProxyURL   string `json:"relay_client_proxy_url"`
+	RelayWebServerEnabled bool   `json:"relay_web_server_enabled"`
 }
 
 type NodeAgentUpdateInput struct {
@@ -100,6 +101,7 @@ func CreateNode(input NodeInput) (*NodeView, error) {
 		node.RelayAgentAccessAddr = strings.TrimSpace(input.RelayAgentAccessAddr)
 		node.RelayClientAccessAddr = strings.TrimSpace(input.RelayClientAccessAddr)
 		node.RelayClientProxyURL = strings.TrimSpace(input.RelayClientProxyURL)
+		node.RelayWebServerEnabled = input.RelayWebServerEnabled
 	}
 	if !node.GeoManualOverride {
 		applyGeoInfoFromIP(node, node.IP)
@@ -137,6 +139,7 @@ func UpdateNode(id uint, input NodeInput) (*NodeView, error) {
 		node.RelayAgentAccessAddr = strings.TrimSpace(input.RelayAgentAccessAddr)
 		node.RelayClientAccessAddr = strings.TrimSpace(input.RelayClientAccessAddr)
 		node.RelayClientProxyURL = strings.TrimSpace(input.RelayClientProxyURL)
+		node.RelayWebServerEnabled = input.RelayWebServerEnabled
 		if input.RelayBindPort > 0 {
 			node.RelayBindPort = input.RelayBindPort
 		}
@@ -354,6 +357,7 @@ func buildNodeView(node *model.Node) *NodeView {
 	view.RelayClientAccessAddr = node.RelayClientAccessAddr
 	view.RelayClientProxyURL = node.RelayClientProxyURL
 	view.RelayStatus = node.RelayStatus
+	view.RelayWebServerEnabled = node.RelayWebServerEnabled
 	view.Version = node.Version
 	view.ExtVersion = node.ExtVersion
 	return view

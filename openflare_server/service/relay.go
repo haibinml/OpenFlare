@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -16,26 +17,29 @@ import (
 
 // RelayHeartbeatPayload is the payload sent by OpenFlareRelay in each heartbeat.
 type RelayHeartbeatPayload struct {
-	Version        string                   `json:"version"`
-	ExtVersion     string                   `json:"frp_version"`
-	RelayStatus    string                   `json:"relay_status"`
-	FrpsConnCount  int                      `json:"frps_connections"`
-	FrpsProxyCount int                      `json:"frps_proxy_count"`
-	Name           string                   `json:"name"`
-	IP             string                   `json:"ip"`
-	Profile        *AgentNodeSystemProfile  `json:"profile,omitempty"`
-	Snapshot       *AgentNodeMetricSnapshot `json:"snapshot,omitempty"`
-	HealthEvents   []AgentNodeHealthEvent   `json:"health_events,omitempty"`
+	Version         string                   `json:"version"`
+	ExtVersion      string                   `json:"frp_version"`
+	RelayStatus     string                   `json:"relay_status"`
+	FrpsConnCount   int                      `json:"frps_connections"`
+	FrpsProxyCount  int                      `json:"frps_proxy_count"`
+	FrpsClientCount int                      `json:"frps_client_count"`
+	FrpsProxies     []RelayProxyStat         `json:"frps_proxies,omitempty"`
+	Name            string                   `json:"name"`
+	IP              string                   `json:"ip"`
+	Profile         *AgentNodeSystemProfile  `json:"profile,omitempty"`
+	Snapshot        *AgentNodeMetricSnapshot `json:"snapshot,omitempty"`
+	HealthEvents    []AgentNodeHealthEvent   `json:"health_events,omitempty"`
 }
 
 const relayFrpsUnhealthyEventType = "frps_unhealthy"
 
 // RelayConfig is the frps configuration sent to the Relay.
 type RelayConfig struct {
-	BindPort      int    `json:"bind_port"`
-	VhostHTTPPort int    `json:"vhost_http_port"`
-	AuthToken     string `json:"auth_token"`
-	LogLevel      string `json:"log_level"`
+	BindPort         int    `json:"bind_port"`
+	VhostHTTPPort    int    `json:"vhost_http_port"`
+	AuthToken        string `json:"auth_token"`
+	LogLevel         string `json:"log_level"`
+	WebServerEnabled bool   `json:"web_server_enabled"`
 }
 
 // RelaySettings contains runtime settings for the Relay.
@@ -148,11 +152,20 @@ func persistRelayHeartbeatObservability(nodeID string, payload RelayHeartbeatPay
 		HealthEvents: payload.HealthEvents,
 	}, reportedAt)
 
+	var proxiesJSON string
+	if len(payload.FrpsProxies) > 0 {
+		if data, err := json.Marshal(payload.FrpsProxies); err == nil {
+			proxiesJSON = string(data)
+		}
+	}
+
 	frpsObs := &model.NodeObservationFrps{
 		NodeID:          nodeID,
 		CapturedAt:      reportedAt,
 		FrpsConnections: payload.FrpsConnCount,
 		FrpsProxyCount:  payload.FrpsProxyCount,
+		FrpsClientCount: payload.FrpsClientCount,
+		FrpsProxies:     proxiesJSON,
 	}
 	_ = frpsObs.Insert()
 }
@@ -162,10 +175,11 @@ func buildRelayConfig(node *model.Node) *RelayConfig {
 		return nil
 	}
 	return &RelayConfig{
-		BindPort:      node.RelayBindPort,
-		VhostHTTPPort: node.RelayVhostHTTPPort,
-		AuthToken:     node.RelayAuthToken,
-		LogLevel:      "info",
+		BindPort:         node.RelayBindPort,
+		VhostHTTPPort:    node.RelayVhostHTTPPort,
+		AuthToken:        node.RelayAuthToken,
+		LogLevel:         "info",
+		WebServerEnabled: node.RelayWebServerEnabled,
 	}
 }
 

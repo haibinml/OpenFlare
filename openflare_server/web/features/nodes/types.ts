@@ -14,6 +14,7 @@ export interface NodeItem {
   relay_client_proxy_url: string;
   relay_auth_token: string;
   relay_status: string;
+  relay_web_server_enabled: boolean;
   relay_frps_connections: number;
   relay_frps_proxy_count: number;
   geo_name: string;
@@ -59,6 +60,7 @@ export interface NodeMutationPayload {
   relay_client_access_addr?: string;
   relay_agent_access_addr?: string;
   relay_client_proxy_url?: string;
+  relay_web_server_enabled?: boolean;
   auto_update_enabled: boolean;
   geo_name: string;
   geo_latitude?: number | null;

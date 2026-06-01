@@ -13,6 +13,8 @@ type NodeObservationFrps struct {
 	CapturedAt      time.Time `json:"captured_at" gorm:"index"`
 	FrpsConnections int       `json:"frps_connections"`
 	FrpsProxyCount  int       `json:"frps_proxy_count"`
+	FrpsClientCount int       `json:"frps_client_count"`
+	FrpsProxies     string    `json:"frps_proxies" gorm:"type:text"`
 	CreatedAt       time.Time `json:"created_at"`
 }
 

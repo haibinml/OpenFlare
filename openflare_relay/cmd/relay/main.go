@@ -45,7 +45,7 @@ func main() {
 	stateStore := state.NewStore(cfg.StatePath)
 	_ = stateStore // In the future we may use stateStore for auth caching
 
-	frpsManager := frps.NewManager(cfg.FrpsPath, cfg.DataDir)
+	frpsManager := frps.NewManager(cfg.FrpsPath, cfg.DataDir, cfg.InitialAuthToken())
 
 	slog.Info("detected frps version", "version", frpsManager.GetVersion())
 

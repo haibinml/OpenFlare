@@ -86,6 +86,8 @@ func (databaseSchemaMigrationContext) ValidateDatabaseSchemaVersion(db *gorm.DB,
 		return validateDatabaseSchemaV15(db, backend)
 	case 16:
 		return validateDatabaseSchemaV16(db, backend)
+	case 17:
+		return validateDatabaseSchemaV17(db, backend)
 	default:
 		return fmt.Errorf("database schema validation for v%d is not defined", version)
 	}
@@ -1298,6 +1300,31 @@ func validateDatabaseSchemaV16(db *gorm.DB, backend string) error {
 	if !db.Migrator().HasColumn(&WAFIPGroup{}, "ext_ips") {
 		return fmt.Errorf("column waf_ip_groups.ext_ips is missing")
 	}
+	return nil
+}
+
+func validateDatabaseSchemaV17(db *gorm.DB, backend string) error {
+	if err := validateDatabaseSchemaV16(db, backend); err != nil {
+		return err
+	}
+	if db == nil {
+		return fmt.Errorf("database handle is nil")
+	}
+
+	migrator := db.Migrator()
+	if !migrator.HasColumn(&Node{}, "relay_web_server_enabled") {
+		return fmt.Errorf("column nodes.relay_web_server_enabled is missing")
+	}
+
+	// Validate columns on a sharded partition table
+	for _, shard := range []string{"node_observation_frps_00"} {
+		for _, column := range []string{"frps_client_count", "frps_proxies"} {
+			if !migrator.HasColumn(shard, column) {
+				return fmt.Errorf("column %s.%s is missing", shard, column)
+			}
+		}
+	}
+
 	return nil
 }
 

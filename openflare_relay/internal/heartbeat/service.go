@@ -54,16 +54,18 @@ func (s *Service) doHeartbeat(ctx context.Context) {
 
 	runtimeStatus := s.frpsManager.GetRuntimeStatus()
 	payload := service.RelayHeartbeatPayload{
-		Version:        config.Version,
-		ExtVersion:     s.frpsManager.GetVersion(),
-		RelayStatus:    runtimeStatus.Status,
-		FrpsConnCount:  runtimeStatus.Connections,
-		FrpsProxyCount: runtimeStatus.ProxyCount,
-		Name:           s.config.NodeName,
-		IP:             s.config.NodeIP,
-		Profile:        observability.BuildProfile(s.config, s.stateStore),
-		Snapshot:       observability.BuildSnapshot(s.config, s.stateStore),
-		HealthEvents:   observability.BuildHealthEvents(runtimeStatus),
+		Version:         config.Version,
+		ExtVersion:      s.frpsManager.GetVersion(),
+		RelayStatus:     runtimeStatus.Status,
+		FrpsConnCount:   runtimeStatus.Connections,
+		FrpsProxyCount:  runtimeStatus.ProxyCount,
+		FrpsClientCount: runtimeStatus.ClientCount,
+		FrpsProxies:     runtimeStatus.Proxies,
+		Name:            s.config.NodeName,
+		IP:              s.config.NodeIP,
+		Profile:         observability.BuildProfile(s.config, s.stateStore),
+		Snapshot:        observability.BuildSnapshot(s.config, s.stateStore),
+		HealthEvents:    observability.BuildHealthEvents(runtimeStatus),
 	}
 
 	resp, err := s.client.Heartbeat(ctx, payload)

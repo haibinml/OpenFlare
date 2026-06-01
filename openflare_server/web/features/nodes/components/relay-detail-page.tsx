@@ -866,6 +866,21 @@ export function RelayDetailPage({ node }: { node: NodeItem }) {
                   <p>Relay 中继版本：{node.version || 'unknown'}</p>
                   <p>frps 核心版本：{node.ext_version || 'unknown'}</p>
                   <p>中继网络接入：{node.relay_agent_access_addr || '—'}</p>
+                  {node.relay_web_server_enabled ? (
+                    <p>
+                      FRPS WebUI：
+                      <a
+                        href={`http://${node.ip || '127.0.0.1'}:${node.relay_bind_port + 500}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[var(--accent-strong)] hover:underline font-medium"
+                      >
+                        点击打开 Web 界面
+                      </a>
+                    </p>
+                  ) : (
+                    <p>FRPS WebUI：已禁用</p>
+                  )}
                 </div>
               </AppCard>
 

@@ -51,6 +51,7 @@ const nodeEditorSchema = z
     relay_client_access_addr: z.string().trim(),
     relay_agent_access_addr: z.string().trim(),
     relay_client_proxy_url: z.string().trim(),
+    relay_web_server_enabled: z.boolean(),
     geo_manual_override: z.boolean(),
     geo_region: z.string(),
     geo_name: z.string().trim().max(128, '位置名不能超过 128 个字符'),
@@ -142,6 +143,7 @@ const defaultValues: NodeEditorValues = {
   relay_client_access_addr: '',
   relay_agent_access_addr: '',
   relay_client_proxy_url: '',
+  relay_web_server_enabled: false,
   geo_manual_override: false,
   geo_region: '',
   geo_name: '',
@@ -233,6 +235,7 @@ function buildFormValues(node?: Partial<NodeItem> | null): NodeEditorValues {
     relay_client_access_addr: node.relay_client_access_addr ?? '',
     relay_agent_access_addr: node.relay_agent_access_addr ?? '',
     relay_client_proxy_url: node.relay_client_proxy_url ?? '',
+    relay_web_server_enabled: node.relay_web_server_enabled ?? false,
     geo_manual_override: node.geo_manual_override ?? false,
     geo_region: node.geo_manual_override ? (node.geo_name ?? '') : '',
     geo_name: node.geo_name ?? '',
@@ -259,6 +262,7 @@ function toPayload(values: NodeEditorValues): NodeMutationPayload {
     relay_client_access_addr: values.type === 'tunnel_relay' ? values.relay_client_access_addr.trim() : undefined,
     relay_agent_access_addr: values.type === 'tunnel_relay' ? values.relay_agent_access_addr.trim() : undefined,
     relay_client_proxy_url: values.type === 'tunnel_relay' ? values.relay_client_proxy_url.trim() : undefined,
+    relay_web_server_enabled: values.type === 'tunnel_relay' ? values.relay_web_server_enabled : undefined,
   };
 
   if (!values.geo_manual_override) {
@@ -426,6 +430,18 @@ export function NodeEditorModal({
             >
               <ResourceInput placeholder="例如: http://10.0.0.1:3128" {...form.register('relay_client_proxy_url')} />
             </ResourceField>
+
+            <ToggleField
+              label="开启 FRPS WebUI"
+              description="开启后可以通过浏览器直接访问 FRPS 的 Web 界面。安全起见，访问密码固定为当前中继节点的接入 Server Token。"
+              checked={form.watch('relay_web_server_enabled')}
+              onChange={(checked) =>
+                form.setValue('relay_web_server_enabled', checked, {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                })
+              }
+            />
           </div>
         )}
 
