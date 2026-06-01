@@ -204,6 +204,12 @@ func dropLegacyNodeColumns(db *gorm.DB, backend string) error {
 	if db == nil || !db.Migrator().HasTable(&Node{}) {
 		return nil
 	}
+	// Drop the legacy index idx_nodes_agent_token if it exists, to avoid errors on dropping the agent_token column (especially on SQLite).
+	if db.Migrator().HasIndex(&Node{}, "idx_nodes_agent_token") {
+		if err := db.Migrator().DropIndex(&Node{}, "idx_nodes_agent_token"); err != nil {
+			return fmt.Errorf("drop index idx_nodes_agent_token failed: %w", err)
+		}
+	}
 	legacyColumns := []struct {
 		column string
 	}{

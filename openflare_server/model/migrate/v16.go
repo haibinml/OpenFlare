@@ -92,6 +92,12 @@ func migrateV16(ctx Context, db *gorm.DB, backend string) error {
 		if err := db.Model(&proxyRouteV16{}).Where("upstream_type = ?", "tunnel").Update("upstream_type", "direct").Error; err != nil {
 			return fmt.Errorf("reset pre-release tunnel proxy routes: %w", err)
 		}
+		// Drop the legacy index idx_proxy_routes_tunnel_id if it exists, to avoid errors on dropping the tunnel_id column (especially on SQLite).
+		if migrator.HasIndex(&proxyRouteV16{}, "idx_proxy_routes_tunnel_id") {
+			if err := migrator.DropIndex(&proxyRouteV16{}, "idx_proxy_routes_tunnel_id"); err != nil {
+				return fmt.Errorf("drop index idx_proxy_routes_tunnel_id failed: %w", err)
+			}
+		}
 		if err := migrator.DropColumn(&proxyRouteV16{}, "tunnel_id"); err != nil {
 			return fmt.Errorf("drop pre-release proxy_routes.tunnel_id: %w", err)
 		}
