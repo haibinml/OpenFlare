@@ -37,6 +37,7 @@ type Node struct {
 	RelayAgentAccessAddr  string `json:"relay_agent_access_addr" gorm:"size:255"`
 	RelayClientAccessAddr string `json:"relay_client_access_addr" gorm:"size:255"`
 	RelayClientProxyURL   string `json:"relay_client_proxy_url" gorm:"size:512"`
+	CapabilitiesJSON      string `json:"capabilities_json" gorm:"type:text;not null;default:'[]'"`
 	RelayStatus           string `json:"relay_status" gorm:"size:16;not null;default:'unknown'"`
 	RelayWebServerEnabled bool   `json:"relay_web_server_enabled" gorm:"not null;default:false"`
 }

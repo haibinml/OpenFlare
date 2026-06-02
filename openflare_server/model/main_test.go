@@ -89,6 +89,10 @@ func findDBModelByTableName(t *testing.T, tableName string) dbModel {
 	return dbModel{}
 }
 
+func expectedCurrentDatabaseVersion() int {
+	return int(currentGooseTargetVersion())
+}
+
 func TestIsDatabaseEmpty(t *testing.T) {
 	db := openTestSQLiteDB(t, "empty.db")
 
@@ -303,14 +307,17 @@ func TestEnsureDatabaseSchemaUpToDateInitializesFreshDatabase(t *testing.T) {
 	if !exists {
 		t.Fatal("expected database schema version to be recorded")
 	}
-	if version != currentDatabaseSchemaVersion {
-		t.Fatalf("unexpected schema version: got %d want %d", version, currentDatabaseSchemaVersion)
+	if version != expectedCurrentDatabaseVersion() {
+		t.Fatalf("unexpected schema version: got %d want %d", version, expectedCurrentDatabaseVersion())
 	}
 	if db.Migrator().HasTable(&DatabaseSchemaVersion{}) {
 		t.Fatal("expected fresh database to avoid legacy database_schema_versions table")
 	}
 	if !db.Migrator().HasTable("goose_db_version") {
 		t.Fatal("expected fresh database to initialize goose_db_version")
+	}
+	if !db.Migrator().HasColumn(&Node{}, "capabilities_json") {
+		t.Fatal("expected fresh database to apply goose migration nodes.capabilities_json")
 	}
 }
 
@@ -343,14 +350,17 @@ func TestEnsureDatabaseSchemaUpToDateUpgradesLegacyDatabase(t *testing.T) {
 	if !exists {
 		t.Fatal("expected legacy database to gain a schema version record")
 	}
-	if version != currentDatabaseSchemaVersion {
-		t.Fatalf("unexpected schema version: got %d want %d", version, currentDatabaseSchemaVersion)
+	if version != expectedCurrentDatabaseVersion() {
+		t.Fatalf("unexpected schema version: got %d want %d", version, expectedCurrentDatabaseVersion())
 	}
 	if db.Migrator().HasTable(&DatabaseSchemaVersion{}) {
 		t.Fatal("expected legacy database_schema_versions table to be removed after bridging to goose")
 	}
 	if !db.Migrator().HasTable("goose_db_version") {
 		t.Fatal("expected legacy upgrade to initialize goose_db_version")
+	}
+	if !db.Migrator().HasColumn(&Node{}, "capabilities_json") {
+		t.Fatal("expected legacy upgrade to apply goose migration nodes.capabilities_json")
 	}
 }
 
@@ -544,8 +554,11 @@ func TestEnsureDatabaseSchemaUpToDateAddsNodeIPManualOverride(t *testing.T) {
 	if !exists {
 		t.Fatal("expected schema version record to exist")
 	}
-	if version != currentDatabaseSchemaVersion {
-		t.Fatalf("unexpected schema version: got %d want %d", version, currentDatabaseSchemaVersion)
+	if version != expectedCurrentDatabaseVersion() {
+		t.Fatalf("unexpected schema version: got %d want %d", version, expectedCurrentDatabaseVersion())
+	}
+	if !db.Migrator().HasColumn(&Node{}, "capabilities_json") {
+		t.Fatal("expected migration chain to include nodes.capabilities_json")
 	}
 }
 
@@ -628,8 +641,11 @@ func TestEnsureDatabaseSchemaUpToDateV16BackfillsNodeColumnsWhenNewColumnsAlread
 	if !exists {
 		t.Fatal("expected schema version record to exist")
 	}
-	if version != currentDatabaseSchemaVersion {
-		t.Fatalf("unexpected schema version: got %d want %d", version, currentDatabaseSchemaVersion)
+	if version != expectedCurrentDatabaseVersion() {
+		t.Fatalf("unexpected schema version: got %d want %d", version, expectedCurrentDatabaseVersion())
+	}
+	if !db.Migrator().HasColumn(&Node{}, "capabilities_json") {
+		t.Fatal("expected v16 upgrade path to apply goose migration nodes.capabilities_json")
 	}
 }
 
@@ -673,6 +689,9 @@ func TestEnsureDatabaseSchemaUpToDateV16DropsLegacyNodeColumnsWhenAlreadyCurrent
 	if !db.Migrator().HasTable("goose_db_version") {
 		t.Fatal("expected current-schema goose_db_version table to exist")
 	}
+	if !db.Migrator().HasColumn(&Node{}, "capabilities_json") {
+		t.Fatal("expected current-schema repair to preserve goose column nodes.capabilities_json")
+	}
 }
 
 func TestEnsureDatabaseSchemaUpToDateKeepsGooseOnlyDatabaseOnReentry(t *testing.T) {
@@ -702,8 +721,11 @@ func TestEnsureDatabaseSchemaUpToDateKeepsGooseOnlyDatabaseOnReentry(t *testing.
 	if !exists {
 		t.Fatal("expected goose-only database to keep goose version record")
 	}
-	if version != currentDatabaseSchemaVersion {
-		t.Fatalf("unexpected goose version: got %d want %d", version, currentDatabaseSchemaVersion)
+	if version != expectedCurrentDatabaseVersion() {
+		t.Fatalf("unexpected goose version: got %d want %d", version, expectedCurrentDatabaseVersion())
+	}
+	if !db.Migrator().HasColumn(&Node{}, "capabilities_json") {
+		t.Fatal("expected goose-only database to keep nodes.capabilities_json")
 	}
 }
 

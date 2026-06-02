@@ -179,4 +179,4 @@ go build -o openflare-agent ./cmd/agent
 4. 涉及配置、部署、API 或产品边界时同步更新文档。
 5. 风险较高的修改补充测试或等效联调验证。
 
-数据库结构变更必须提升数据库版本号，并补充从上一版本到新版本的显式迁移方法和校验逻辑。
+数据库结构变更必须提升数据库版本号，并补充显式迁移方法和校验逻辑。v8-v17 保留为旧升级框架兼容链；v17 之后统一使用 goose，新的 goose 框架代码必须集中在 `openflare_server/model/goose` 包下；每次数据库升级都要在该包下新增独立的 `goose_<timestamp>_<description>.go` 文件，不得把具体迁移逻辑集中堆在 goose 注册入口中，也不得把新 goose 框架代码放回 `openflare_server/model` 根包。

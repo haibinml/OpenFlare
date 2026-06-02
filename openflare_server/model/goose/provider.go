@@ -1,4 +1,4 @@
-package model
+package goose
 
 import (
 	"context"
@@ -6,24 +6,29 @@ import (
 	"fmt"
 
 	"github.com/glebarez/sqlite"
-	"github.com/pressly/goose/v3"
+	presslygoose "github.com/pressly/goose/v3"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 )
 
-func gooseDialectForBackend(backend string) (goose.Dialect, error) {
+type Context interface {
+	ApplyCurrentSchema(db *gorm.DB, backend string) error
+	RegisterSharding(db *gorm.DB, backend string) error
+}
+
+func dialectForBackend(backend string) (presslygoose.Dialect, error) {
 	switch backend {
 	case "postgres":
-		return goose.DialectPostgres, nil
+		return presslygoose.DialectPostgres, nil
 	case "sqlite":
-		return goose.DialectSQLite3, nil
+		return presslygoose.DialectSQLite3, nil
 	default:
 		return "", fmt.Errorf("unsupported database backend: %s", backend)
 	}
 }
 
-func getGORMDBFromSQLDB(db *sql.DB, backend string) (*gorm.DB, error) {
+func openGORMDB(ctx Context, db *sql.DB, backend string) (*gorm.DB, error) {
 	var dialector gorm.Dialector
 	switch backend {
 	case "postgres":
@@ -40,32 +45,32 @@ func getGORMDBFromSQLDB(db *sql.DB, backend string) (*gorm.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := registerSharding(gormDB, backend); err != nil {
+	if err := ctx.RegisterSharding(gormDB, backend); err != nil {
 		return nil, err
 	}
 	return gormDB, nil
 }
 
-func buildGooseProvider(db *gorm.DB, backend string) (*goose.Provider, error) {
+func buildProvider(db *gorm.DB, backend string, ctx Context) (*presslygoose.Provider, error) {
 	sqlDB, err := db.DB()
 	if err != nil {
 		return nil, err
 	}
-	dialect, err := gooseDialectForBackend(backend)
+	dialect, err := dialectForBackend(backend)
 	if err != nil {
 		return nil, err
 	}
-	return goose.NewProvider(
+	return presslygoose.NewProvider(
 		dialect,
 		sqlDB,
 		nil,
-		goose.WithDisableGlobalRegistry(true),
-		goose.WithGoMigrations(buildGooseMigrations(backend)...),
+		presslygoose.WithDisableGlobalRegistry(true),
+		presslygoose.WithGoMigrations(buildMigrations(backend, ctx)...),
 	)
 }
 
-func runGooseMigrations(db *gorm.DB, backend string) error {
-	provider, err := buildGooseProvider(db, backend)
+func runMigrations(db *gorm.DB, backend string, ctx Context) error {
+	provider, err := buildProvider(db, backend, ctx)
 	if err != nil {
 		return fmt.Errorf("build goose provider: %w", err)
 	}
