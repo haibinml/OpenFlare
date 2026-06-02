@@ -156,28 +156,57 @@ func (m *Manager) restartProcess(ctx context.Context, relayID string, configPath
 	m.processes[relayID] = proc
 
 	go func() {
+		backoff := 1 * time.Second
+		const maxBackoff = 60 * time.Second
+
 		for {
-			select {
-			case <-procCtx.Done():
+			m.mu.Lock()
+			if procCtx.Err() != nil {
+				m.mu.Unlock()
 				return
-			default:
 			}
+			m.mu.Unlock()
 
 			cmd := exec.CommandContext(procCtx, m.cfg.FrpcPath, "-c", configPath)
+
+			m.mu.Lock()
 			proc.Cmd = cmd
 			proc.Status = "running"
+			m.mu.Unlock()
 
+			startedAt := time.Now()
 			err := cmd.Run()
+
+			m.mu.Lock()
+			if procCtx.Err() != nil {
+				proc.Status = "stopped"
+				m.mu.Unlock()
+				return
+			}
+
 			if err != nil {
-				if procCtx.Err() != nil {
-					return
-				}
 				proc.LastError = err.Error()
 				proc.Status = "error"
 				slog.Error("frpc process exited unexpectedly", "relay_id", relayID, "error", err)
-				time.Sleep(5 * time.Second) // backoff
 			} else {
 				proc.Status = "stopped"
+				proc.LastError = "exited unexpectedly with code 0"
+				slog.Warn("frpc process exited unexpectedly with code 0", "relay_id", relayID)
+			}
+			m.mu.Unlock()
+
+			if time.Since(startedAt) >= 10*time.Second {
+				backoff = 1 * time.Second
+			}
+
+			select {
+			case <-procCtx.Done():
+				return
+			case <-time.After(backoff):
+				backoff = backoff * 2
+				if backoff > maxBackoff {
+					backoff = maxBackoff
+				}
 			}
 		}
 	}()
