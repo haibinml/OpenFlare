@@ -95,6 +95,7 @@ func (conn *Connection) SendPing() error {
 		return errors.New("relay ws connection is nil")
 	}
 	slog.Debug("relay ws sending ping")
+	_ = conn.conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
 	return websocket.JSON.Send(conn.conn, service.WSMessage{
 		Type: "ping",
 	})
@@ -105,6 +106,7 @@ func (conn *Connection) SendPong() error {
 		return errors.New("relay ws connection is nil")
 	}
 	slog.Debug("relay ws sending pong")
+	_ = conn.conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
 	return websocket.JSON.Send(conn.conn, service.WSMessage{
 		Type: "pong",
 	})

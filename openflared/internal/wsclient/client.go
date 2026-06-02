@@ -95,6 +95,7 @@ func (conn *Connection) SendPong() error {
 		return errors.New("flared ws connection is nil")
 	}
 	slog.Debug("flared ws sending pong")
+	_ = conn.conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
 	return websocket.JSON.Send(conn.conn, service.WSMessage{
 		Type: "pong",
 	})
