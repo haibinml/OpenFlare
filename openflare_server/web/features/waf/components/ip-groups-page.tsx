@@ -75,7 +75,7 @@ const typeLabels: Record<WAFIPGroupType, string> = {
 const automaticPresetRules = [
   {
     name: '单 IP 404 高频扫描',
-    expr: 'request_count > 100 && status_404_ratio >= 0.8',
+    expr: 'request_count > 100 && StatusRatio(404) >= 0.8',
   },
   {
     name: '单 IP 直连访问异常',

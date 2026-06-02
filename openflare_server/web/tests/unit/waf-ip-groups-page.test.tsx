@@ -200,7 +200,7 @@ describe('WAF IP groups', () => {
 
     const textarea = screen.getByLabelText(/自动配置 JSON/);
     const value = (textarea as HTMLTextAreaElement).value;
-    expect(value).toContain('request_count > 100 && status_404_ratio >= 0.8');
+    expect(value).toContain('request_count > 100 && StatusRatio(404) >= 0.8');
     expect(value).toContain('ip_host_count > 50 && ip_host_ratio > 0.5');
   });
 
@@ -260,7 +260,7 @@ describe('WAF IP groups', () => {
         lookback_minutes: 60,
         rules: [
           expect.objectContaining({
-            expr: 'request_count > 100 && status_404_ratio >= 0.8',
+            expr: 'request_count > 100 && StatusRatio(404) >= 0.8',
           }),
         ],
       }),

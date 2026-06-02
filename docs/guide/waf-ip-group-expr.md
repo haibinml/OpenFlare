@@ -12,7 +12,7 @@
   "rules": [
     {
       "name": "单 IP 404 高频扫描",
-      "expr": "request_count > 100 && status_404_ratio >= 0.8"
+      "expr": "request_count > 100 && StatusRatio(404) >= 0.8"
     }
   ]
 }
@@ -74,12 +74,12 @@ Host 是否为“通过 IP 访问”按请求日志中的 `Host` 字段判断：
 | --- | --- | --- |
 | `>`、`>=`、`<`、`<=` | 数值比较 | `request_count > 100` |
 | `==`、`!=` | 相等或不相等 | `ip != "127.0.0.1"` |
-| `&&` | 并且 | `request_count > 100 && status_404_ratio >= 0.8` |
-| `||` | 或者 | `status_404_ratio >= 0.8 || server_error_count > 20` |
+| `&&` | 并且 | `request_count > 100 && StatusRatio(404) >= 0.8` |
+| `||` | 或者 | `StatusRatio(404) >= 0.8 || server_error_count > 20` |
 | `!` | 取反 | `!(ip == "127.0.0.1")` |
 | `in` | 判断值是否在列表中 | `ip in ["203.0.113.10", "198.51.100.20"]` |
 | `not in` | 判断值是否不在列表中 | `ip not in ["127.0.0.1"]` |
-| `()` | 分组控制优先级 | `(request_count > 100 && status_404_ratio >= 0.8) || server_error_count > 50` |
+| `()` | 分组控制优先级 | `(request_count > 100 && StatusRatio(404) >= 0.8) || server_error_count > 50` |
 
 ## 内置预设
 
@@ -88,7 +88,7 @@ Host 是否为“通过 IP 访问”按请求日志中的 `Host` 字段判断：
 ```json
 {
   "name": "单 IP 404 高频扫描",
-  "expr": "request_count > 100 && status_404_ratio >= 0.8"
+  "expr": "request_count > 100 && StatusRatio(404) >= 0.8"
 }
 ```
 
@@ -113,7 +113,7 @@ Host 是否为“通过 IP 访问”按请求日志中的 `Host` 字段判断：
   "rules": [
     {
       "name": "高频 404 扫描",
-      "expr": "request_count > 100 && status_404_ratio >= 0.8"
+      "expr": "request_count > 100 && StatusRatio(404) >= 0.8"
     }
   ]
 }
@@ -155,7 +155,7 @@ IP 直连访问异常：
   "rules": [
     {
       "name": "排除可信 IP 的 404 扫描",
-      "expr": "ip not in [\"203.0.113.10\", \"198.51.100.20\"] && request_count > 100 && status_404_ratio >= 0.8"
+      "expr": "ip not in [\"203.0.113.10\", \"198.51.100.20\"] && request_count > 100 && StatusRatio(404) >= 0.8"
     }
   ]
 }

@@ -228,7 +228,7 @@ func TestSyncWAFIPGroupAutomaticExprRules(t *testing.T) {
 		AutoConfig: json.RawMessage(`{
 			"lookback_minutes": 60,
 			"rules": [
-				{"name":"单 IP 404 高频扫描","expr":"request_count > 100 && status_404_ratio >= 0.8"},
+				{"name":"单 IP 404 高频扫描","expr":"request_count > 100 && StatusRatio(404) >= 0.8"},
 				{"name":"单 IP 直连访问异常","expr":"ip_host_count > 50 && ip_host_ratio > 0.5"}
 			]
 		}`),
@@ -267,7 +267,7 @@ func TestWAFIPGroupAutoConfigReturnsMatchedIPs(t *testing.T) {
 		AutoConfig: json.RawMessage(`{
 			"lookback_minutes": 60,
 			"rules": [
-				{"name":"单 IP 404 高频扫描","expr":"request_count > 100 && status_404_ratio >= 0.8"},
+				{"name":"单 IP 404 高频扫描","expr":"request_count > 100 && StatusRatio(404) >= 0.8"},
 				{"name":"单 IP 直连访问异常","expr":"ip_host_count > 50 && ip_host_ratio > 0.5"}
 			]
 		}`),
@@ -383,7 +383,7 @@ func TestWAFIPGroupAutomaticTTLExpiration(t *testing.T) {
 			"lookback_minutes": 60,
 			"ttl": 10,
 			"rules": [
-				{"name":"404 Scan","expr":"request_count > 100 && status_404_ratio >= 0.8"}
+				{"name":"404 Scan","expr":"request_count > 100 && StatusRatio(404) >= 0.8"}
 			]
 		}`),
 	})
