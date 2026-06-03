@@ -205,6 +205,12 @@ func TestUpgradeDatabaseSchemaV15ToV16AppliesCompressedReleaseSchema(t *testing.
 	if err := applyCurrentSchema(db, "sqlite"); err != nil {
 		t.Fatalf("apply current schema: %v", err)
 	}
+	if err := db.Exec("ALTER TABLE proxy_routes ADD COLUMN pow_enabled BOOLEAN NOT NULL DEFAULT 0").Error; err != nil {
+		t.Fatalf("failed to add legacy pow_enabled: %v", err)
+	}
+	if err := db.Exec("ALTER TABLE proxy_routes ADD COLUMN pow_config TEXT NOT NULL DEFAULT '{}'").Error; err != nil {
+		t.Fatalf("failed to add legacy pow_config: %v", err)
+	}
 	if err := ensureDefaultWAFRuleGroup(db); err != nil {
 		t.Fatalf("ensure default waf rule group: %v", err)
 	}
@@ -329,6 +335,13 @@ func TestEnsureDatabaseSchemaUpToDateUpgradesLegacyDatabase(t *testing.T) {
 	if err := autoMigrateAll(db); err != nil {
 		t.Fatalf("auto migrate db: %v", err)
 	}
+	// Add legacy PoW columns manually to proxy_routes table to simulate legacy schema v9-v17 state
+	if err := db.Exec("ALTER TABLE proxy_routes ADD COLUMN pow_enabled BOOLEAN NOT NULL DEFAULT 0").Error; err != nil {
+		t.Fatalf("failed to add legacy pow_enabled: %v", err)
+	}
+	if err := db.Exec("ALTER TABLE proxy_routes ADD COLUMN pow_config TEXT NOT NULL DEFAULT '{}'").Error; err != nil {
+		t.Fatalf("failed to add legacy pow_config: %v", err)
+	}
 	if err := db.Create(&User{
 		Username:    "legacy",
 		Password:    "secret",
@@ -439,6 +452,13 @@ func TestEnsureDatabaseSchemaUpToDateAddsProxyRouteDomainCertificateFields(t *te
 	if err := db.AutoMigrate(&legacyProxyRouteV7{}); err != nil {
 		t.Fatalf("auto migrate legacy proxy_routes v7: %v", err)
 	}
+	// Add legacy PoW columns manually to proxy_routes table to simulate legacy schema v9-v17 state
+	if err := db.Exec("ALTER TABLE proxy_routes ADD COLUMN pow_enabled BOOLEAN NOT NULL DEFAULT 0").Error; err != nil {
+		t.Fatalf("failed to add legacy pow_enabled: %v", err)
+	}
+	if err := db.Exec("ALTER TABLE proxy_routes ADD COLUMN pow_config TEXT NOT NULL DEFAULT '{}'").Error; err != nil {
+		t.Fatalf("failed to add legacy pow_config: %v", err)
+	}
 
 	now := time.Now().UTC()
 	certID := uint(9)
@@ -527,6 +547,12 @@ func TestEnsureDatabaseSchemaUpToDateAddsNodeIPManualOverride(t *testing.T) {
 	if err := applyCurrentSchema(db, "sqlite"); err != nil {
 		t.Fatalf("apply current schema: %v", err)
 	}
+	if err := db.Exec("ALTER TABLE proxy_routes ADD COLUMN pow_enabled BOOLEAN NOT NULL DEFAULT 0").Error; err != nil {
+		t.Fatalf("failed to add legacy pow_enabled: %v", err)
+	}
+	if err := db.Exec("ALTER TABLE proxy_routes ADD COLUMN pow_config TEXT NOT NULL DEFAULT '{}'").Error; err != nil {
+		t.Fatalf("failed to add legacy pow_config: %v", err)
+	}
 	if err := ensureDefaultWAFRuleGroup(db); err != nil {
 		t.Fatalf("ensure default waf rule group: %v", err)
 	}
@@ -569,6 +595,12 @@ func TestEnsureDatabaseSchemaUpToDateV16BackfillsNodeColumnsWhenNewColumnsAlread
 	}
 	if err := applyCurrentSchema(db, "sqlite"); err != nil {
 		t.Fatalf("apply current schema: %v", err)
+	}
+	if err := db.Exec("ALTER TABLE proxy_routes ADD COLUMN pow_enabled BOOLEAN NOT NULL DEFAULT 0").Error; err != nil {
+		t.Fatalf("failed to add legacy pow_enabled: %v", err)
+	}
+	if err := db.Exec("ALTER TABLE proxy_routes ADD COLUMN pow_config TEXT NOT NULL DEFAULT '{}'").Error; err != nil {
+		t.Fatalf("failed to add legacy pow_config: %v", err)
 	}
 	if err := ensureDefaultWAFRuleGroup(db); err != nil {
 		t.Fatalf("ensure default waf rule group: %v", err)

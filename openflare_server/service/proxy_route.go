@@ -55,8 +55,6 @@ type ProxyRouteInput struct {
 	CachePolicy          string                        `json:"cache_policy"`
 	CacheRules           []string                      `json:"cache_rules"`
 	CustomHeaders        []ProxyRouteCustomHeaderInput `json:"custom_headers"`
-	PoWEnabled           bool                          `json:"pow_enabled"`
-	PoWConfig            string                        `json:"pow_config"`
 	BasicAuthEnabled     bool                          `json:"basic_auth_enabled"`
 	BasicAuthUsername    string                        `json:"basic_auth_username"`
 	BasicAuthPassword    string                        `json:"basic_auth_password"`
@@ -96,8 +94,6 @@ type ProxyRouteView struct {
 	CacheRuleList        []string                      `json:"cache_rule_list"`
 	CustomHeaders        string                        `json:"custom_headers"`
 	CustomHeaderList     []ProxyRouteCustomHeaderInput `json:"custom_header_list"`
-	PoWEnabled           bool                          `json:"pow_enabled"`
-	PoWConfig            *ProxyRoutePoWConfig          `json:"pow_config"`
 	BasicAuthEnabled     bool                          `json:"basic_auth_enabled"`
 	BasicAuthUsername    string                        `json:"basic_auth_username"`
 	BasicAuthPassword    string                        `json:"basic_auth_password"`
@@ -239,15 +235,6 @@ func buildProxyRoute(route *model.ProxyRoute, input ProxyRouteInput) (*model.Pro
 		return nil, err
 	}
 
-	powConfig, err := normalizePoWConfig(input.PoWEnabled, input.PoWConfig)
-	if err != nil {
-		return nil, err
-	}
-	powConfigJSON, err := json.Marshal(powConfig)
-	if err != nil {
-		return nil, err
-	}
-
 	if !input.EnableHTTPS {
 		input.RedirectHTTP = false
 		input.CertID = nil
@@ -330,8 +317,6 @@ func buildProxyRoute(route *model.ProxyRoute, input ProxyRouteInput) (*model.Pro
 	route.CachePolicy = normalizeCachePolicy(input.CacheEnabled, cachePolicy)
 	route.CacheRules = string(cacheRulesJSON)
 	route.CustomHeaders = string(customHeadersJSON)
-	route.PoWEnabled = input.PoWEnabled
-	route.PoWConfig = string(powConfigJSON)
 	route.BasicAuthEnabled = input.BasicAuthEnabled
 	route.BasicAuthUsername = input.BasicAuthUsername
 	route.BasicAuthPassword = input.BasicAuthPassword
@@ -395,10 +380,6 @@ func buildProxyRouteView(route *model.ProxyRoute) (*ProxyRouteView, error) {
 	if err != nil {
 		return nil, err
 	}
-	powConfig, err := decodeStoredPoWConfig(route.PoWEnabled, route.PoWConfig)
-	if err != nil {
-		return nil, err
-	}
 	certIDs, err := decodeStoredCertIDs(route.CertIDs, route.CertID)
 	if err != nil {
 		return nil, err
@@ -439,8 +420,6 @@ func buildProxyRouteView(route *model.ProxyRoute) (*ProxyRouteView, error) {
 		CacheRuleList:        cacheRules,
 		CustomHeaders:        route.CustomHeaders,
 		CustomHeaderList:     customHeaders,
-		PoWEnabled:           route.PoWEnabled,
-		PoWConfig:            powConfig,
 		BasicAuthEnabled:     route.BasicAuthEnabled,
 		BasicAuthUsername:    route.BasicAuthUsername,
 		BasicAuthPassword:    route.BasicAuthPassword,

@@ -982,31 +982,31 @@ func TestPublishConfigVersionDetectsPoWChanges(t *testing.T) {
 	if err != nil {
 		t.Fatalf("initial PublishConfigVersion failed: %v", err)
 	}
-	if !strings.Contains(firstRelease.Version.SupportFilesJSON, `"path":"pow_config.json"`) {
-		t.Fatal("expected publish to include pow_config.json support file")
+	if !strings.Contains(firstRelease.Version.SupportFilesJSON, `"path":"waf_config.json"`) {
+		t.Fatal("expected publish to include waf_config.json support file")
 	}
 
-	_, err = UpdateProxyRoute(route.ID, ProxyRouteInput{
-		Domain:       route.Domain,
-		OriginURL:    route.OriginURL,
-		Enabled:      true,
-		PoWEnabled:   true,
-		PoWConfig:    `{"difficulty":5,"algorithm":"slow","session_ttl":7200,"challenge_ttl":180,"whitelist":{"ips":["127.0.0.1"],"ip_cidrs":[],"paths":[],"path_regexes":[],"user_agents":[]},"blacklist":{"ips":[],"ip_cidrs":[],"paths":["/login"],"path_regexes":[],"user_agents":[]}}`,
-		RedirectHTTP: false,
+	group, err := CreateWAFRuleGroup(WAFRuleGroupInput{
+		Name:            "pow group",
+		Enabled:         true,
+		BlockStatusCode: 418,
+		PoWEnabled:      true,
+		PoWConfig:       json.RawMessage(`{"difficulty":5,"algorithm":"slow","session_ttl":7200,"challenge_ttl":180,"whitelist":{"ips":["127.0.0.1"],"ip_cidrs":[],"paths":[],"path_regexes":[],"user_agents":[]},"blacklist":{"ips":[],"ip_cidrs":[],"paths":["/login"],"path_regexes":[],"user_agents":[]}}`),
 	})
 	if err != nil {
-		t.Fatalf("UpdateProxyRoute failed: %v", err)
+		t.Fatalf("CreateWAFRuleGroup failed: %v", err)
+	}
+
+	if _, err = ReplaceWAFSiteRuleGroups(route.ID, []uint{group.ID}); err != nil {
+		t.Fatalf("ReplaceWAFSiteRuleGroups failed: %v", err)
 	}
 
 	diff, err := DiffConfigVersion()
 	if err != nil {
 		t.Fatalf("DiffConfigVersion failed: %v", err)
 	}
-	if len(diff.ModifiedDomains) != 1 || diff.ModifiedDomains[0] != "pow.example.com" {
-		t.Fatalf("expected PoW change to mark domain as modified, got %#v", diff.ModifiedDomains)
-	}
-	if len(diff.ModifiedSites) != 1 || diff.ModifiedSites[0] != "pow.example.com" {
-		t.Fatalf("expected PoW change to mark site as modified, got %#v", diff.ModifiedSites)
+	if !diff.WAFConfigChanged {
+		t.Fatal("expected PoW change (via WAF Rule Group) to trigger WAF config change")
 	}
 
 	secondRelease, err := PublishConfigVersion("root", false)
@@ -1053,18 +1053,18 @@ func TestPublishConfigVersionDetectsPoWChanges(t *testing.T) {
 	if err := json.Unmarshal([]byte(secondRelease.Version.SupportFilesJSON), &supportFiles); err != nil {
 		t.Fatalf("failed to decode support files: %v", err)
 	}
-	foundPowSupportFile := false
+	foundWafSupportFile := false
 	for _, file := range supportFiles {
-		if file.Path != "pow_config.json" {
+		if file.Path != "waf_config.json" {
 			continue
 		}
-		foundPowSupportFile = true
+		foundWafSupportFile = true
 		if !strings.Contains(file.Content, `"difficulty":5`) {
-			t.Fatalf("expected pow support file to persist config, got %s", file.Content)
+			t.Fatalf("expected waf support file to persist pow config, got %s", file.Content)
 		}
 	}
-	if !foundPowSupportFile {
-		t.Fatal("expected publish to include pow_config.json support file")
+	if !foundWafSupportFile {
+		t.Fatal("expected publish to include waf_config.json support file")
 	}
 }
 
@@ -1081,21 +1081,34 @@ func TestPublishConfigVersionRendersBasicAuthWithPoW(t *testing.T) {
 		t.Fatalf("CreateTLSCertificate failed: %v", err)
 	}
 
-	_, err = CreateProxyRoute(ProxyRouteInput{
+	route, err := CreateProxyRoute(ProxyRouteInput{
 		Domain:            "xbot.example.com",
 		OriginURL:         "http://c1:36185",
 		Enabled:           true,
 		EnableHTTPS:       true,
 		CertID:            &certificate.ID,
 		RedirectHTTP:      true,
-		PoWEnabled:        true,
-		PoWConfig:         `{"difficulty":4,"algorithm":"fast","session_ttl":600,"challenge_ttl":300,"whitelist":{"ips":[],"ip_cidrs":[],"paths":[],"path_regexes":[],"user_agents":[]},"blacklist":{"ips":[],"ip_cidrs":[],"paths":[],"path_regexes":[],"user_agents":[]}}`,
 		BasicAuthEnabled:  true,
 		BasicAuthUsername: "admin",
 		BasicAuthPassword: "123",
 	})
 	if err != nil {
 		t.Fatalf("CreateProxyRoute failed: %v", err)
+	}
+
+	group, err := CreateWAFRuleGroup(WAFRuleGroupInput{
+		Name:            "pow group",
+		Enabled:         true,
+		BlockStatusCode: 418,
+		PoWEnabled:      true,
+		PoWConfig:       json.RawMessage(`{"difficulty":4,"algorithm":"fast","session_ttl":600,"challenge_ttl":300,"whitelist":{"ips":[],"ip_cidrs":[],"paths":[],"path_regexes":[],"user_agents":[]},"blacklist":{"ips":[],"ip_cidrs":[],"paths":[],"path_regexes":[],"user_agents":[]}}`),
+	})
+	if err != nil {
+		t.Fatalf("CreateWAFRuleGroup failed: %v", err)
+	}
+
+	if _, err = ReplaceWAFSiteRuleGroups(route.ID, []uint{group.ID}); err != nil {
+		t.Fatalf("ReplaceWAFSiteRuleGroups failed: %v", err)
 	}
 
 	result, err := PublishConfigVersion("root", false)

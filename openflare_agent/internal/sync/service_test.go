@@ -190,7 +190,7 @@ func TestSyncOnceSuccess(t *testing.T) {
 	if client.reports[0].MainConfigChecksum == "" || client.reports[0].RouteConfigChecksum == "" {
 		t.Fatal("expected main and route config checksums to be reported")
 	}
-	if client.reports[0].SupportFileCount != 4 {
+	if client.reports[0].SupportFileCount != 3 {
 		t.Fatalf("expected support file count to be reported, got %d", client.reports[0].SupportFileCount)
 	}
 }
@@ -326,7 +326,7 @@ func TestSyncOnceRollbackOnNginxFailure(t *testing.T) {
 	if client.reports[0].MainConfigChecksum == "" || client.reports[0].RouteConfigChecksum == "" {
 		t.Fatal("expected failed report to include main and route config checksums")
 	}
-	if client.reports[0].SupportFileCount != 4 {
+	if client.reports[0].SupportFileCount != 3 {
 		t.Fatalf("expected failed report to include support file count, got %d", client.reports[0].SupportFileCount)
 	}
 }

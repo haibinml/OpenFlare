@@ -83,8 +83,6 @@ type snapshotRoute struct {
 	CachePolicy        string                        `json:"cache_policy,omitempty"`
 	CacheRules         []string                      `json:"cache_rules,omitempty"`
 	CustomHeaders      []ProxyRouteCustomHeaderInput `json:"custom_headers,omitempty"`
-	PoWEnabled         bool                          `json:"pow_enabled,omitempty"`
-	PoWConfig          *ProxyRoutePoWConfig          `json:"pow_config,omitempty"`
 	BasicAuthEnabled   bool                          `json:"basic_auth_enabled,omitempty"`
 	BasicAuthUsername  string                        `json:"basic_auth_username,omitempty"`
 	BasicAuthPassword  string                        `json:"basic_auth_password,omitempty"`
@@ -551,13 +549,6 @@ func buildSnapshotRoutes(routes []*model.ProxyRoute) ([]snapshotRoute, error) {
 		if err != nil {
 			return nil, fmt.Errorf("路由 %s 缓存规则无效", route.Domain)
 		}
-		powConfig, err := decodeStoredPoWConfig(route.PoWEnabled, route.PoWConfig)
-		if err != nil {
-			return nil, fmt.Errorf("路由 %s PoW 配置无效", route.Domain)
-		}
-		if !route.PoWEnabled {
-			powConfig = nil
-		}
 		items = append(items, snapshotRoute{
 			ID:                 route.ID,
 			SiteName:           normalizeProxyRouteSiteNameInput(route, route.SiteName, domains[0]),
@@ -579,8 +570,6 @@ func buildSnapshotRoutes(routes []*model.ProxyRoute) ([]snapshotRoute, error) {
 			CachePolicy:        route.CachePolicy,
 			CacheRules:         cacheRules,
 			CustomHeaders:      customHeaders,
-			PoWEnabled:         route.PoWEnabled,
-			PoWConfig:          powConfig,
 			BasicAuthEnabled:   route.BasicAuthEnabled,
 			BasicAuthUsername:  route.BasicAuthUsername,
 			BasicAuthPassword:  route.BasicAuthPassword,
@@ -861,17 +850,6 @@ func normalizeSnapshotRoutes(routes []snapshotRoute) []snapshotRoute {
 		if err == nil {
 			routes[index].LimitRate = normalizedLimitRate
 		}
-		if routes[index].PoWEnabled {
-			raw, err := json.Marshal(routes[index].PoWConfig)
-			if err == nil {
-				normalizedPoWConfig, err := normalizePoWConfig(true, string(raw))
-				if err == nil {
-					routes[index].PoWConfig = &normalizedPoWConfig
-				}
-			}
-		} else {
-			routes[index].PoWConfig = nil
-		}
 		if !routes[index].BasicAuthEnabled {
 			routes[index].BasicAuthUsername = ""
 			routes[index].BasicAuthPassword = ""
@@ -918,7 +896,7 @@ func flattenSnapshotRoutesByDomain(routes []snapshotRoute) map[string]snapshotRo
 }
 
 func snapshotRouteConfigEqual(left snapshotRoute, right snapshotRoute) bool {
-	if left.SiteName != right.SiteName || left.Domain != right.Domain || left.OriginURL != right.OriginURL || left.OriginHost != right.OriginHost || left.EnableHTTPS != right.EnableHTTPS || left.RedirectHTTP != right.RedirectHTTP || left.LimitConnPerServer != right.LimitConnPerServer || left.LimitConnPerIP != right.LimitConnPerIP || left.LimitRate != right.LimitRate || left.CacheEnabled != right.CacheEnabled || left.CachePolicy != right.CachePolicy || left.PoWEnabled != right.PoWEnabled || left.BasicAuthEnabled != right.BasicAuthEnabled || left.BasicAuthUsername != right.BasicAuthUsername || left.BasicAuthPassword != right.BasicAuthPassword || left.UpstreamType != right.UpstreamType || !uintPtrEqual(left.TunnelNodeID, right.TunnelNodeID) || left.TunnelTargetAddr != right.TunnelTargetAddr || left.TunnelTargetProto != right.TunnelTargetProto || !uintPtrEqual(left.PagesProjectID, right.PagesProjectID) || !snapshotPagesDeploymentEqual(left.PagesDeployment, right.PagesDeployment) || !uintSliceEqual(left.CertIDs, right.CertIDs) || !uintSliceEqual(left.DomainCertIDs, right.DomainCertIDs) {
+	if left.SiteName != right.SiteName || left.Domain != right.Domain || left.OriginURL != right.OriginURL || left.OriginHost != right.OriginHost || left.EnableHTTPS != right.EnableHTTPS || left.RedirectHTTP != right.RedirectHTTP || left.LimitConnPerServer != right.LimitConnPerServer || left.LimitConnPerIP != right.LimitConnPerIP || left.LimitRate != right.LimitRate || left.CacheEnabled != right.CacheEnabled || left.CachePolicy != right.CachePolicy || left.BasicAuthEnabled != right.BasicAuthEnabled || left.BasicAuthUsername != right.BasicAuthUsername || left.BasicAuthPassword != right.BasicAuthPassword || left.UpstreamType != right.UpstreamType || !uintPtrEqual(left.TunnelNodeID, right.TunnelNodeID) || left.TunnelTargetAddr != right.TunnelTargetAddr || left.TunnelTargetProto != right.TunnelTargetProto || !uintPtrEqual(left.PagesProjectID, right.PagesProjectID) || !snapshotPagesDeploymentEqual(left.PagesDeployment, right.PagesDeployment) || !uintSliceEqual(left.CertIDs, right.CertIDs) || !uintSliceEqual(left.DomainCertIDs, right.DomainCertIDs) {
 		return false
 	}
 	if len(left.Domains) != len(right.Domains) {
@@ -953,9 +931,6 @@ func snapshotRouteConfigEqual(left snapshotRoute, right snapshotRoute) bool {
 			return false
 		}
 	}
-	if !snapshotPoWConfigEqual(left.PoWConfig, right.PoWConfig) {
-		return false
-	}
 	return true
 }
 
@@ -984,26 +959,6 @@ func snapshotWAFConfigEqual(left snapshotWAFDocument, right snapshotWAFDocument)
 		return false
 	}
 	return string(leftJSON) == string(rightJSON)
-}
-
-func snapshotPoWConfigEqual(left *ProxyRoutePoWConfig, right *ProxyRoutePoWConfig) bool {
-	if left == nil || right == nil {
-		return left == nil && right == nil
-	}
-	return left.Difficulty == right.Difficulty &&
-		left.Algorithm == right.Algorithm &&
-		left.SessionTTL == right.SessionTTL &&
-		left.ChallengeTTL == right.ChallengeTTL &&
-		stringSliceEqual(left.Whitelist.IPs, right.Whitelist.IPs) &&
-		stringSliceEqual(left.Whitelist.IPCidrs, right.Whitelist.IPCidrs) &&
-		stringSliceEqual(left.Whitelist.Paths, right.Whitelist.Paths) &&
-		stringSliceEqual(left.Whitelist.PathRegexes, right.Whitelist.PathRegexes) &&
-		stringSliceEqual(left.Whitelist.UserAgents, right.Whitelist.UserAgents) &&
-		stringSliceEqual(left.Blacklist.IPs, right.Blacklist.IPs) &&
-		stringSliceEqual(left.Blacklist.IPCidrs, right.Blacklist.IPCidrs) &&
-		stringSliceEqual(left.Blacklist.Paths, right.Blacklist.Paths) &&
-		stringSliceEqual(left.Blacklist.PathRegexes, right.Blacklist.PathRegexes) &&
-		stringSliceEqual(left.Blacklist.UserAgents, right.Blacklist.UserAgents)
 }
 
 func stringSliceEqual(left []string, right []string) bool {

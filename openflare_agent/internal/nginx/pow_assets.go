@@ -39,9 +39,9 @@ end
 -- Lazy-load pow_config from file; reload when content changes
 local function load_pow_config()
     local config_paths = {
-        "__OPENFLARE_RUNTIME_CONFIG_DIR__/pow_config.json",
-        "/etc/nginx/openflare-lua/pow_config.json",
-        "/usr/local/openresty/nginx/conf/pow_config.json"
+        "__OPENFLARE_RUNTIME_CONFIG_DIR__/waf_config.json",
+        "/etc/nginx/openflare-lua/waf_config.json",
+        "/usr/local/openresty/nginx/conf/waf_config.json"
     }
     for _, config_path in ipairs(config_paths) do
         local f = io.open(config_path, "r")
@@ -54,7 +54,7 @@ local function load_pow_config()
                 return
             end
 
-            -- Clear old domain entries
+            -- Clear old domain/site entries
             local old_keys = pow_config_dict:get("_domain_keys")
             if old_keys then
                 for domain in string.gmatch(old_keys, "[^\n]+") do
@@ -64,14 +64,37 @@ local function load_pow_config()
 
             local domain_keys = {}
             if content and content ~= "" and content ~= "{}" then
-                local ok, entries = pcall(cjson.decode, content)
-                if ok and entries and type(entries) == "table" then
-                    for _, entry in ipairs(entries) do
-                        if entry.domains then
-                            for _, domain in ipairs(entry.domains) do
-                                pow_config_dict:set(domain, cjson.encode(entry), 0)
-                                domain_keys[#domain_keys+1] = domain
+                local ok, decoded = pcall(cjson.decode, content)
+                if ok and decoded and decoded.rule_groups and decoded.site_rule_groups then
+                    -- Build rule groups map (group ID -> PoWConfig)
+                    local groups = {}
+                    for _, group in ipairs(decoded.rule_groups) do
+                        if group.pow_enabled then
+                            groups[tostring(group.id)] = group.pow_config
+                        end
+                    end
+                    -- Build site name to pow_config map
+                    for site, group_ids in pairs(decoded.site_rule_groups) do
+                        local pow_config = nil
+                        -- Check custom group IDs first
+                        for _, id in ipairs(group_ids) do
+                            pow_config = groups[tostring(id)]
+                            if pow_config then
+                                break
                             end
+                        end
+                        -- If not found, check global group IDs
+                        if not pow_config then
+                            for _, group in ipairs(decoded.rule_groups) do
+                                if group.is_global and group.pow_enabled then
+                                    pow_config = group.pow_config
+                                    break
+                                end
+                            end
+                        end
+                        if pow_config then
+                            pow_config_dict:set(site, cjson.encode({enabled = true, config = pow_config}), 0)
+                            domain_keys[#domain_keys+1] = site
                         end
                     end
                 end
@@ -91,7 +114,12 @@ if not host or host == "" then
     return
 end
 
-local config_raw = pow_config_dict:get(host)
+local site = ngx.var.openflare_waf_site or ""
+if site == "" then
+    site = host
+end
+
+local config_raw = pow_config_dict:get(site)
 if not config_raw then
     return
 end
@@ -199,17 +227,22 @@ local args = ngx.req.get_uri_args()
 local host = args["host"] or ngx.var.host or ""
 local redir = args["redir"] or ""
 
-local config_raw = pow_config_dict:get(host)
+local site = ngx.var.openflare_waf_site or ""
+if site == "" then
+    site = host
+end
+
+local config_raw = pow_config_dict:get(site)
 if not config_raw then
     ngx.status = 403
-    ngx.say("PoW not configured for this host")
+    ngx.say("PoW not configured for this site")
     return
 end
 
 local ok, route_config = pcall(cjson.decode, config_raw)
 if not ok or not route_config or not route_config.enabled then
     ngx.status = 403
-    ngx.say("PoW not enabled for this host")
+    ngx.say("PoW not enabled for this site")
     return
 end
 

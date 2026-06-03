@@ -34,12 +34,7 @@ func Render(doc Document, certificateFiles []SupportFile) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	powConfig, err := RenderPoWConfig(doc)
-	if err != nil {
-		return nil, err
-	}
 	files := append([]SupportFile(nil), certificateFiles...)
-	files = append(files, SupportFile{Path: "pow_config.json", Content: powConfig})
 	files = append(files, SupportFile{Path: "waf_config.json", Content: wafConfig})
 	files = DedupeSupportFiles(files)
 	return &Result{
@@ -88,9 +83,6 @@ func RenderRouteConfig(doc Document, certificateFiles []SupportFile) (string, er
 		cacheConfig := routeCacheConfig{Enabled: route.CacheEnabled, Policy: route.CachePolicy, Rules: route.CacheRules}
 		limitConfig := routeLimitConfig{LimitConnPerServer: route.LimitConnPerServer, LimitConnPerIP: route.LimitConnPerIP, LimitRate: route.LimitRate}
 		powEnabled, _ := getPoWConfigForRoute(route.ID, doc.WAF)
-		if route.PoWEnabled {
-			powEnabled = true
-		}
 		if normalizeRouteUpstreamType(route.UpstreamType) == "pages" {
 			if route.PagesDeployment == nil {
 				return "", fmt.Errorf("route %s pages deployment is missing", route.Domain)
@@ -214,12 +206,6 @@ func RenderPoWConfig(doc Document) (string, error) {
 	entries := make([]domainEntry, 0)
 	for _, route := range doc.Routes {
 		powEnabled, powConfig := getPoWConfigForRoute(route.ID, doc.WAF)
-		if route.PoWEnabled {
-			powEnabled = true
-			if route.PoWConfig != nil {
-				powConfig = route.PoWConfig
-			}
-		}
 		if !powEnabled {
 			continue
 		}
@@ -234,19 +220,21 @@ func RenderPoWConfig(doc Document) (string, error) {
 
 func RenderWAFConfig(snapshot WAFDocument) (string, error) {
 	type wafRuntimeRuleGroup struct {
-		ID                uint     `json:"id"`
-		Name              string   `json:"name"`
-		IsGlobal          bool     `json:"is_global"`
-		BlockStatusCode   int      `json:"block_status_code"`
-		BlockResponseBody string   `json:"block_response_body"`
-		IPWhitelist       []string `json:"ip_whitelist"`
-		IPBlacklist       []string `json:"ip_blacklist"`
-		IPWhitelistGroups []uint   `json:"ip_whitelist_group_ids,omitempty"`
-		IPBlacklistGroups []uint   `json:"ip_blacklist_group_ids,omitempty"`
-		CountryWhitelist  []string `json:"country_whitelist"`
-		CountryBlacklist  []string `json:"country_blacklist"`
-		RegionWhitelist   []string `json:"region_whitelist"`
-		RegionBlacklist   []string `json:"region_blacklist"`
+		ID                uint       `json:"id"`
+		Name              string     `json:"name"`
+		IsGlobal          bool       `json:"is_global"`
+		BlockStatusCode   int        `json:"block_status_code"`
+		BlockResponseBody string     `json:"block_response_body"`
+		IPWhitelist       []string   `json:"ip_whitelist"`
+		IPBlacklist       []string   `json:"ip_blacklist"`
+		IPWhitelistGroups []uint     `json:"ip_whitelist_group_ids,omitempty"`
+		IPBlacklistGroups []uint     `json:"ip_blacklist_group_ids,omitempty"`
+		CountryWhitelist  []string   `json:"country_whitelist"`
+		CountryBlacklist  []string   `json:"country_blacklist"`
+		RegionWhitelist   []string   `json:"region_whitelist"`
+		RegionBlacklist   []string   `json:"region_blacklist"`
+		PoWEnabled        bool       `json:"pow_enabled"`
+		PoWConfig         *PoWConfig `json:"pow_config,omitempty"`
 	}
 	type wafRuntimeConfig struct {
 		DefaultBlockStatusCode int                   `json:"default_block_status_code"`
@@ -268,6 +256,10 @@ func RenderWAFConfig(snapshot WAFDocument) (string, error) {
 			globalGroupIDs = append(globalGroupIDs, group.ID)
 		}
 		enabledGroupIDs[group.ID] = struct{}{}
+		powConfig := group.PoWConfig
+		if !group.PoWEnabled {
+			powConfig = nil
+		}
 		groups = append(groups, wafRuntimeRuleGroup{
 			ID:                group.ID,
 			Name:              group.Name,
@@ -282,6 +274,8 @@ func RenderWAFConfig(snapshot WAFDocument) (string, error) {
 			CountryBlacklist:  group.CountryBlacklist,
 			RegionWhitelist:   group.RegionWhitelist,
 			RegionBlacklist:   group.RegionBlacklist,
+			PoWEnabled:        group.PoWEnabled,
+			PoWConfig:         powConfig,
 		})
 	}
 	sort.Slice(groups, func(i, j int) bool {

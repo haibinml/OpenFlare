@@ -11,39 +11,6 @@ import (
 	"gorm.io/gorm"
 )
 
-func TestGetActiveConfigForAgentIncludesPoWConfig(t *testing.T) {
-	setupServiceTestDB(t)
-
-	_, err := CreateProxyRoute(ProxyRouteInput{
-		Domain:     "pow-agent.example.com",
-		OriginURL:  "https://origin.internal",
-		Enabled:    true,
-		PoWEnabled: true,
-		PoWConfig:  `{"difficulty":4,"algorithm":"fast","session_ttl":86400,"challenge_ttl":300,"whitelist":{"paths":["/.well-known/*","/favicon.ico","/robots.txt"],"user_agents":["Googlebot","bingbot","Baiduspider"]},"blacklist":{"ips":[],"ip_cidrs":[],"paths":[],"path_regexes":[],"user_agents":[]}}`,
-	})
-	if err != nil {
-		t.Fatalf("CreateProxyRoute failed: %v", err)
-	}
-
-	if _, err := PublishConfigVersion("root", false); err != nil {
-		t.Fatalf("PublishConfigVersion failed: %v", err)
-	}
-
-	activeConfig, err := GetActiveConfigForAgent()
-	if err != nil {
-		t.Fatalf("GetActiveConfigForAgent failed: %v", err)
-	}
-
-	for _, file := range activeConfig.SupportFiles {
-		if file.Path == "pow_config.json" || file.Path == "waf_config.json" {
-			t.Fatalf("agent config should not receive rendered runtime config file %s", file.Path)
-		}
-	}
-	if !strings.Contains(activeConfig.SourceConfigJSON, `"pow_enabled":true`) {
-		t.Fatal("expected agent config source json to include PoW source configuration")
-	}
-}
-
 func TestGetActiveConfigForAgentIncludesWAFConfig(t *testing.T) {
 	setupServiceTestDB(t)
 
@@ -141,39 +108,6 @@ func TestChangedWAFIPGroupsForAgentReturnsChecksumDelta(t *testing.T) {
 	}
 	if len(delta) != 1 || delta[0].ID != updated.ID || delta[0].IPList[0] != "203.0.113.45" || delta[0].Checksum == groups[0].Checksum {
 		t.Fatalf("expected updated group delta, got %#v", delta)
-	}
-}
-
-func TestGetActiveConfigForAgentUsesTenMinutePoWSessionDefault(t *testing.T) {
-	setupServiceTestDB(t)
-
-	_, err := CreateProxyRoute(ProxyRouteInput{
-		Domain:     "pow-default.example.com",
-		OriginURL:  "https://origin.internal",
-		Enabled:    true,
-		PoWEnabled: true,
-		PoWConfig:  `{}`,
-	})
-	if err != nil {
-		t.Fatalf("CreateProxyRoute failed: %v", err)
-	}
-
-	if _, err := PublishConfigVersion("root", false); err != nil {
-		t.Fatalf("PublishConfigVersion failed: %v", err)
-	}
-
-	activeConfig, err := GetActiveConfigForAgent()
-	if err != nil {
-		t.Fatalf("GetActiveConfigForAgent failed: %v", err)
-	}
-
-	for _, file := range activeConfig.SupportFiles {
-		if file.Path == "pow_config.json" {
-			t.Fatal("agent config should not receive rendered pow_config.json")
-		}
-	}
-	if !strings.Contains(activeConfig.SourceConfigJSON, `"session_ttl":600`) {
-		t.Fatalf("expected default PoW session TTL to be in source json, got %s", activeConfig.SourceConfigJSON)
 	}
 }
 

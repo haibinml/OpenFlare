@@ -1131,11 +1131,23 @@ func validateDatabaseSchemaV9(db *gorm.DB, backend string) error {
 	if err := validateDatabaseSchemaV8(db, backend); err != nil {
 		return err
 	}
-	if !db.Migrator().HasColumn(&ProxyRoute{}, "pow_enabled") {
-		return fmt.Errorf("column proxy_routes.pow_enabled is missing")
+	hasAppliedDropPoW := false
+	if db.Migrator().HasTable("goose_db_version") {
+		var count int64
+		_ = db.Table("goose_db_version").
+			Where("version_id = ? AND is_applied = ?", 202606030003, true).
+			Count(&count).Error
+		if count > 0 {
+			hasAppliedDropPoW = true
+		}
 	}
-	if !db.Migrator().HasColumn(&ProxyRoute{}, "pow_config") {
-		return fmt.Errorf("column proxy_routes.pow_config is missing")
+	if !hasAppliedDropPoW {
+		if !db.Migrator().HasColumn(&ProxyRoute{}, "pow_enabled") {
+			return fmt.Errorf("column proxy_routes.pow_enabled is missing")
+		}
+		if !db.Migrator().HasColumn(&ProxyRoute{}, "pow_config") {
+			return fmt.Errorf("column proxy_routes.pow_config is missing")
+		}
 	}
 	return nil
 }

@@ -549,7 +549,7 @@ func TestManagerEnsureLuaAssetsWritesReadableFiles(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to read pow lua file: %v", err)
 	}
-	if !strings.Contains(string(data), filepath.ToSlash(manager.RuntimeConfigDir)+"/pow_config.json") {
+	if !strings.Contains(string(data), filepath.ToSlash(manager.RuntimeConfigDir)+"/waf_config.json") {
 		t.Fatalf("expected pow lua to read runtime config dir, got %s", string(data))
 	}
 }
