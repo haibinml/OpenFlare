@@ -366,6 +366,8 @@ jobs:
           files: dist/*
           draft: false
           prerelease: ${{ needs.prepare.outputs.is_prerelease == 'true' }}
+          body: |
+            查看完整更新日志: https://open-flare.pages.dev/changelog/
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
