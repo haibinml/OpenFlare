@@ -3,6 +3,7 @@ package service
 import (
 	"archive/zip"
 	"bytes"
+	"fmt"
 	"mime/multipart"
 	"net/http/httptest"
 	"openflare/model"
@@ -28,7 +29,7 @@ func TestPagesUploadActivateAndPublishStaticRoute(t *testing.T) {
 		"assets/app.js":    "console.log('pages')",
 		"assets/style.css": "body{color:#111}",
 	}))
-	deployment, err := UploadPagesDeployment(project.ID, uploadHeader, "index.html", "root")
+	deployment, err := UploadPagesDeployment(project.ID, uploadHeader, "", "index.html", "root")
 	if err != nil {
 		t.Fatalf("UploadPagesDeployment failed: %v", err)
 	}
@@ -109,7 +110,7 @@ func TestUploadPagesDeploymentRejectsZipSlip(t *testing.T) {
 	_, err = UploadPagesDeployment(project.ID, multipartFileHeader(t, "bad.zip", testPagesZip(t, map[string]string{
 		"../escape.html": "bad",
 		"index.html":     "ok",
-	})), "index.html", "root")
+	})), "", "index.html", "root")
 	if err == nil || !strings.Contains(err.Error(), "逃逸目录") {
 		t.Fatalf("expected zip-slip rejection, got %v", err)
 	}
@@ -145,7 +146,7 @@ func TestPagesDeploymentPackageRequiresActiveConfigSnapshot(t *testing.T) {
 	}
 	deployment, err := UploadPagesDeployment(project.ID, multipartFileHeader(t, "site.zip", testPagesZip(t, map[string]string{
 		"index.html": "ok",
-	})), "index.html", "root")
+	})), "", "index.html", "root")
 	if err != nil {
 		t.Fatalf("UploadPagesDeployment failed: %v", err)
 	}
@@ -228,7 +229,7 @@ func TestDeletePagesDeploymentRejectsActiveDeployment(t *testing.T) {
 	if err != nil {
 		t.Fatalf("CreatePagesProject failed: %v", err)
 	}
-	deployment, err := UploadPagesDeployment(project.ID, multipartFileHeader(t, "site.zip", testPagesZip(t, map[string]string{"index.html": "ok"})), "index.html", "root")
+	deployment, err := UploadPagesDeployment(project.ID, multipartFileHeader(t, "site.zip", testPagesZip(t, map[string]string{"index.html": "ok"})), "", "index.html", "root")
 	if err != nil {
 		t.Fatalf("UploadPagesDeployment failed: %v", err)
 	}
@@ -260,7 +261,7 @@ func TestUploadPagesDeploymentWithTopLevelFolder(t *testing.T) {
 		"Speed-Test-source/index.html":    "<h1>Hello Pages</h1>",
 		"Speed-Test-source/assets/app.js": "console.log('pages')",
 	}))
-	deployment, err := UploadPagesDeployment(project.ID, uploadHeader, "index.html", "root")
+	deployment, err := UploadPagesDeployment(project.ID, uploadHeader, "", "index.html", "root")
 	if err != nil {
 		t.Fatalf("UploadPagesDeployment with folder failed: %v", err)
 	}
@@ -323,5 +324,72 @@ func TestPagesProjectAPIProxyValidation(t *testing.T) {
 	}
 	if !project.APIProxyEnabled || project.APIProxyPath != "/api" || project.APIProxyPass != "http://127.0.0.1:8080" || project.APIProxyRewrite != "/" {
 		t.Fatalf("unexpected project state: %+v", project)
+	}
+}
+
+func TestUploadPagesDeploymentWithRootDir(t *testing.T) {
+	setupServiceTestDB(t)
+
+	project, err := CreatePagesProject(PagesProjectInput{
+		Name:    "App Site",
+		Slug:    "app-site",
+		Enabled: true,
+	})
+	if err != nil {
+		t.Fatalf("CreatePagesProject failed: %v", err)
+	}
+
+	// 1. Upload a zip with files inside a subfolder, specifying "build" as rootDir.
+	uploadHeader := multipartFileHeader(t, "site.zip", testPagesZip(t, map[string]string{
+		"build/index.html":       "<h1>App Root</h1>",
+		"build/static/bundle.js": "console.log('app')",
+		"README.md":              "README info",
+	}))
+	deployment, err := UploadPagesDeployment(project.ID, uploadHeader, "build", "index.html", "root")
+	if err != nil {
+		t.Fatalf("UploadPagesDeployment with rootDir failed: %v", err)
+	}
+	if deployment.FileCount != 3 {
+		t.Fatalf("expected 3 files, got %d", deployment.FileCount)
+	}
+	if deployment.RootDir != "build" {
+		t.Fatalf("expected RootDir to be 'build', got %q", deployment.RootDir)
+	}
+	if deployment.EntryFile != "index.html" {
+		t.Fatalf("expected EntryFile to be 'index.html', got %q", deployment.EntryFile)
+	}
+
+	// 2. Try uploading with wrong entry file relative to root directory, should fail
+	_, err = UploadPagesDeployment(project.ID, uploadHeader, "build", "missing.html", "root")
+	if err == nil || !strings.Contains(err.Error(), "缺少入口文件") {
+		t.Fatalf("expected failure for missing entry file, got %v", err)
+	}
+
+	// 3. Test config snapshot LocalRoot path rendering
+	project, err = ActivatePagesDeployment(project.ID, deployment.ID)
+	if err != nil {
+		t.Fatalf("ActivatePagesDeployment failed: %v", err)
+	}
+	_, err = CreateProxyRoute(ProxyRouteInput{
+		Domain:         "app.example.com",
+		Enabled:        true,
+		UpstreamType:   "pages",
+		PagesProjectID: &project.ID,
+	})
+	if err != nil {
+		t.Fatalf("CreateProxyRoute failed: %v", err)
+	}
+	result, err := PublishConfigVersion("root", false)
+	if err != nil {
+		t.Fatalf("PublishConfigVersion failed: %v", err)
+	}
+	// Verify LocalRoot contains the rootDir
+	expectedLocalRoot := fmt.Sprintf("deployments/%d/current/build", deployment.ID)
+	if !strings.Contains(result.Version.SnapshotJSON, expectedLocalRoot) {
+		t.Fatalf("expected snapshot JSON to include %q, got %s", expectedLocalRoot, result.Version.SnapshotJSON)
+	}
+
+	if !strings.Contains(result.Version.RenderedConfig, "current/build") {
+		t.Fatalf("expected rendered config to point to current/build, got:\n%s", result.Version.RenderedConfig)
 	}
 }

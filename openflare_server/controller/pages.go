@@ -93,7 +93,13 @@ func UploadPagesDeployment(c *gin.Context) {
 		respondBadRequest(c, "缺少 Pages 部署包")
 		return
 	}
-	deployment, err := service.UploadPagesDeployment(id, file, c.PostForm("entry_file"), c.GetString("username"))
+	deployment, err := service.UploadPagesDeployment(
+		id,
+		file,
+		c.PostForm("root_dir"),
+		c.PostForm("entry_file"),
+		c.GetString("username"),
+	)
 	if err != nil {
 		respondFailure(c, err.Error())
 		return

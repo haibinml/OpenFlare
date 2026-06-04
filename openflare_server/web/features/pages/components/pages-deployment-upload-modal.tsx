@@ -33,12 +33,14 @@ export function PagesDeploymentUploadModal({
 }: PagesDeploymentUploadModalProps) {
   const queryClient = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
+  const [rootDir, setRootDir] = useState('');
   const [entryFile, setEntryFile] = useState('index.html');
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const resetForm = () => {
     setFile(null);
+    setRootDir('');
     setEntryFile('index.html');
     setUploadProgress(null);
     setErrorMessage(null);
@@ -60,6 +62,7 @@ export function PagesDeploymentUploadModal({
       const deployment = await uploadPagesDeployment(
         projectId,
         file,
+        rootDir,
         entryFile,
         (percent) => {
           setUploadProgress(percent);
@@ -148,7 +151,20 @@ export function PagesDeploymentUploadModal({
             onChange={(event) => setFile(event.target.files?.[0] ?? null)}
           />
         </ResourceField>
-        <ResourceField label="入口文件">
+        <ResourceField
+          label="根目录 (可选)"
+          hint="静态资源的根文件夹路径 (例如 build 或 dist)，若为空则默认为 zip 包根目录。"
+        >
+          <ResourceInput
+            value={rootDir}
+            onChange={(event) => setRootDir(event.target.value)}
+            placeholder="例如: build"
+          />
+        </ResourceField>
+        <ResourceField
+          label="入口文件"
+          hint="基于根目录下的入口文件路径。"
+        >
           <ResourceInput
             value={entryFile}
             onChange={(event) => setEntryFile(event.target.value)}

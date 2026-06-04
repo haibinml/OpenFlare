@@ -70,6 +70,7 @@ type PagesDeploymentView struct {
 	Status           string     `json:"status"`
 	FileCount        int        `json:"file_count"`
 	TotalSize        int64      `json:"total_size"`
+	RootDir          string     `json:"root_dir"`
 	EntryFile        string     `json:"entry_file"`
 	CreatedBy        string     `json:"created_by"`
 	CreatedAt        time.Time  `json:"created_at"`
@@ -229,7 +230,7 @@ func ListPagesDeploymentFiles(deploymentID uint) ([]*PagesDeploymentFileView, er
 	return views, nil
 }
 
-func UploadPagesDeployment(projectID uint, fileHeader *multipart.FileHeader, entryFile string, createdBy string) (*PagesDeploymentView, error) {
+func UploadPagesDeployment(projectID uint, fileHeader *multipart.FileHeader, rootDir string, entryFile string, createdBy string) (*PagesDeploymentView, error) {
 	project, err := model.GetPagesProjectByID(projectID)
 	if err != nil {
 		return nil, err
@@ -240,13 +241,17 @@ func UploadPagesDeployment(projectID uint, fileHeader *multipart.FileHeader, ent
 	if !strings.EqualFold(filepath.Ext(fileHeader.Filename), ".zip") {
 		return nil, errors.New("Pages 部署包必须是 .zip 文件")
 	}
+	rootDir, err = validateAndNormalizePagesRootDir(rootDir)
+	if err != nil {
+		return nil, err
+	}
 	entryFile = normalizePagesEntryFile(entryFile)
 	tempPath, checksum, err := persistPagesUploadTemp(fileHeader)
 	if err != nil {
 		return nil, err
 	}
 	defer os.Remove(tempPath)
-	manifest, err := inspectPagesZip(tempPath, entryFile)
+	manifest, err := inspectPagesZip(tempPath, rootDir, entryFile)
 	if err != nil {
 		return nil, err
 	}
@@ -277,6 +282,7 @@ func UploadPagesDeployment(projectID uint, fileHeader *multipart.FileHeader, ent
 			ArtifactPath:     artifactPath,
 			FileCount:        manifest.FileCount,
 			TotalSize:        manifest.TotalSize,
+			RootDir:          rootDir,
 			EntryFile:        manifest.EntryFile,
 			CreatedBy:        strings.TrimSpace(createdBy),
 		}
@@ -298,6 +304,34 @@ func UploadPagesDeployment(projectID uint, fileHeader *multipart.FileHeader, ent
 		return nil, err
 	}
 	return buildPagesDeploymentView(deployment), nil
+}
+
+func validateAndNormalizePagesRootDir(raw string) (string, error) {
+	value := strings.TrimSpace(raw)
+	if value == "" {
+		return "", nil
+	}
+	if len(value) > 512 {
+		return "", errors.New("Pages 根目录长度不能超过 512")
+	}
+	if strings.Contains(value, "\\") || strings.ContainsAny(value, "\"';") {
+		return "", errors.New("Pages 根目录包含不支持的字符")
+	}
+	for _, r := range value {
+		if r <= 0x20 || r == 0x7f {
+			return "", errors.New("Pages 根目录不能包含空白或控制字符")
+		}
+	}
+	cleaned := path.Clean(filepath.ToSlash(value))
+	if cleaned == "." || cleaned == "/" {
+		return "", nil
+	}
+	for _, segment := range strings.Split(cleaned, "/") {
+		if segment == "." || segment == ".." {
+			return "", errors.New("Pages 根目录不能包含 . 或 .. 路径段")
+		}
+	}
+	return strings.TrimPrefix(cleaned, "/"), nil
 }
 
 func ActivatePagesDeployment(projectID uint, deploymentID uint) (*PagesProjectView, error) {
@@ -498,6 +532,7 @@ func buildPagesDeploymentView(deployment *model.PagesDeployment) *PagesDeploymen
 		Status:           deployment.Status,
 		FileCount:        deployment.FileCount,
 		TotalSize:        deployment.TotalSize,
+		RootDir:          deployment.RootDir,
 		EntryFile:        deployment.EntryFile,
 		CreatedBy:        deployment.CreatedBy,
 		CreatedAt:        deployment.CreatedAt,
@@ -644,7 +679,7 @@ func findCommonRootPrefix(files []*zip.File) (string, error) {
 	return commonPrefix, nil
 }
 
-func inspectPagesZip(zipPath string, entryFile string) (*pagesDeploymentManifest, error) {
+func inspectPagesZip(zipPath string, rootDir string, entryFile string) (*pagesDeploymentManifest, error) {
 	reader, err := zip.OpenReader(zipPath)
 	if err != nil {
 		return nil, errors.New("Pages 部署包不是有效 zip 文件")
@@ -659,6 +694,10 @@ func inspectPagesZip(zipPath string, entryFile string) (*pagesDeploymentManifest
 	manifest := &pagesDeploymentManifest{
 		Files:     []model.PagesDeploymentFile{},
 		EntryFile: entryFile,
+	}
+	targetEntryPath := entryFile
+	if rootDir != "" {
+		targetEntryPath = path.Join(rootDir, entryFile)
 	}
 	entrySeen := false
 	for _, item := range reader.File {
@@ -692,7 +731,7 @@ func inspectPagesZip(zipPath string, entryFile string) (*pagesDeploymentManifest
 		if err != nil {
 			return nil, err
 		}
-		if normalizedPath == entryFile {
+		if normalizedPath == targetEntryPath {
 			entrySeen = true
 		}
 		manifest.Files = append(manifest.Files, model.PagesDeploymentFile{
@@ -705,7 +744,7 @@ func inspectPagesZip(zipPath string, entryFile string) (*pagesDeploymentManifest
 		return nil, errors.New("Pages 部署包不能为空")
 	}
 	if !entrySeen {
-		return nil, fmt.Errorf("Pages 部署包缺少入口文件 %s", entryFile)
+		return nil, fmt.Errorf("Pages 部署包缺少入口文件 %s", targetEntryPath)
 	}
 	return manifest, nil
 }

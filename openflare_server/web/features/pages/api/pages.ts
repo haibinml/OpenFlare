@@ -42,12 +42,14 @@ export function getPagesDeployments(projectId: number) {
 export function uploadPagesDeployment(
   projectId: number,
   file: File,
+  rootDir = '',
   entryFile = 'index.html',
   onProgress?: (percent: number) => void,
 ) {
   if (!onProgress) {
     const formData = new FormData();
     formData.append('package', file);
+    formData.append('root_dir', rootDir);
     formData.append('entry_file', entryFile);
     return apiRequest<PagesDeployment>(
       `/pages/${projectId}/deployments/upload`,
@@ -61,6 +63,7 @@ export function uploadPagesDeployment(
   return new Promise<PagesDeployment>((resolve, reject) => {
     const formData = new FormData();
     formData.append('package', file);
+    formData.append('root_dir', rootDir);
     formData.append('entry_file', entryFile);
 
     const xhr = new XMLHttpRequest();

@@ -7,6 +7,7 @@ import (
 	"openflare/common"
 	"openflare/model"
 	openrestyrender "openflare/utils/render/openresty"
+	"path"
 	"sort"
 	"strconv"
 	"strings"
@@ -610,6 +611,11 @@ func buildSnapshotPagesDeployment(projectID *uint) (*snapshotPagesDeployment, er
 	if deployment.ProjectID != project.ID {
 		return nil, errors.New("Pages 激活部署不属于当前项目")
 	}
+	localRoot := fmt.Sprintf("%s/deployments/%d/current", openrestyrender.PagesDirPlaceholder, deployment.ID)
+	cleanedRootDir := strings.TrimSpace(deployment.RootDir)
+	if cleanedRootDir != "" {
+		localRoot = path.Join(localRoot, cleanedRootDir)
+	}
 	return &snapshotPagesDeployment{
 		ProjectID:          project.ID,
 		ProjectSlug:        project.Slug,
@@ -623,7 +629,7 @@ func buildSnapshotPagesDeployment(projectID *uint) (*snapshotPagesDeployment, er
 		APIProxyPath:       project.APIProxyPath,
 		APIProxyPass:       project.APIProxyPass,
 		APIProxyRewrite:    project.APIProxyRewrite,
-		LocalRoot:          fmt.Sprintf("%s/deployments/%d/current", openrestyrender.PagesDirPlaceholder, deployment.ID),
+		LocalRoot:          localRoot,
 	}, nil
 }
 

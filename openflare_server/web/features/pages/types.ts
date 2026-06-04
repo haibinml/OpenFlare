@@ -6,6 +6,7 @@ export interface PagesDeployment {
   status: 'uploaded' | 'active';
   file_count: number;
   total_size: number;
+  root_dir?: string;
   entry_file: string;
   created_by: string;
   created_at: string;
