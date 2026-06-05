@@ -70,7 +70,7 @@ OpenResty (Agent, TLS/WAF)
 | **OpenResty**   | 接收真实流量，执行 WAF 过滤、PoW 防护、Basic Auth 认证与静态/反代服务 | [WAF 设计](./waf-design.md) / [Pages 设计](./pages-design.md) |
 | **Relay**       | 部署于边缘节点，管理 `frps` 守护进程生命周期，接受心跳派发的穿透中继配置 | [内网穿透设计](./tunnel-design.md) |
 | **OpenFlared**  | 部署于内网，管理 `frpc` 进程组，向多个 Relay 建立反向隧道，上报连接状态 | [内网穿透设计](./tunnel-design.md) |
-| **Frontend**    | Next.js 管理界面，提供路由、WAF、证书、节点、穿透隧道和 Pages 项目的可视化管理 | [开发约束](../guideline/development-constraints.md) |
+| **Frontend**    | Next.js 管理界面，提供路由、WAF、证书、节点、穿透隧道和 Pages 项目的可视化管理 | [开发约束](../guideline/Constraints.md) |
 
 ---
 
@@ -164,7 +164,7 @@ OpenResty (Agent, TLS/WAF)
 修改系统架构或开发新功能前，请按以下顺序阅读：
 
 1. **[产品边界](./index.md)**：了解 OpenFlare 核心定位与不允许逾越的设计边界。
-2. **[开发约束](../guideline/development-constraints.md)**：掌握数据模型、API 约定、数据库迁移（Goose）与前端规范。
+2. **[开发约束](../guideline/Constraints.md)**：掌握数据模型、API 约定、数据库迁移（Goose）与前端规范。
 3. **[Agent 与发布模型](./agent-design.md)**：理解版本快照同步及失败回滚的安全兜底逻辑。
 4. **细分领域设计**：
    * 穿透相关开发：阅读 [内网穿透隧道设计](./tunnel-design.md)。

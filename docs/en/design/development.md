@@ -2,7 +2,7 @@
 
 You will learn: How to build OpenFlare's local development environment, start the Server, the Agent, and the Admin Frontend, run test and build commands, and understand the boundaries to respect before contributing code.
 
-This page is aimed at contributors. Product boundaries, data model constraints, API conventions, and frontend layering specifications are governed by [Development Constraints](../../guideline/development-constraints.md); this page only provides actionable workflows for local development.
+This page is aimed at contributors. Product boundaries, data model constraints, API conventions, and frontend layering specifications are governed by [Development Constraints](../../guideline/Constraints.md); this page only provides actionable workflows for local development.
 
 ## Repository Structure
 
