@@ -26,17 +26,6 @@ sidebar: false
 
 ### 变更
 
-- 提取并新增 `common/response` 通用响应子包与 `controller/bind` 参数解析绑定子包，重构所有控制器与中间件中硬编码的 `c.JSON` 及参数绑定逻辑，彻底隔离 Gin 依赖并避免变量遮蔽冲突。
-
-- 将 `usage.md` 改名为 `proxy-config.md`（新建反代配置），重新梳理大纲结构，专注于如何从导入/申请证书开始，一步步新增并发布代理路由规则，并同步更新全部导航与文档引用链接
-- WAF 白名单调整为准入名单语义：存在白名单规则时，未命中白名单的请求会被拦截
-- 更新仓库结构设计文档，使 `openflare_agent` 和 `openflare_server` 的目录结构描述与实际物理结构保持一致
-- 新增 `pages-design.md` 设计文档，详细说明 Pages 静态托管功能在 Server 与 Agent 侧的架构设计和渲染逻辑
-- 新增 `kuma-design.md` 设计文档，详细说明 Uptime Kuma 自动监控同步机制、Socket.IO 控制流、防污染标签模型与差分状态机算法
-- 更新 `architecture.md` 系统架构文档，完善 Pages 静态托管与 Uptime Kuma 监控同步在组件职责及贡献建议中的关联
-- 移除 design 分区下冗余的 `development.md` 本地开发文档，并同步清理 `guide/index.md` 和 `AGENTS.md` 中的导航与指引引用
-- 重构并简化 `architecture.md` 系统架构文档，移除非宏观功能设计细节，采用“总分”结构引流至各个专项设计文档
-- 精简 `index.md` 产品边界文档，将 `repository.md` 仓库结构完整合并至其中，物理删除冗余的 `repository.md` 文件并重定向其所有超链接引用
 
 ---
 
