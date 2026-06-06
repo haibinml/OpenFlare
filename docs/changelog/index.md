@@ -24,21 +24,14 @@ sidebar: false
 ### 新增
 
 - 新增密码登录人机验证（基于 Proof-of-Work 和无感浏览器检测的 Cap 验证码防护）
-- 新增后端 PoW 校验服务，实现 FNV-1a/XORShift PRNG 难题生成、验证及 JWT 难题校验算法
+- 新增后端 PoW 校验服务，实现 FNV-1a/XORShift PRNG 难题生成、验证及 JWT 难题校验算法，支持基于路由路径参数 `scope` 进行验证流的强校验与安全隔离
 - 新增线程安全的内存 TTL 核销缓存，支持高并发与 Single-use 难题令牌防重放
-- 新增 Gin 拦截中间件与登录路由 `X-Cap-Token` 自动校验，支持从 HTTP 请求头验证并放行
-- 前端登录页集成 cap-widget 组件，按需加载 CDN 脚本，实现静默 PoW 求解与令牌提交
+- 新增 Gin 拦截中间件与参数化路由 `/api/cap/:scope/challenge` 和 `/api/cap/:scope/redeem`，登录接口 `POST /api/user/login` 自动从 HTTP 请求头校验 `X-Cap-Token` 并放行
+- 前端登录页集成 cap-widget 组件，配置 `/api/cap/login/` 隔离端点按需加载 CDN 脚本，实现静默 PoW 求解与令牌提交
 - 管理后台系统设置页“登录与注册开关”中新增“启用登录人机验证”开关，支持热更新全局防护状态
 - 新增 Agent 交互式安装向导，支持选择本地安装和 Docker 运行模式；未传参数时自动进入交互菜单
 - 新增 Docker 运行模式的智能环境检查，检测到未安装 Docker 时支持一键在线安装，中国大陆环境支持多镜像源自动测速优选与加速器配置
 - 新增 Agent 交互式卸载向导，支持选择本地卸载和 Docker 容器卸载模式；未传参数时自动进入交互菜单
-- 新增 Pages 静态托管使用指南（`pages-usage.md`），讲解 ZIP 上传、SPA Fallback 与 API 代理配置
-- 新增 Uptime Kuma 监控同步集成指南（`uptime-kuma.md`），说明同步参数与专属标签隔离机制
-- 完善 WAF IP 组订阅模式使用指南（`waf-usage.md`），补充 JSON 路径提取映射规则与同步参数说明
-
-### 修复
-
-- 修复由于前端验证码组件未携带 `scope` 导致的登录验证码校验失败或过期的问题；通过引入路径参数化路由 `/api/cap/:scope/...` 支持在不同流程中隔离与核销特定 scope 的人机验证难题
 
 ### 变更
 
