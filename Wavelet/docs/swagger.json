@@ -278,7 +278,6 @@
                 "parameters": [
                     {
                         "type": "integer",
-                        "format": "int64",
                         "description": "认证源 ID 或名称",
                         "name": "id",
                         "in": "path",
@@ -356,7 +355,6 @@
                 "parameters": [
                     {
                         "type": "integer",
-                        "format": "int64",
                         "description": "认证源 ID 或名称",
                         "name": "id",
                         "in": "path",
@@ -424,7 +422,6 @@
                 "parameters": [
                     {
                         "type": "integer",
-                        "format": "int64",
                         "description": "认证源 ID 或名称",
                         "name": "id",
                         "in": "path",
@@ -1335,7 +1332,6 @@
                 "parameters": [
                     {
                         "type": "integer",
-                        "format": "int64",
                         "description": "通道ID",
                         "name": "id",
                         "in": "path",
@@ -1389,7 +1385,6 @@
                 "parameters": [
                     {
                         "type": "integer",
-                        "format": "int64",
                         "description": "通道ID",
                         "name": "id",
                         "in": "path",
@@ -3342,7 +3337,6 @@
                     },
                     {
                         "type": "integer",
-                        "format": "int64",
                         "description": "上传用户 ID",
                         "name": "user_id",
                         "in": "query"
@@ -4236,7 +4230,6 @@
                 "parameters": [
                     {
                         "type": "integer",
-                        "format": "int64",
                         "description": "外部帐号绑定记录 ID",
                         "name": "id",
                         "in": "path",
@@ -6464,11 +6457,6 @@
                 "UploadStatusPending": "待使用",
                 "UploadStatusUsed": "已使用"
             },
-            "x-enum-descriptions": [
-                "待使用",
-                "已使用",
-                "已删除"
-            ],
             "x-enum-varnames": [
                 "UploadStatusPending",
                 "UploadStatusUsed",

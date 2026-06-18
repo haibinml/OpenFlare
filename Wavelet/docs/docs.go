@@ -285,7 +285,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "format": "int64",
                         "description": "认证源 ID 或名称",
                         "name": "id",
                         "in": "path",
@@ -363,7 +362,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "format": "int64",
                         "description": "认证源 ID 或名称",
                         "name": "id",
                         "in": "path",
@@ -431,7 +429,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "format": "int64",
                         "description": "认证源 ID 或名称",
                         "name": "id",
                         "in": "path",
@@ -1342,7 +1339,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "format": "int64",
                         "description": "通道ID",
                         "name": "id",
                         "in": "path",
@@ -1396,7 +1392,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "format": "int64",
                         "description": "通道ID",
                         "name": "id",
                         "in": "path",
@@ -3349,7 +3344,6 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "format": "int64",
                         "description": "上传用户 ID",
                         "name": "user_id",
                         "in": "query"
@@ -4243,7 +4237,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "format": "int64",
                         "description": "外部帐号绑定记录 ID",
                         "name": "id",
                         "in": "path",
@@ -6471,11 +6464,6 @@ const docTemplate = `{
                 "UploadStatusPending": "待使用",
                 "UploadStatusUsed": "已使用"
             },
-            "x-enum-descriptions": [
-                "待使用",
-                "已使用",
-                "已删除"
-            ],
             "x-enum-varnames": [
                 "UploadStatusPending",
                 "UploadStatusUsed",

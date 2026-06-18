@@ -672,10 +672,6 @@ definitions:
       UploadStatusDeleted: 已删除
       UploadStatusPending: 待使用
       UploadStatusUsed: 已使用
-    x-enum-descriptions:
-    - 待使用
-    - 已使用
-    - 已删除
     x-enum-varnames:
     - UploadStatusPending
     - UploadStatusUsed
@@ -1560,7 +1556,6 @@ paths:
       description: 删除指定认证源及其关联的所有外部帐号绑定记录，警告：删除后相关用户将无法通过该源登录，需要管理员权限
       parameters:
       - description: 认证源 ID 或名称
-        format: int64
         in: path
         name: id
         required: true
@@ -1600,7 +1595,6 @@ paths:
       description: 更新指定 ID 的认证源配置。若 client_secret 字段为空，则保留原有密钥不变，需要管理员权限
       parameters:
       - description: 认证源 ID 或名称
-        format: int64
         in: path
         name: id
         required: true
@@ -1651,7 +1645,6 @@ paths:
       description: 启用或禁用指定认证源。尝试启用时将验证 Client ID 和 Client Secret 是否已配置，需要管理员权限
       parameters:
       - description: 认证源 ID 或名称
-        format: int64
         in: path
         name: id
         required: true
@@ -2148,7 +2141,6 @@ paths:
       description: 根据ID删除消息通道，需要管理员权限
       parameters:
       - description: 通道ID
-        format: int64
         in: path
         name: id
         required: true
@@ -2171,7 +2163,6 @@ paths:
       description: 修改消息通道配置，需要管理员权限
       parameters:
       - description: 通道ID
-        format: int64
         in: path
         name: id
         required: true
@@ -3392,7 +3383,6 @@ paths:
         name: extension
         type: string
       - description: 上传用户 ID
-        format: int64
         in: query
         name: user_id
         type: integer
@@ -3969,7 +3959,6 @@ paths:
       description: 解除当前登录用户与指定外部帐号的绑定关系，需要登录
       parameters:
       - description: 外部帐号绑定记录 ID
-        format: int64
         in: path
         name: id
         required: true
