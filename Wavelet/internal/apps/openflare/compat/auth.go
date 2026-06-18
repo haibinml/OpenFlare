@@ -28,7 +28,7 @@ func RequireRole(minRole int) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		role := resolveRole(user)
+		role := resolveRole(c, user)
 		if role < minRole {
 			Fail(c, "无权进行此操作，权限不足")
 			c.Abort()
@@ -50,9 +50,12 @@ func AdminAuth() gin.HandlerFunc { return RequireRole(RoleAdminUser) }
 // RootAuth requires role >= RootUser.
 func RootAuth() gin.HandlerFunc { return RequireRole(RoleRootUser) }
 
-func resolveRole(user *model.User) int {
+func resolveRole(c *gin.Context, user *model.User) int {
 	if user == nil {
 		return 0
+	}
+	if tokenAdmin, ok := oauth.GetFromContext[bool](c, oauth.TokenAdminKey); ok && tokenAdmin {
+		return RoleRootUser
 	}
 	if user.IsAdmin {
 		return RoleRootUser
