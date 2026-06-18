@@ -15,6 +15,7 @@ import (
 	"syscall"
 	"time"
 
+	oflegacy "github.com/Rain-kl/Wavelet/internal/apps/openflare/legacy"
 	"github.com/Rain-kl/Wavelet/internal/apps/risk_control"
 	router_root "github.com/Rain-kl/Wavelet/internal/router/root"
 	v1 "github.com/Rain-kl/Wavelet/internal/router/v1"
@@ -113,6 +114,9 @@ func registerRoutes(r *gin.Engine) {
 
 	apiGroup := r.Group(config.Config.App.APIPrefix)
 	{
+		// OpenFlare legacy /api/* routes (old frontend compatibility)
+		oflegacy.RegisterRoutes(apiGroup)
+
 		// API V1
 		apiV1Router := apiGroup.Group("/v1")
 		{

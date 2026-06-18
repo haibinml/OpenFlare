@@ -1,0 +1,463 @@
+// Copyright 2026 Arctel.net
+// SPDX-License-Identifier: Apache-2.0
+
+package model
+
+import (
+	"context"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/Rain-kl/Wavelet/internal/db"
+	"gorm.io/gorm"
+)
+
+// OpenFlareOption stores a hot-reloadable OpenFlare system option.
+type OpenFlareOption struct {
+	Key   string `json:"key" gorm:"column:key;primaryKey;size:128;not null"`
+	Value string `json:"value" gorm:"type:text;not null"`
+}
+
+// TableName returns the OpenFlare options table name.
+func (OpenFlareOption) TableName() string {
+	return "of_options"
+}
+
+// OptionMap holds the in-memory option snapshot for fast reads and hot reload.
+var (
+	OptionMap        map[string]string
+	OptionMapRWMutex sync.RWMutex
+
+	// StartTime records process start time (seconds) for legacy /api/status.
+	StartTime = time.Now().Unix()
+
+	// Hot-reload mirrors for frequently read options (legacy OpenFlare keys).
+	SystemName                                  = "OpenFlare"
+	ServerAddress                               = ""
+	Footer                                      = ""
+	HomePageLink                                = ""
+	PasswordLoginEnabled                        = true
+	CapLoginEnabled                             = true
+	PasswordRegisterEnabled                     = false
+	EmailVerificationEnabled                    = false
+	GitHubOAuthEnabled                          = false
+	WeChatAuthEnabled                           = false
+	GitHubClientId                              = ""
+	GitHubClientSecret                          = ""
+	WeChatServerAddress                         = ""
+	WeChatServerToken                           = ""
+	WeChatAccountQRCodeImageURL                 = ""
+	SMTPServer                                  = ""
+	SMTPPort                                    = 587
+	SMTPAccount                                 = ""
+	SMTPToken                                   = ""
+	AgentDiscoveryToken                         = ""
+	AgentHeartbeatInterval                      = 10000
+	AgentWebsocketUpgradeEnabled                = true
+	NodeOfflineThreshold                        = 2 * time.Minute
+	AgentUpdateRepo                             = "Rain-kl/OpenFlare"
+	GeoIPProvider                               = "ipinfo"
+	DatabaseAutoCleanupEnabled                  = false
+	DatabaseAutoCleanupRetentionDays            = 30
+	UptimeKumaEnabled                           = false
+	UptimeKumaUrl                               = ""
+	UptimeKumaUsername                          = ""
+	UptimeKumaPassword                          = ""
+	UptimeKumaMonitorScope                      = "all"
+	UptimeKumaSelectedSites                     = ""
+	UptimeKumaSyncInterval                      = 5
+	UptimeKumaInterval                          = 60
+	UptimeKumaRetry                             = 0
+	UptimeKumaRetryInterval                     = 60
+	UptimeKumaTimeout                           = 48
+	OpenRestyDefaultServerReturnStatus          = 421
+	OpenRestyWorkerProcesses                    = "auto"
+	OpenRestyWorkerConnections                  = 4096
+	OpenRestyWorkerRlimitNofile                 = 65535
+	OpenRestyEventsUse                          = "epoll"
+	OpenRestyEventsMultiAcceptEnabled           = true
+	OpenRestyKeepaliveTimeout                   = 20
+	OpenRestyKeepaliveRequests                  = 1000
+	OpenRestyClientHeaderTimeout                = 15
+	OpenRestyClientBodyTimeout                  = 15
+	OpenRestyClientMaxBodySize                  = "64m"
+	OpenRestyLargeClientHeaderBuffers           = "4 16k"
+	OpenRestySendTimeout                        = 30
+	OpenRestyResolvers                          = ""
+	OpenRestyProxyConnectTimeout                = 3
+	OpenRestyProxySendTimeout                   = 60
+	OpenRestyProxyReadTimeout                   = 60
+	OpenRestyWebsocketEnabled                   = true
+	OpenRestyHTTP3Enabled                       = true
+	OpenRestyProxyRequestBufferingEnabled       = false
+	OpenRestyProxyBufferingEnabled              = true
+	OpenRestyProxyBuffers                       = "16 16k"
+	OpenRestyProxyBufferSize                    = "8k"
+	OpenRestyProxyBusyBuffersSize               = "64k"
+	OpenRestyGzipEnabled                        = true
+	OpenRestyGzipMinLength                      = 1024
+	OpenRestyGzipCompLevel                      = 5
+	OpenRestyCacheEnabled                       = false
+	OpenRestyCachePath                          = ""
+	OpenRestyCacheLevels                        = "1:2"
+	OpenRestyCacheInactive                      = "30m"
+	OpenRestyCacheMaxSize                       = "1g"
+	OpenRestyCacheKeyTemplate                   = "$scheme$host$request_uri"
+	OpenRestyCacheLockEnabled                   = true
+	OpenRestyCacheLockTimeout                   = "5s"
+	OpenRestyCacheUseStale                      = "error timeout updating http_500 http_502 http_503 http_504"
+	OpenRestyMainConfigTemplate                 = defaultOpenRestyMainConfigTemplate
+	GlobalApiRateLimitNum                       = 300
+	GlobalApiRateLimitDuration            int64 = 3 * 60
+	GlobalWebRateLimitNum                       = 300
+	GlobalWebRateLimitDuration            int64 = 3 * 60
+	CriticalRateLimitNum                        = 100
+	CriticalRateLimitDuration             int64 = 20 * 60
+)
+
+const defaultOpenRestyMainConfigTemplate = `# This file is generated by OpenFlare. Do not edit manually.
+worker_processes {{OpenRestyWorkerProcesses}};
+worker_rlimit_nofile {{OpenRestyWorkerRlimitNofile}};
+pid logs/nginx.pid;
+error_log {{OpenRestyErrorLogPath}} warn;
+
+events {
+    worker_connections {{OpenRestyWorkerConnections}};
+{{OpenRestyEventsUseDirective}}{{OpenRestyEventsMultiAcceptDirective}}}
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+{{OpenRestyConnectionUpgradeMap}}{{OpenRestyDefaultServerBlock}}    log_format openflare_json escape=json '{"ts":"$time_iso8601","host":"$host","path":"$request_uri","remote_addr":"$remote_addr","status":$status,"request_time":$request_time,"bytes_sent":$body_bytes_sent,"request_length":$request_length}';
+    access_log {{OpenRestyAccessLogPath}} openflare_json;
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout {{OpenRestyKeepaliveTimeout}};
+    keepalive_requests {{OpenRestyKeepaliveRequests}};
+    client_header_timeout {{OpenRestyClientHeaderTimeout}};
+    client_body_timeout {{OpenRestyClientBodyTimeout}};
+    client_max_body_size {{OpenRestyClientMaxBodySize}};
+    large_client_header_buffers {{OpenRestyLargeClientHeaderBuffers}};
+    send_timeout {{OpenRestySendTimeout}};
+    proxy_connect_timeout {{OpenRestyProxyConnectTimeout}};
+    proxy_send_timeout {{OpenRestyProxySendTimeout}};
+    proxy_read_timeout {{OpenRestyProxyReadTimeout}};
+    proxy_request_buffering {{OpenRestyProxyRequestBuffering}};
+    proxy_buffering {{OpenRestyProxyBuffering}};
+    proxy_buffers {{OpenRestyProxyBuffers}};
+    proxy_buffer_size {{OpenRestyProxyBufferSize}};
+    proxy_busy_buffers_size {{OpenRestyProxyBusyBuffersSize}};
+    gzip {{OpenRestyGzip}};
+    gzip_min_length {{OpenRestyGzipMinLength}};
+    gzip_comp_level {{OpenRestyGzipCompLevel}};
+{{OpenRestyResolverDirective}}{{OpenRestyCacheBlock}}    include {{OpenRestyRouteConfigInclude}};
+}
+`
+
+// DefaultOpenFlareOptions returns built-in defaults keyed by legacy OpenFlare option names.
+func DefaultOpenFlareOptions() map[string]string {
+	return map[string]string{
+		"PasswordLoginEnabled":                  strconv.FormatBool(PasswordLoginEnabled),
+		"CapLoginEnabled":                       strconv.FormatBool(CapLoginEnabled),
+		"PasswordRegisterEnabled":               strconv.FormatBool(PasswordRegisterEnabled),
+		"EmailVerificationEnabled":              strconv.FormatBool(EmailVerificationEnabled),
+		"GitHubOAuthEnabled":                    strconv.FormatBool(GitHubOAuthEnabled),
+		"WeChatAuthEnabled":                     strconv.FormatBool(WeChatAuthEnabled),
+		"SMTPServer":                            "",
+		"SMTPPort":                              strconv.Itoa(SMTPPort),
+		"SMTPAccount":                           "",
+		"SMTPToken":                             "",
+		"Notice":                                "",
+		"About":                                 "",
+		"Footer":                                Footer,
+		"HomePageLink":                          HomePageLink,
+		"SystemName":                            SystemName,
+		"ServerAddress":                         "",
+		"GitHubClientId":                        "",
+		"GitHubClientSecret":                    "",
+		"WeChatServerAddress":                   "",
+		"WeChatServerToken":                     "",
+		"WeChatAccountQRCodeImageURL":           "",
+		"AgentDiscoveryToken":                   "",
+		"AgentHeartbeatInterval":                strconv.Itoa(AgentHeartbeatInterval),
+		"AgentWebsocketUpgradeEnabled":          strconv.FormatBool(AgentWebsocketUpgradeEnabled),
+		"NodeOfflineThreshold":                  strconv.Itoa(int(NodeOfflineThreshold.Milliseconds())),
+		"AgentUpdateRepo":                       AgentUpdateRepo,
+		"GeoIPProvider":                         GeoIPProvider,
+		"DatabaseAutoCleanupEnabled":            strconv.FormatBool(DatabaseAutoCleanupEnabled),
+		"UptimeKumaEnabled":                     strconv.FormatBool(UptimeKumaEnabled),
+		"UptimeKumaUrl":                         UptimeKumaUrl,
+		"UptimeKumaUsername":                    UptimeKumaUsername,
+		"UptimeKumaPassword":                    UptimeKumaPassword,
+		"UptimeKumaMonitorScope":                UptimeKumaMonitorScope,
+		"UptimeKumaSelectedSites":               UptimeKumaSelectedSites,
+		"UptimeKumaSyncInterval":                strconv.Itoa(UptimeKumaSyncInterval),
+		"UptimeKumaInterval":                    strconv.Itoa(UptimeKumaInterval),
+		"UptimeKumaRetry":                       strconv.Itoa(UptimeKumaRetry),
+		"UptimeKumaRetryInterval":               strconv.Itoa(UptimeKumaRetryInterval),
+		"UptimeKumaTimeout":                     strconv.Itoa(UptimeKumaTimeout),
+		"DatabaseAutoCleanupRetentionDays":      strconv.Itoa(DatabaseAutoCleanupRetentionDays),
+		"OpenRestyDefaultServerReturnStatus":    strconv.Itoa(OpenRestyDefaultServerReturnStatus),
+		"OpenRestyWorkerProcesses":              OpenRestyWorkerProcesses,
+		"OpenRestyWorkerConnections":            strconv.Itoa(OpenRestyWorkerConnections),
+		"OpenRestyWorkerRlimitNofile":           strconv.Itoa(OpenRestyWorkerRlimitNofile),
+		"OpenRestyEventsUse":                    OpenRestyEventsUse,
+		"OpenRestyEventsMultiAcceptEnabled":     strconv.FormatBool(OpenRestyEventsMultiAcceptEnabled),
+		"OpenRestyKeepaliveTimeout":             strconv.Itoa(OpenRestyKeepaliveTimeout),
+		"OpenRestyKeepaliveRequests":            strconv.Itoa(OpenRestyKeepaliveRequests),
+		"OpenRestyClientHeaderTimeout":          strconv.Itoa(OpenRestyClientHeaderTimeout),
+		"OpenRestyClientBodyTimeout":            strconv.Itoa(OpenRestyClientBodyTimeout),
+		"OpenRestyClientMaxBodySize":            OpenRestyClientMaxBodySize,
+		"OpenRestyLargeClientHeaderBuffers":     OpenRestyLargeClientHeaderBuffers,
+		"OpenRestySendTimeout":                  strconv.Itoa(OpenRestySendTimeout),
+		"OpenRestyProxyConnectTimeout":          strconv.Itoa(OpenRestyProxyConnectTimeout),
+		"OpenRestyProxySendTimeout":             strconv.Itoa(OpenRestyProxySendTimeout),
+		"OpenRestyProxyReadTimeout":             strconv.Itoa(OpenRestyProxyReadTimeout),
+		"OpenRestyWebsocketEnabled":             strconv.FormatBool(OpenRestyWebsocketEnabled),
+		"OpenRestyHTTP3Enabled":                 strconv.FormatBool(OpenRestyHTTP3Enabled),
+		"OpenRestyProxyRequestBufferingEnabled": strconv.FormatBool(OpenRestyProxyRequestBufferingEnabled),
+		"OpenRestyProxyBufferingEnabled":        strconv.FormatBool(OpenRestyProxyBufferingEnabled),
+		"OpenRestyProxyBuffers":                 OpenRestyProxyBuffers,
+		"OpenRestyProxyBufferSize":              OpenRestyProxyBufferSize,
+		"OpenRestyProxyBusyBuffersSize":         OpenRestyProxyBusyBuffersSize,
+		"OpenRestyGzipEnabled":                  strconv.FormatBool(OpenRestyGzipEnabled),
+		"OpenRestyGzipMinLength":                strconv.Itoa(OpenRestyGzipMinLength),
+		"OpenRestyGzipCompLevel":                strconv.Itoa(OpenRestyGzipCompLevel),
+		"OpenRestyCacheEnabled":                 strconv.FormatBool(OpenRestyCacheEnabled),
+		"OpenRestyCachePath":                    OpenRestyCachePath,
+		"OpenRestyCacheLevels":                  OpenRestyCacheLevels,
+		"OpenRestyCacheInactive":                OpenRestyCacheInactive,
+		"OpenRestyCacheMaxSize":                 OpenRestyCacheMaxSize,
+		"OpenRestyCacheKeyTemplate":             OpenRestyCacheKeyTemplate,
+		"OpenRestyCacheLockEnabled":             strconv.FormatBool(OpenRestyCacheLockEnabled),
+		"OpenRestyCacheLockTimeout":             OpenRestyCacheLockTimeout,
+		"OpenRestyCacheUseStale":                OpenRestyCacheUseStale,
+		"OpenRestyMainConfigTemplate":           OpenRestyMainConfigTemplate,
+		"GlobalApiRateLimitNum":                 strconv.Itoa(GlobalApiRateLimitNum),
+		"GlobalApiRateLimitDuration":            strconv.FormatInt(GlobalApiRateLimitDuration, 10),
+		"GlobalWebRateLimitNum":                 strconv.Itoa(GlobalWebRateLimitNum),
+		"GlobalWebRateLimitDuration":            strconv.FormatInt(GlobalWebRateLimitDuration, 10),
+		"CriticalRateLimitNum":                  strconv.Itoa(CriticalRateLimitNum),
+		"CriticalRateLimitDuration":             strconv.FormatInt(CriticalRateLimitDuration, 10),
+	}
+}
+
+// InitOptionMap seeds defaults and overlays persisted options from of_options.
+func InitOptionMap(ctx context.Context) error {
+	OptionMapRWMutex.Lock()
+	OptionMap = DefaultOpenFlareOptions()
+	OptionMapRWMutex.Unlock()
+
+	options, err := ListOpenFlareOptions(ctx)
+	if err != nil {
+		return err
+	}
+	for _, option := range options {
+		applyOptionMap(option.Key, option.Value)
+	}
+	return nil
+}
+
+// ListOpenFlareOptions returns all persisted options.
+func ListOpenFlareOptions(ctx context.Context) ([]OpenFlareOption, error) {
+	var options []OpenFlareOption
+	if err := db.DB(ctx).Find(&options).Error; err != nil {
+		return nil, err
+	}
+	return options, nil
+}
+
+// UpdateOpenFlareOption updates a single option in DB and memory.
+func UpdateOpenFlareOption(ctx context.Context, key, value string) error {
+	return UpdateOpenFlareOptions(ctx, []OpenFlareOption{{Key: key, Value: value}})
+}
+
+// UpdateOpenFlareOptions batch-updates options in a transaction and refreshes OptionMap.
+func UpdateOpenFlareOptions(ctx context.Context, options []OpenFlareOption) error {
+	if len(options) == 0 {
+		return nil
+	}
+
+	if err := db.DB(ctx).Transaction(func(tx *gorm.DB) error {
+		for _, item := range options {
+			if item.Key == "UptimeKumaPassword" && strings.TrimSpace(item.Value) == "" {
+				continue
+			}
+			option := OpenFlareOption{Key: item.Key}
+			if err := tx.FirstOrCreate(&option, OpenFlareOption{Key: item.Key}).Error; err != nil {
+				return err
+			}
+			option.Value = item.Value
+			if err := tx.Save(&option).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	for _, item := range options {
+		if item.Key == "UptimeKumaPassword" && strings.TrimSpace(item.Value) == "" {
+			continue
+		}
+		applyOptionMap(item.Key, item.Value)
+	}
+	return nil
+}
+
+// OptionValue returns a snapshot value from OptionMap.
+func OptionValue(key string) string {
+	OptionMapRWMutex.RLock()
+	defer OptionMapRWMutex.RUnlock()
+	if OptionMap == nil {
+		return ""
+	}
+	return OptionMap[key]
+}
+
+// ResetOptionMapForTest clears in-memory option state for unit tests.
+func ResetOptionMapForTest() {
+	OptionMapRWMutex.Lock()
+	OptionMap = nil
+	OptionMapRWMutex.Unlock()
+}
+
+func applyOptionMap(key, value string) {
+	OptionMapRWMutex.Lock()
+	if OptionMap == nil {
+		OptionMap = make(map[string]string)
+	}
+	OptionMap[key] = value
+	if strings.HasSuffix(key, "Enabled") {
+		boolValue := value == "true"
+		switch key {
+		case "PasswordRegisterEnabled":
+			PasswordRegisterEnabled = boolValue
+		case "PasswordLoginEnabled":
+			PasswordLoginEnabled = boolValue
+		case "CapLoginEnabled":
+			CapLoginEnabled = boolValue
+		case "EmailVerificationEnabled":
+			EmailVerificationEnabled = boolValue
+		case "GitHubOAuthEnabled":
+			GitHubOAuthEnabled = boolValue
+		case "WeChatAuthEnabled":
+			WeChatAuthEnabled = boolValue
+		}
+	}
+	switch key {
+	case "SMTPServer":
+		SMTPServer = value
+	case "SMTPPort":
+		if intValue, err := strconv.Atoi(value); err == nil {
+			SMTPPort = intValue
+		}
+	case "SMTPAccount":
+		SMTPAccount = value
+	case "SMTPToken":
+		SMTPToken = value
+	case "ServerAddress":
+		ServerAddress = value
+	case "GitHubClientId":
+		GitHubClientId = value
+	case "GitHubClientSecret":
+		GitHubClientSecret = value
+	case "Footer":
+		Footer = value
+	case "HomePageLink":
+		HomePageLink = value
+	case "SystemName":
+		SystemName = value
+	case "WeChatServerAddress":
+		WeChatServerAddress = value
+	case "WeChatServerToken":
+		WeChatServerToken = value
+	case "WeChatAccountQRCodeImageURL":
+		WeChatAccountQRCodeImageURL = value
+	case "AgentDiscoveryToken":
+		AgentDiscoveryToken = value
+	case "AgentHeartbeatInterval":
+		if v, err := strconv.Atoi(value); err == nil && v > 0 {
+			AgentHeartbeatInterval = v
+		}
+	case "AgentWebsocketUpgradeEnabled":
+		AgentWebsocketUpgradeEnabled = value == "true"
+	case "NodeOfflineThreshold":
+		if v, err := strconv.Atoi(value); err == nil && v > 0 {
+			NodeOfflineThreshold = time.Duration(v) * time.Millisecond
+		}
+	case "AgentUpdateRepo":
+		if value != "" {
+			AgentUpdateRepo = value
+		}
+	case "GeoIPProvider":
+		GeoIPProvider = value
+	case "UptimeKumaEnabled":
+		UptimeKumaEnabled = value == "true"
+	case "UptimeKumaUrl":
+		UptimeKumaUrl = value
+	case "UptimeKumaUsername":
+		UptimeKumaUsername = value
+	case "UptimeKumaPassword":
+		UptimeKumaPassword = value
+	case "UptimeKumaMonitorScope":
+		UptimeKumaMonitorScope = value
+	case "UptimeKumaSelectedSites":
+		UptimeKumaSelectedSites = value
+	case "UptimeKumaSyncInterval":
+		if v, err := strconv.Atoi(value); err == nil && v > 0 {
+			UptimeKumaSyncInterval = v
+		}
+	case "UptimeKumaInterval":
+		if v, err := strconv.Atoi(value); err == nil && v > 0 {
+			UptimeKumaInterval = v
+		}
+	case "UptimeKumaRetry":
+		if v, err := strconv.Atoi(value); err == nil && v >= 0 {
+			UptimeKumaRetry = v
+		}
+	case "UptimeKumaRetryInterval":
+		if v, err := strconv.Atoi(value); err == nil && v > 0 {
+			UptimeKumaRetryInterval = v
+		}
+	case "UptimeKumaTimeout":
+		if v, err := strconv.Atoi(value); err == nil && v > 0 {
+			UptimeKumaTimeout = v
+		}
+	case "DatabaseAutoCleanupEnabled":
+		DatabaseAutoCleanupEnabled = value == "true"
+	case "DatabaseAutoCleanupRetentionDays":
+		if v, err := strconv.Atoi(value); err == nil && v >= 1 {
+			DatabaseAutoCleanupRetentionDays = v
+		}
+	case "GlobalApiRateLimitNum":
+		if v, err := strconv.Atoi(value); err == nil && v > 0 {
+			GlobalApiRateLimitNum = v
+		}
+	case "GlobalApiRateLimitDuration":
+		if v, err := strconv.ParseInt(value, 10, 64); err == nil && v > 0 {
+			GlobalApiRateLimitDuration = v
+		}
+	case "GlobalWebRateLimitNum":
+		if v, err := strconv.Atoi(value); err == nil && v > 0 {
+			GlobalWebRateLimitNum = v
+		}
+	case "GlobalWebRateLimitDuration":
+		if v, err := strconv.ParseInt(value, 10, 64); err == nil && v > 0 {
+			GlobalWebRateLimitDuration = v
+		}
+	case "CriticalRateLimitNum":
+		if v, err := strconv.Atoi(value); err == nil && v > 0 {
+			CriticalRateLimitNum = v
+		}
+	case "CriticalRateLimitDuration":
+		if v, err := strconv.ParseInt(value, 10, 64); err == nil && v > 0 {
+			CriticalRateLimitDuration = v
+		}
+	}
+	OptionMapRWMutex.Unlock()
+}
