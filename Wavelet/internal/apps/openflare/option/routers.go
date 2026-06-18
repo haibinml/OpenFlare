@@ -22,7 +22,7 @@ func RegisterRoutes(apiGroup *gin.RouterGroup) {
 	optionRoute := apiGroup.Group("/option")
 	optionRoute.Use(compat.RootAuth())
 	{
-		optionRoute.GET("/", listOptionsHandler)
+		compat.RegisterCollection(optionRoute, "GET", listOptionsHandler)
 		optionRoute.POST("/update", updateOptionHandler)
 		optionRoute.POST("/update-batch", updateOptionsBatchHandler)
 		optionRoute.POST("/geoip/lookup", lookupGeoIPHandler)

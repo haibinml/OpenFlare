@@ -13,9 +13,9 @@ func registerPagesRoutes(apiGroup *gin.RouterGroup) {
 	pagesRoute := apiGroup.Group("/pages")
 	pagesRoute.Use(compat.AdminAuth())
 	{
-		pagesRoute.GET("/", pages.ListProjectsHandler)
+		compat.RegisterCollection(pagesRoute, "GET", pages.ListProjectsHandler)
 		pagesRoute.GET("/:id", pages.GetProjectHandler)
-		pagesRoute.POST("/", pages.CreateProjectHandler)
+		compat.RegisterCollection(pagesRoute, "POST", pages.CreateProjectHandler)
 		pagesRoute.POST("/:id/update", pages.UpdateProjectHandler)
 		pagesRoute.POST("/:id/delete", pages.DeleteProjectHandler)
 		pagesRoute.GET("/:id/deployments", pages.ListDeploymentsHandler)

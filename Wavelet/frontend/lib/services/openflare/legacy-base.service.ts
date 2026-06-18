@@ -16,7 +16,12 @@ export class LegacyOpenFlareBaseService {
   protected static readonly basePath: string = '';
 
   protected static getFullPath(path: string): string {
-    return `${this.basePath}${path}`;
+    const full = `${this.basePath}${path}`;
+    // Avoid Next.js 308 (strip slash) <-> Gin 301 (add slash) redirect loops in dev proxy.
+    if (full.length > 1 && full.endsWith('/')) {
+      return full.slice(0, -1);
+    }
+    return full;
   }
 
   protected static parseLegacyResponse<T>(body: LegacyApiResponse<T>): T {

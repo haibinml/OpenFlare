@@ -43,6 +43,7 @@ sidebar: false
 - 修复静态导出构建中 `useSearchParams` 未包裹 Suspense 的问题；`pnpm build:embed` 全量 46 页通过。
 - 补全前端迁移收尾：新增 `/openflare/about` 关于页与 `AboutService`；补全 `UpdateService` 升级流程（在线升级、手动上传、WebSocket 日志流）及顶栏版本升级入口。
 - 前端 UI 打磨：节点/WAF/DNS/配置清理等 Dialog 补 RHF+Zod；代理规则详情与访问日志 Tab 补 error 态；`pnpm build:embed` 增至 47 静态页。
+- 修复开发模式下 `/api/*` 尾斜杠引发 Next.js 308 与 Gin 301 循环重定向：前端 Service 规范化路径、Next `skipTrailingSlashRedirect`、后端双路径注册。
 
 ## [v2.3.4] - 2026-06-17
 

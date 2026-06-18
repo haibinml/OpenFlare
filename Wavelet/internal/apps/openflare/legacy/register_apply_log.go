@@ -13,7 +13,7 @@ func registerApplyLogRoutes(apiGroup *gin.RouterGroup) {
 	applyLogRoute := apiGroup.Group("/apply-logs")
 	applyLogRoute.Use(compat.AdminAuth())
 	{
-		applyLogRoute.GET("/", apply_log.GetApplyLogs)
+		compat.RegisterCollection(applyLogRoute, "GET", apply_log.GetApplyLogs)
 		applyLogRoute.POST("/cleanup", apply_log.CleanupApplyLogs)
 	}
 }

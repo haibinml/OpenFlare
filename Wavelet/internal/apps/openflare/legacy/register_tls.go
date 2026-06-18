@@ -13,9 +13,9 @@ func registerTLSRoutes(apiGroup *gin.RouterGroup) {
 	managedDomainRoute := apiGroup.Group("/managed-domains")
 	managedDomainRoute.Use(compat.AdminAuth())
 	{
-		managedDomainRoute.GET("/", tls.GetManagedDomains)
+		compat.RegisterCollection(managedDomainRoute, "GET", tls.GetManagedDomains)
 		managedDomainRoute.GET("/match", tls.MatchManagedDomainCertificateHandler)
-		managedDomainRoute.POST("/", tls.CreateManagedDomainHandler)
+		compat.RegisterCollection(managedDomainRoute, "POST", tls.CreateManagedDomainHandler)
 		managedDomainRoute.POST("/:id/update", tls.UpdateManagedDomainHandler)
 		managedDomainRoute.POST("/:id/delete", tls.DeleteManagedDomainHandler)
 	}
@@ -23,10 +23,10 @@ func registerTLSRoutes(apiGroup *gin.RouterGroup) {
 	tlsCertificateRoute := apiGroup.Group("/tls-certificates")
 	tlsCertificateRoute.Use(compat.AdminAuth())
 	{
-		tlsCertificateRoute.GET("/", tls.GetCertificates)
+		compat.RegisterCollection(tlsCertificateRoute, "GET", tls.GetCertificates)
 		tlsCertificateRoute.GET("/:id", tls.GetCertificateDetail)
 		tlsCertificateRoute.GET("/:id/content", tls.GetCertificateContentHandler)
-		tlsCertificateRoute.POST("/", tls.CreateCertificateHandler)
+		compat.RegisterCollection(tlsCertificateRoute, "POST", tls.CreateCertificateHandler)
 		tlsCertificateRoute.POST("/:id/update", tls.UpdateCertificateHandler)
 		tlsCertificateRoute.POST("/:id/update-acme", tls.UpdateACMECertificateHandler)
 		tlsCertificateRoute.POST("/:id/convert-acme", tls.ConvertCertificateToACMEHandler)
@@ -45,8 +45,8 @@ func registerTLSRoutes(apiGroup *gin.RouterGroup) {
 	dnsAccountRoute := apiGroup.Group("/dns-accounts")
 	dnsAccountRoute.Use(compat.AdminAuth())
 	{
-		dnsAccountRoute.GET("/", tls.GetDNSAccounts)
-		dnsAccountRoute.POST("/", tls.CreateDNSAccountHandler)
+		compat.RegisterCollection(dnsAccountRoute, "GET", tls.GetDNSAccounts)
+		compat.RegisterCollection(dnsAccountRoute, "POST", tls.CreateDNSAccountHandler)
 		dnsAccountRoute.POST("/:id/update", tls.UpdateDNSAccountHandler)
 		dnsAccountRoute.POST("/:id/delete", tls.DeleteDNSAccountHandler)
 	}

@@ -38,6 +38,8 @@ func Serve() {
 
 	// 初始化路由
 	r := gin.New()
+	// Legacy OpenFlare list endpoints register both /resource and /resource/; disable auto slash redirects.
+	r.RedirectTrailingSlash = false
 	r.Use(gin.Recovery())
 	r.Use(corsMiddleware())
 

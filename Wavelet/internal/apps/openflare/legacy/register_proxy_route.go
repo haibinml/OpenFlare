@@ -13,9 +13,9 @@ func registerProxyRouteRoutes(apiGroup *gin.RouterGroup) {
 	proxyRouteGroup := apiGroup.Group("/proxy-routes")
 	proxyRouteGroup.Use(compat.AdminAuth())
 	{
-		proxyRouteGroup.GET("/", proxy_route.GetProxyRoutes)
+		compat.RegisterCollection(proxyRouteGroup, "GET", proxy_route.GetProxyRoutes)
 		proxyRouteGroup.GET("/:id", proxy_route.GetProxyRouteHandler)
-		proxyRouteGroup.POST("/", proxy_route.CreateProxyRouteHandler)
+		compat.RegisterCollection(proxyRouteGroup, "POST", proxy_route.CreateProxyRouteHandler)
 		proxyRouteGroup.POST("/:id/update", proxy_route.UpdateProxyRouteHandler)
 		proxyRouteGroup.POST("/:id/delete", proxy_route.DeleteProxyRouteHandler)
 	}

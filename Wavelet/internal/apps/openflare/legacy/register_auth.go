@@ -27,7 +27,7 @@ func registerAuthRoutes(apiGroup *gin.RouterGroup) {
 		externalAccounts := oauthGroup.Group("/external-accounts")
 		externalAccounts.Use(compat.UserAuth())
 		{
-			externalAccounts.GET("/", ListExternalAccounts)
+			compat.RegisterCollection(externalAccounts, "GET", ListExternalAccounts)
 			externalAccounts.POST("/:id/delete", DeleteExternalAccount)
 		}
 	}
@@ -56,10 +56,10 @@ func registerAuthRoutes(apiGroup *gin.RouterGroup) {
 		adminGroup := userGroup.Group("/")
 		adminGroup.Use(compat.AdminAuth())
 		{
-			adminGroup.GET("/", GetAllUsers)
+			compat.RegisterCollection(adminGroup, "GET", GetAllUsers)
 			adminGroup.GET("/search", SearchUsers)
 			adminGroup.GET("/:id", GetUser)
-			adminGroup.POST("/", CreateUser)
+			compat.RegisterCollection(adminGroup, "POST", CreateUser)
 			adminGroup.POST("/manage", ManageUser)
 			adminGroup.POST("/update", UpdateUser)
 			adminGroup.POST("/:id/delete", DeleteUser)
@@ -69,8 +69,8 @@ func registerAuthRoutes(apiGroup *gin.RouterGroup) {
 	authSourceGroup := apiGroup.Group("/auth-sources")
 	authSourceGroup.Use(compat.RootAuth())
 	{
-		authSourceGroup.GET("/", ListAuthSources)
-		authSourceGroup.POST("/", CreateAuthSource)
+		compat.RegisterCollection(authSourceGroup, "GET", ListAuthSources)
+		compat.RegisterCollection(authSourceGroup, "POST", CreateAuthSource)
 		authSourceGroup.POST("/:id/update", UpdateAuthSource)
 		authSourceGroup.POST("/:id/delete", DeleteAuthSource)
 		authSourceGroup.POST("/:id/toggle", ToggleAuthSource)

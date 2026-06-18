@@ -15,8 +15,8 @@ func registerNodeRoutes(apiGroup *gin.RouterGroup) {
 	{
 		nodeRoute.GET("/bootstrap-token", node.GetBootstrapTokenHandler)
 		nodeRoute.POST("/bootstrap-token/rotate", node.RotateBootstrapTokenHandler)
-		nodeRoute.GET("/", node.ListNodesHandler)
-		nodeRoute.POST("/", node.CreateNodeHandler)
+		compat.RegisterCollection(nodeRoute, "GET", node.ListNodesHandler)
+		compat.RegisterCollection(nodeRoute, "POST", node.CreateNodeHandler)
 		nodeRoute.GET("/:id/agent-release", node.GetAgentReleaseHandler)
 		nodeRoute.POST("/:id/update", node.UpdateNodeHandler)
 		nodeRoute.POST("/:id/delete", node.DeleteNodeHandler)

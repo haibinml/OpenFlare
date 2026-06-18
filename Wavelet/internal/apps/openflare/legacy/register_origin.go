@@ -13,9 +13,9 @@ func registerOriginRoutes(apiGroup *gin.RouterGroup) {
 	originRoute := apiGroup.Group("/origins")
 	originRoute.Use(compat.AdminAuth())
 	{
-		originRoute.GET("/", origin.GetOrigins)
+		compat.RegisterCollection(originRoute, "GET", origin.GetOrigins)
 		originRoute.GET("/:id", origin.GetOrigin)
-		originRoute.POST("/", origin.CreateOriginHandler)
+		compat.RegisterCollection(originRoute, "POST", origin.CreateOriginHandler)
 		originRoute.POST("/:id/update", origin.UpdateOriginHandler)
 		originRoute.POST("/:id/delete", origin.DeleteOriginHandler)
 	}

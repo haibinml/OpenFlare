@@ -15,7 +15,7 @@ func RegisterRoutes(apiGroup *gin.RouterGroup) {
 	accessLogRoute := apiGroup.Group("/access-logs")
 	accessLogRoute.Use(compat.AdminAuth())
 	{
-		accessLogRoute.GET("/", getAccessLogsHandler)
+		compat.RegisterCollection(accessLogRoute, "GET", getAccessLogsHandler)
 		accessLogRoute.GET("/folds", getFoldedAccessLogsHandler)
 		accessLogRoute.GET("/folds/ip-summary", getFoldedAccessLogIPsHandler)
 		accessLogRoute.GET("/ip-summary", getAccessLogIPSummariesHandler)

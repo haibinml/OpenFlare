@@ -13,7 +13,7 @@ func registerConfigVersionRoutes(apiGroup *gin.RouterGroup) {
 	configVersionGroup := apiGroup.Group("/config-versions")
 	configVersionGroup.Use(compat.AdminAuth())
 	{
-		configVersionGroup.GET("/", config_version.ListConfigVersionsHandler)
+		compat.RegisterCollection(configVersionGroup, "GET", config_version.ListConfigVersionsHandler)
 		configVersionGroup.GET("/active", config_version.GetActiveConfigVersionHandler)
 		configVersionGroup.GET("/preview", config_version.PreviewConfigVersionHandler)
 		configVersionGroup.GET("/diff", config_version.DiffConfigVersionHandler)
