@@ -1,57 +1,80 @@
-.cache
-.gocache*
+# IDE
+.idea/*
 .idea
+!.idea/icon.png
 .vscode
-/upload/
-*.exe
-*.db
-build
-*.log
+.pnpm-store/
+
+# logs
 /logs/
-.gocache
+*.log
 
-# If you prefer the allow list template instead of the deny list, see community template:
-# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
-#
-# Binaries for programs and plugins
-*.exe~
-*.dll
-*.so
-*.dylib
+# config
+config.yaml
+.env
+.env.*
+!.env.example
 
-# Test binary, built with `go test -c`
-*.test
+# sqlite
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
 
-# Code coverage profiles and other test artifacts
+# frontend
+frontend/build
+frontend/disk
+frontend/node_modules/*
+frontend/.next/*
+frontend/next-env.d.ts
+frontend/package-lock.json
+frontend/.env
+*.tsbuildinfo
+
+# os
+.DS_Store
+Thumbs.db
+
+# build
+/build/
+/bin/
+/dist/
+
+# go workspace
+go.work
+go.work.sum
+main
+
+# upload
+/uploads/
+s3_cache
+
+/frontend/.next/
+/data/
+/internal/router/dist/
+/frontend/out/
+/internal/router/root/dist/
+.dmux/
+
+# test coverage
 *.out
 coverage.*
 *.coverprofile
 profile.cov
 
-# Dependency directories (remove the comment below to include it)
-# vendor/
-
-# Go workspace file
-go.work
-go.work.sum
-
-# env file
-.env
-
-# Editor/IDE
-# .idea/
-# .vscode/
-
-.DS_Store
-.codex-cache
-/.gomodcache/
-*.mmdb
-!openflare_agent/internal/geoipdata/GeoLite2-Country.mmdb
-
+# generic ignores
+.cache
+.gocache*
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
 *-source
 *-source.zip
 .codex*
-
-/bin/
-.dmux/
 .grok
+/.gomodcache/
+*.mmdb
+!openflare_agent/internal/geoipdata/GeoLite2-Country.mmdb

@@ -17,7 +17,7 @@ jobs:
         env:
           CI: ""
         run: |
-          cd openflare-server/frontend
+          cd frontend
           corepack enable
           pnpm install --frozen-lockfile
           pnpm build:embed
@@ -27,4 +27,4 @@ jobs:
         with:
           ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
           BRANCH: gh-pages # The branch the action should deploy to.
-          FOLDER: openflare-server/frontend/out # The folder the action should deploy.
+          FOLDER: frontend/out # The folder the action should deploy.
