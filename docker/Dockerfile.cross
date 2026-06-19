@@ -90,7 +90,7 @@ RUN set -e; \
         [ -n "$FILTER_ARCH" ] && [ "$GOARCH" != "$FILTER_ARCH" ] && continue; \
         EXT=""; \
         [ "$GOOS" = "windows" ] && EXT=".exe"; \
-        OUTPUT="/out/wavelet_${GOOS}_${GOARCH}${EXT}"; \
+        OUTPUT="/out/openflare-server_${GOOS}_${GOARCH}${EXT}"; \
         echo "==> Building ${OUTPUT} (version=${VERSION})..."; \
         CGO_ENABLED=0 GOOS=${GOOS} GOARCH=${GOARCH} \
           go build \

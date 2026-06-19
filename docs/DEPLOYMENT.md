@@ -10,9 +10,9 @@
 
 | 组件名称 | 运行命令/形式 | 职责说明 | 必选/可选 |
 | :--- | :--- | :--- | :--- |
-| **HTTP API 服务** | `bin/wavelet api` | 接收并处理前端及第三方的 RESTful API 请求 | **必选** |
-| **异步任务工作进程** | `bin/wavelet worker` | 消费并处理异步队列任务（如邮件发送、清理上传文件等） | **必选** |
-| **定时任务调度器** | `bin/wavelet scheduler` | 定时向 Redis 队列下发 Cron 任务（仅负责触发，不负责执行） | **必选** |
+| **HTTP API 服务** | `bin/openflare-server api` | 接收并处理前端及第三方的 RESTful API 请求 | **必选** |
+| **异步任务工作进程** | `bin/openflare-server worker` | 消费并处理异步队列任务（如邮件发送、清理上传文件等） | **必选** |
+| **定时任务调度器** | `bin/openflare-server scheduler` | 定时向 Redis 队列下发 Cron 任务（仅负责触发，不负责执行） | **必选** |
 | **前端服务 (Node.js)** | `pnpm start` | 提供 React/Next.js 页面服务（在分离部署时使用） | 分离模式必选 |
 | **PostgreSQL** | 关系型主数据库 | 存储用户、系统配置、认证源、任务执行记录等核心数据 | **必选** |
 | **Redis** | 缓存与消息队列中间件 | 存储 Session 会话、临时缓存以及 Asynq 异步任务队列数据 | **必选** |
@@ -99,12 +99,12 @@ docker compose up -d
 make build-embedded
 ```
 该命令会自动完成前端的静态编译导出 (`frontend/out`)、复制到 Go 后端目录，最后使用 `-tags embed_frontend` 生成后端单文件：
-- 产物路径：`bin/wavelet`
+- 产物路径：`bin/openflare-server`
 
 #### 3. 进程管理 (使用 Systemd)
-将 `bin/wavelet` 拷贝到生产服务器 `/usr/local/bin/wavelet`，并为 `api`、`worker` 和 `scheduler` 配置 Systemd 管理服务。
+将 `bin/openflare-server` 拷贝到生产服务器 `/usr/local/bin/openflare-server`，并为 `api`、`worker` 和 `scheduler` 配置 Systemd 管理服务。
 
-新建 API 进程服务文件 `/etc/systemd/system/wavelet-api.service`：
+新建 API 进程服务文件 `/etc/systemd/system/openflare-api.service`：
 ```ini
 [Unit]
 Description=Refreshing API Service
@@ -114,14 +114,14 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory=/app
-ExecStart=/usr/local/bin/wavelet api
+ExecStart=/usr/local/bin/openflare-server api
 Restart=always
 RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
 ```
-同理，新建 Worker 服务 `/etc/systemd/system/wavelet-worker.service`（将命令改为 `wavelet worker`），以及 Scheduler 服务 `/etc/systemd/system/wavelet-scheduler.service`（将命令改为 `wavelet scheduler`）。
+同理，新建 Worker 服务 `/etc/systemd/system/openflare-worker.service`（将命令改为 `openflare-server worker`），以及 Scheduler 服务 `/etc/systemd/system/openflare-scheduler.service`（将命令改为 `openflare-server scheduler`）。
 
 启动并启用所有服务：
 ```bash
@@ -171,9 +171,9 @@ server {
 #### 1. 部署后端 Go 服务
 1. 编译后端：
    ```bash
-   go build -o bin/wavelet main.go
+   go build -o bin/openflare-server main.go
    ```
-2. 在后端服务器上，同样使用 Systemd 或 Docker 守护启动 `wavelet api`、`wavelet worker` 和 `wavelet scheduler`。
+2. 在后端服务器上，同样使用 Systemd 或 Docker 守护启动 `openflare-server api`、`openflare-server worker` 和 `openflare-server scheduler`。
 3. 配置后端 Nginx 将客户端 API 请求（如 `/api/...`）反向代理至后端绑定的端口（如 `:8000`）。
 
 #### 2. 部署前端 Next.js 服务

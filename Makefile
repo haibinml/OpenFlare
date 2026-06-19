@@ -24,7 +24,7 @@ build-embedded:
 	go build \
 		-tags embed_frontend \
 		-ldflags "-s -w -X '$(MODULE)/internal/buildinfo.Version=$(VERSION)' -X '$(MODULE)/internal/buildinfo.BuildTime=$(BUILD_DATE)'" \
-		-o bin/wavelet \
+		-o bin/openflare-server \
 		main.go
 
 code-check:
@@ -35,7 +35,7 @@ build-backend:
 	@echo "==> Building backend version=$(VERSION) build_date=$(BUILD_DATE)..."
 	go build \
 		-ldflags "-s -w -X '$(MODULE)/internal/buildinfo.Version=$(VERSION)' -X '$(MODULE)/internal/buildinfo.BuildTime=$(BUILD_DATE)'" \
-		-o bin/wavelet \
+		-o bin/openflare-server \
 		main.go
 
 build-agent:

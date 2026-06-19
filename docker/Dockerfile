@@ -46,7 +46,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build \
     -tags embed_frontend \
     -trimpath \
     -ldflags="-s -w -X github.com/Rain-kl/Wavelet/internal/buildinfo.Version=${VERSION} -X github.com/Rain-kl/Wavelet/internal/buildinfo.BuildTime=${BUILD_DATE}" \
-    -o /out/wavelet \
+    -o /out/openflare-server \
     ./main.go
 
 FROM alpine:${ALPINE_VERSION}
@@ -59,10 +59,10 @@ RUN apk add --no-cache ca-certificates tzdata postgresql-client && \
 
 WORKDIR /app
 
-COPY --from=backend-builder /out/wavelet ./wavelet
+COPY --from=backend-builder /out/openflare-server ./openflare-server
 COPY docs ./docs
 
 EXPOSE 3000
 
-ENTRYPOINT ["./wavelet"]
+ENTRYPOINT ["./openflare-server"]
 CMD ["all"]
