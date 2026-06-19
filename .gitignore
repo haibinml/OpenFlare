@@ -2,12 +2,12 @@
 .gocache*
 .idea
 .vscode
-upload
+/upload/
 *.exe
 *.db
 build
 *.log
-logs
+/logs/
 .gocache
 
 # If you prefer the allow list template instead of the deny list, see community template:
@@ -49,8 +49,9 @@ go.work.sum
 !openflare_agent/internal/geoipdata/GeoLite2-Country.mmdb
 
 *-source
-*-source.*
+*-source.zip
 .codex*
 
 /bin/
 .dmux/
+.grok
