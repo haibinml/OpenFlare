@@ -16,9 +16,9 @@ sidebar: false
 
 ## [Unreleased]
 
-### 变更
+### 移除
 
-- Wavelet API 路径统一：管理端由 `/api/v1/openflare/*` 调整为 `/api/v1/d/*`；Agent/Relay/Tunnel 协议路由分别迁移至 `/api/v1/agent/*`、`/api/v1/relay/*`、`/api/v1/tunnel/*`（原 `/api/flared/*`）。同步更新 Wavelet 前端服务层与 `openflare-agent`、`openflare-relay`、`openflared` 客户端连接端点。
+- 移除 Wavelet 中从旧系统迁移但未实装的全局 API / Web / 敏感接口限流选项（`GlobalApiRateLimit*`、`GlobalWebRateLimit*`、`CriticalRateLimit*`）及相关校验与数据库种子。
 
 ### 新增
 
@@ -69,6 +69,7 @@ sidebar: false
 
 ### 变更
 
+- Wavelet API 路径统一：管理端由 `/api/v1/openflare/*` 调整为 `/api/v1/d/*`；Agent/Relay/Tunnel 协议路由分别迁移至 `/api/v1/agent/*`、`/api/v1/relay/*`、`/api/v1/tunnel/*`（原 `/api/flared/*`）。同步更新 Wavelet 前端服务层与 `openflare-agent`、`openflare-relay`、`openflared` 客户端连接端点。
 - 移除 Wavelet 顶栏 OpenFlare 服务端版本入口按钮；版本升级能力保留在 Admin 设置 OpenFlare 运维 Tab。
 - 将 Wavelet 默认上游仓库调整为 `Rain-kl/OpenFlare`，站点名称、邮件模板、前端默认标题与页脚品牌统一初始化为 OpenFlare；新增 goose 迁移回填既有环境的旧 Wavelet 默认值。
 - Wavelet WAF IP 组列表新增「查看」操作，支持在查看弹窗中浏览当前 IP 并移除单条 IP；自动类型同步裁剪 `ext_ips` 以与 `ip_list` 保持一致。
