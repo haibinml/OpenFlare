@@ -11,7 +11,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-
 func handleLogicError(c *gin.Context, err error) bool {
 	if err == nil {
 		return false
@@ -21,7 +20,7 @@ func handleLogicError(c *gin.Context, err error) bool {
 
 // ListConfigVersionsHandler lists config versions.
 // @Summary 获取配置版本列表
-// @Description 返回所有已发布的 OpenResty 配置版本摘要，需要管理员权限
+// @Description 返回所有已发布的 OpenResty 配置版本摘要，按创建时间倒序排列，需要管理员权限
 // @Tags openflare-config-version
 // @Produce json
 // @Security SessionCookie

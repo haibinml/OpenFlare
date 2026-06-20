@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/Rain-kl/Wavelet/internal/apps/openflare/waf"
 	"github.com/Rain-kl/Wavelet/internal/db"
@@ -36,6 +37,40 @@ func setupConfigVersionTestDB(t *testing.T) func() {
 	return func() {
 		db.SetDB(nil)
 	}
+}
+
+func TestListConfigVersionsOrdersByCreatedAtDesc(t *testing.T) {
+	cleanup := setupConfigVersionTestDB(t)
+	defer cleanup()
+	ctx := context.Background()
+	conn := db.DB(ctx)
+	require.NotNil(t, conn)
+
+	newer := &model.ConfigVersion{
+		Version:        "20260102-001",
+		SnapshotJSON:   "{}",
+		RenderedConfig: "route {}",
+		Checksum:       "checksum-newer",
+		CreatedBy:      "tester",
+		CreatedAt:      time.Date(2026, 1, 2, 12, 0, 0, 0, time.UTC),
+	}
+	older := &model.ConfigVersion{
+		Version:        "20260101-001",
+		SnapshotJSON:   "{}",
+		RenderedConfig: "route {}",
+		Checksum:       "checksum-older",
+		CreatedBy:      "tester",
+		CreatedAt:      time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC),
+	}
+	require.NoError(t, conn.Create(newer).Error)
+	require.NoError(t, conn.Create(older).Error)
+	require.Greater(t, older.ID, newer.ID)
+
+	versions, err := ListConfigVersions(ctx)
+	require.NoError(t, err)
+	require.Len(t, versions, 2)
+	assert.Equal(t, newer.Version, versions[0].Version)
+	assert.Equal(t, older.Version, versions[1].Version)
 }
 
 func TestPublishConfigVersionCreatesVersion(t *testing.T) {

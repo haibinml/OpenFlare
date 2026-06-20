@@ -80,6 +80,15 @@ export default function ConfigVersionsPage() {
     [preview, diff],
   )
 
+  const sortedVersions = useMemo(
+    () =>
+      [...versions].sort(
+        (left, right) =>
+          new Date(right.created_at).getTime() - new Date(left.created_at).getTime(),
+      ),
+    [versions],
+  )
+
   const fetchVersions = useCallback(async () => {
     setLoading(true)
     setError(null)
@@ -240,7 +249,7 @@ export default function ConfigVersionsPage() {
       <div className="border border-dashed shadow-none rounded-lg overflow-hidden bg-background">
         {loading ? (
           <LoadingStateWithBorder />
-        ) : versions.length === 0 ? (
+        ) : sortedVersions.length === 0 ? (
           <EmptyStateWithBorder
             title="暂无历史版本"
             description="当前还没有可查看的发布记录，请先触发一次配置发布。"
@@ -258,7 +267,7 @@ export default function ConfigVersionsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {versions.map((version) => (
+              {sortedVersions.map((version) => (
                 <TableRow
                   key={version.id}
                   className="border-dashed hover:bg-muted/10 transition-colors"

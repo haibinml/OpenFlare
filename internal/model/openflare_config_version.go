@@ -41,7 +41,7 @@ func (ConfigVersion) TableName() string {
 	return "of_config_versions"
 }
 
-// ListConfigVersionSummaries returns config version summaries ordered by id desc.
+// ListConfigVersionSummaries returns config version summaries ordered by created_at desc.
 func ListConfigVersionSummaries(ctx context.Context) ([]*ConfigVersionSummary, error) {
 	conn := db.DB(ctx)
 	if conn == nil {
@@ -50,7 +50,7 @@ func ListConfigVersionSummaries(ctx context.Context) ([]*ConfigVersionSummary, e
 	var versions []*ConfigVersionSummary
 	err := conn.Model(&ConfigVersion{}).
 		Select("id", "version", "checksum", "is_active", "created_by", "created_at").
-		Order("id desc").
+		Order("created_at desc, id desc").
 		Find(&versions).Error
 	return versions, err
 }
