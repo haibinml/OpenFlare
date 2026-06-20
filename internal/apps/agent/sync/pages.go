@@ -241,14 +241,49 @@ func switchPagesCurrentDir(baseDir string, deploymentID uint, releaseDir string)
 	if err := os.MkdirAll(filepath.Dir(currentDir), pagesDirPerm); err != nil {
 		return err
 	}
-	if _, err := os.Stat(currentDir); err == nil {
+
+	relTarget, err := filepath.Rel(filepath.Dir(currentDir), releaseDir)
+	if err != nil {
+		relTarget = releaseDir
+	}
+
+	// Try creating a temporary symlink first to check if symlinks are supported/feasible
+	tmpSymlink := currentDir + ".tmp"
+	_ = os.Remove(tmpSymlink)
+
+	symlinkErr := os.Symlink(relTarget, tmpSymlink)
+	if symlinkErr != nil {
+		return fallbackCopyPagesCurrentDir(currentDir, previousDir, releaseDir)
+	}
+
+	// Symlink is supported, proceed with symlink swap
+	_ = os.Remove(tmpSymlink)
+
+	if _, err := os.Lstat(currentDir); err == nil {
+		if err := os.Rename(currentDir, previousDir); err != nil {
+			return err
+		}
+	}
+
+	if err := os.Symlink(relTarget, currentDir); err != nil {
+		if _, restoreErr := os.Lstat(previousDir); restoreErr == nil {
+			_ = os.Rename(previousDir, currentDir)
+		}
+		return err
+	}
+	_ = os.RemoveAll(previousDir)
+	return nil
+}
+
+func fallbackCopyPagesCurrentDir(currentDir, previousDir, releaseDir string) error {
+	if _, err := os.Lstat(currentDir); err == nil {
 		if err := os.Rename(currentDir, previousDir); err != nil {
 			return err
 		}
 	}
 	if err := copyPagesDir(releaseDir, currentDir); err != nil {
 		_ = os.RemoveAll(currentDir)
-		if _, restoreErr := os.Stat(previousDir); restoreErr == nil {
+		if _, restoreErr := os.Lstat(previousDir); restoreErr == nil {
 			_ = os.Rename(previousDir, currentDir)
 		}
 		return err

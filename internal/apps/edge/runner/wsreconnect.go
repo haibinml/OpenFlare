@@ -63,8 +63,10 @@ func RunWSReconnectLoop(ctx context.Context, cfg WSReconnectConfig,
 
 // SleepContext pauses execution for the given duration or until the context is canceled.
 func SleepContext(ctx context.Context, d time.Duration) {
+	t := time.NewTimer(d)
+	defer t.Stop()
 	select {
 	case <-ctx.Done():
-	case <-time.After(d):
+	case <-t.C:
 	}
 }

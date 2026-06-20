@@ -95,6 +95,13 @@ func Logout(c *gin.Context) {
 	username := session.Get(UserNameKey)
 	if userID != nil {
 		logger.InfoF(c.Request.Context(), "[LoginAudit] user logged out: %v, ID: %v, IP: %s", username, userID, c.ClientIP())
+		if id, ok := userID.(uint64); ok {
+			InvalidateCachedUser(c.Request.Context(), id)
+		} else if idFloat, ok := userID.(float64); ok {
+			InvalidateCachedUser(c.Request.Context(), uint64(idFloat))
+		} else if idInt, ok := userID.(int); ok && idInt >= 0 {
+			InvalidateCachedUser(c.Request.Context(), uint64(idInt))
+		}
 	}
 	session.Options(GetSessionOptions(-1))
 	session.Clear()

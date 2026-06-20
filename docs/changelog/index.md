@@ -18,6 +18,16 @@ sidebar: false
 
 ### 变更
 
+- 优化认证性能：引入 Redis 与本地二级缓存缓存 Token 数据库查询和用户 Active 状态，并在用户注销或用户状态修改/删除时进行缓存失效清理。
+- 重构用户与令牌管理：完成 User 控制器和 AccessToken 控制器的 Handler 和数据库操作逻辑的层级解耦（移入 `logics.go`），并统一对数据库异常进行脱敏封装，避免底层数据库错误泄露。
+- 优化观测数据缓存：`ObservabilityBufferStore` 引入内存缓存，避免每次心跳时从磁盘重复读取和解析 JSON 缓存文件。
+- 优化 ClickHouse 写入去重效率：`dedupSet` 的 `markIfNew` 改为定期清理过期 Key，避免在高并发指标入队时同步遍历整个 Map。
+- 优化大文件打包下载：`BatchDownloadFiles` 批量打包 ZIP 下载流中引入 `bufio.Writer` 缓冲写入，避免直接向网络 Socket 进行无缓冲碎片化写入。
+- 优化 Pages 静态部署切换性能：在支持的系统与文件系统下，优先通过软链接（Symlink）进行 Pages deployments 目录快速切换，失败时自动退回到全量目录复制（Copy）。
+
+### 修复
+
+- 修复 CAP 模块路由错误响应：将 CAP 接口中的所有直接 JSON 错误响应改造为统一的 `response.Abort*` 抛出并挂载到中间件统一写出 JSON，保证全局 `{ "error_msg": "...", "data": null }` 信封规范。
 
 ### 移除
 

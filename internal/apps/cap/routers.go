@@ -6,8 +6,13 @@ package cap
 import (
 	"net/http"
 
+	"github.com/Rain-kl/Wavelet/internal/common/response"
+	pkgcap "github.com/Rain-kl/Wavelet/pkg/cap"
 	"github.com/gin-gonic/gin"
 )
+
+// ChallengeResponse is a local type alias for the pkg/cap.ChallengeResponse struct
+type ChallengeResponse = pkgcap.ChallengeResponse
 
 type challengeRequest struct {
 	Scope string `json:"scope" form:"scope"`
@@ -26,8 +31,8 @@ type redeemRequest struct {
 // @Accept json
 // @Produce json
 // @Param request body challengeRequest false "可选范围限制参数"
-// @Success 200 {object} cap.ChallengeResponse "成功返回 PoW 难题"
-// @Failure 500 {object} RedeemResponse "内部服务错误"
+// @Success 200 {object} response.Any{data=cap.ChallengeResponse} "成功返回 PoW 难题"
+// @Failure 500 {object} response.Any "内部服务错误"
 // @Router /api/cap/challenge [post]
 func Challenge(c *gin.Context) {
 	var req challengeRequest
@@ -40,14 +45,11 @@ func Challenge(c *gin.Context) {
 	mgr := GetDefaultManager()
 	resp, err := mgr.Generate(c.Request.Context(), req.Scope)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, RedeemResponse{
-			Success: false,
-			Error:   err.Error(),
-		})
+		response.AbortInternal(c, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, resp)
+	c.JSON(http.StatusOK, response.OK(resp))
 }
 
 // Redeem 提交 PoW 解答并兑换一次性凭证 Token
@@ -57,17 +59,14 @@ func Challenge(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body redeemRequest true "难题 Token 与解答 solutions 数组"
-// @Success 200 {object} RedeemResponse "核销成功，返回 X-Cap-Token"
-// @Failure 400 {object} RedeemResponse "参数错误或核销失败"
-// @Failure 500 {object} RedeemResponse "内部服务错误"
+// @Success 200 {object} response.Any{data=cap.RedeemResponse} "核销成功，返回 X-Cap-Token"
+// @Failure 400 {object} response.Any "参数错误或核销失败"
+// @Failure 500 {object} response.Any "内部服务错误"
 // @Router /api/cap/redeem [post]
 func Redeem(c *gin.Context) {
 	var req redeemRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, RedeemResponse{
-			Success: false,
-			Error:   "无效的参数",
-		})
+		response.AbortBadRequest(c, "无效的参数")
 		return
 	}
 
@@ -78,17 +77,14 @@ func Redeem(c *gin.Context) {
 	mgr := GetDefaultManager()
 	resp, err := mgr.Redeem(c.Request.Context(), req.Token, req.Solutions, req.Scope)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, RedeemResponse{
-			Success: false,
-			Error:   err.Error(),
-		})
+		response.AbortInternal(c, err.Error())
 		return
 	}
 
 	if !resp.Success {
-		c.JSON(http.StatusBadRequest, resp)
+		response.AbortBadRequest(c, resp.Error)
 		return
 	}
 
-	c.JSON(http.StatusOK, resp)
+	c.JSON(http.StatusOK, response.OK(resp))
 }

@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net"
@@ -13,6 +14,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/Rain-kl/Wavelet/internal/apps/flared/config"
@@ -225,15 +227,18 @@ func (m *Manager) restartProcess(ctx context.Context, relayID string, configPath
 				backoff = 1 * time.Second
 			}
 
+			t := time.NewTimer(backoff)
 			select {
 			case <-procCtx.Done():
+				t.Stop()
 				return
-			case <-time.After(backoff):
+			case <-t.C:
 				backoff *= 2
 				if backoff > maxBackoff {
 					backoff = maxBackoff
 				}
 			}
+			t.Stop()
 		}
 	}()
 }
@@ -350,10 +355,13 @@ func ensureNoOrphanProcess(pidPath string) {
 	}
 	process, err := os.FindProcess(pid)
 	if err == nil && process != nil {
-		slog.Warn("attempting to kill potentially orphan process", "pid", pid, "pid_path", pidPath)
-		_ = process.Kill()
-		// Wait a little bit to ensure the OS has reclaimed ports
-		time.Sleep(orphanProcessKillDelay)
+		err = process.Signal(syscall.Signal(0))
+		if err == nil || errors.Is(err, os.ErrPermission) {
+			slog.Warn("attempting to kill potentially orphan process", "pid", pid, "pid_path", pidPath)
+			_ = process.Kill()
+			// Wait a little bit to ensure the OS has reclaimed ports
+			time.Sleep(orphanProcessKillDelay)
+		}
 	}
 	_ = os.Remove(pidPath)
 }

@@ -26,8 +26,10 @@ type ObservabilityBufferRecord struct {
 
 // ObservabilityBufferStore persists observability records to disk for replay on heartbeat.
 type ObservabilityBufferStore struct {
-	path string
-	mu   sync.Mutex
+	path        string
+	mu          sync.Mutex
+	cache       []ObservabilityBufferRecord
+	cacheLoaded bool
 }
 
 // NewObservabilityBufferStore creates a store backed by the file at path.
@@ -174,21 +176,34 @@ func (s *ObservabilityBufferStore) Ack(windowStartedAtUnix []int64, retainAfterU
 }
 
 func (s *ObservabilityBufferStore) loadUnlocked() ([]ObservabilityBufferRecord, error) {
+	if s.cacheLoaded {
+		copied := make([]ObservabilityBufferRecord, len(s.cache))
+		copy(copied, s.cache)
+		return copied, nil
+	}
 	data, err := os.ReadFile(s.path)
 	if err != nil {
 		if os.IsNotExist(err) {
+			s.cache = []ObservabilityBufferRecord{}
+			s.cacheLoaded = true
 			return []ObservabilityBufferRecord{}, nil
 		}
 		return nil, err
 	}
 	if len(data) == 0 {
+		s.cache = []ObservabilityBufferRecord{}
+		s.cacheLoaded = true
 		return []ObservabilityBufferRecord{}, nil
 	}
 	var records []ObservabilityBufferRecord
 	if err = json.Unmarshal(data, &records); err != nil {
 		return nil, err
 	}
-	return records, nil
+	s.cache = records
+	s.cacheLoaded = true
+	copied := make([]ObservabilityBufferRecord, len(s.cache))
+	copy(copied, s.cache)
+	return copied, nil
 }
 
 func (s *ObservabilityBufferStore) saveUnlocked(records []ObservabilityBufferRecord) error {
@@ -199,7 +214,12 @@ func (s *ObservabilityBufferStore) saveUnlocked(records []ObservabilityBufferRec
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(s.path, data, stateFilePerm)
+	if err := os.WriteFile(s.path, data, stateFilePerm); err != nil {
+		return err
+	}
+	s.cache = records
+	s.cacheLoaded = true
+	return nil
 }
 
 // ObservabilityWindowStartedAt calculates the start of the 60-second window for the given metrics, openresty observation, or traffic report.

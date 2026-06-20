@@ -5,9 +5,6 @@
 ### 1. 开发指导规范 (AI & Developer Guidelines)
 
 * **必须阅读**：
-  * **[docs/guideline/development-constraints.md](docs/guideline/Constraints.md)**：掌握核心后端/Agent/前端分层约束、数据模型规范、数据库迁移升级协议、API 与鉴权设计准则及变更准入与验收标准。
-  * **[docs/guideline/Role.md](./docs/guideline/Role.md)**：通用的 Go 后端开发与高质量编码准则，包括架构、并发、错误处理、安全及工作流程。
-* **正在进行的开发计划与接手 (Handover & Plans)**：
   * **[docs/plan/index.md](./docs/plan/index.md)**：查看正在进行的开发实现计划（Implementation Plan）与 AI 代理交接文档（Handover），接手项目时优先检查。
 
 ### 2. 系统设计与架构 (Design Docs)

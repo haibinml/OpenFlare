@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
 	"golang.org/x/net/websocket"
@@ -52,6 +53,7 @@ type Connection struct {
 	Conn        *websocket.Conn
 	URL         string
 	ReadTimeout time.Duration
+	writeMu     sync.Mutex
 }
 
 // New creates a new WebSocket client with the given configuration.
@@ -153,6 +155,9 @@ func (conn *Connection) SendMessage(msgType string, payload any) error {
 		Type:    msgType,
 		Payload: payload,
 	}
+
+	conn.writeMu.Lock()
+	defer conn.writeMu.Unlock()
 
 	_ = conn.Conn.SetWriteDeadline(time.Now().Add(writeDeadlineSecs * time.Second))
 	return websocket.JSON.Send(conn.Conn, message)

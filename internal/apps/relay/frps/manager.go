@@ -6,6 +6,7 @@ package frps
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -13,6 +14,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	service "github.com/Rain-kl/Wavelet/pkg/protocol"
@@ -322,10 +324,13 @@ func ensureNoOrphanProcess(pidPath string) {
 	}
 	process, err := os.FindProcess(pid)
 	if err == nil && process != nil {
-		slog.Warn("attempting to kill potentially orphan process", "pid", pid, "pid_path", pidPath)
-		_ = process.Kill()
-		// Wait a little bit to ensure the OS has reclaimed ports
-		time.Sleep(frpsOrphanProcessCleanupDelay)
+		err = process.Signal(syscall.Signal(0))
+		if err == nil || errors.Is(err, os.ErrPermission) {
+			slog.Warn("attempting to kill potentially orphan process", "pid", pid, "pid_path", pidPath)
+			_ = process.Kill()
+			// Wait a little bit to ensure the OS has reclaimed ports
+			time.Sleep(frpsOrphanProcessCleanupDelay)
+		}
 	}
 	_ = os.Remove(pidPath)
 }

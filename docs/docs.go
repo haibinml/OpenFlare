@@ -49,13 +49,25 @@ const docTemplate = `{
                     "200": {
                         "description": "成功返回 PoW 难题",
                         "schema": {
-                            "$ref": "#/definitions/cap.ChallengeResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_apps_cap.ChallengeResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "500": {
                         "description": "内部服务错误",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_apps_cap.RedeemResponse"
+                            "$ref": "#/definitions/response.Any"
                         }
                     }
                 }
@@ -89,19 +101,31 @@ const docTemplate = `{
                     "200": {
                         "description": "核销成功，返回 X-Cap-Token",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_apps_cap.RedeemResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_apps_cap.RedeemResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
                         "description": "参数错误或核销失败",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_apps_cap.RedeemResponse"
+                            "$ref": "#/definitions/response.Any"
                         }
                     },
                     "500": {
                         "description": "内部服务错误",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Rain-kl_Wavelet_internal_apps_cap.RedeemResponse"
+                            "$ref": "#/definitions/response.Any"
                         }
                     }
                 }
@@ -13057,32 +13081,6 @@ const docTemplate = `{
                 }
             }
         },
-        "cap.ChallengeResponse": {
-            "type": "object",
-            "properties": {
-                "challenge": {
-                    "type": "object",
-                    "properties": {
-                        "c": {
-                            "type": "integer"
-                        },
-                        "d": {
-                            "type": "integer"
-                        },
-                        "s": {
-                            "type": "integer"
-                        }
-                    }
-                },
-                "expires": {
-                    "description": "ms timestamp",
-                    "type": "integer"
-                },
-                "token": {
-                    "type": "string"
-                }
-            }
-        },
         "cap.challengeRequest": {
             "type": "object",
             "properties": {
@@ -13576,6 +13574,32 @@ const docTemplate = `{
                     }
                 },
                 "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Rain-kl_Wavelet_internal_apps_cap.ChallengeResponse": {
+            "type": "object",
+            "properties": {
+                "challenge": {
+                    "type": "object",
+                    "properties": {
+                        "c": {
+                            "type": "integer"
+                        },
+                        "d": {
+                            "type": "integer"
+                        },
+                        "s": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "expires": {
+                    "description": "ms timestamp",
+                    "type": "integer"
+                },
+                "token": {
                     "type": "string"
                 }
             }
