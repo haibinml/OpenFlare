@@ -18,6 +18,8 @@ sidebar: false
 
 ### 修复
 
+- 修复 Agent 心跳上报公网 IP 后节点地理位置未自动更新：进程启动时按 `GeoIPProvider` 初始化 `pkg/geoip`，`mmdb` 模式从内置 GeoLite2 种子到 `data/`，并在 Relay 心跳同步地理位置。
+
 - 修复 Agent 启动时 Pages 部署包下载失败：Pages 部署包统一下载走 upload 文件存储框架，部署记录持久化 `upload_id`，legacy `artifact_path` 仅用于一次性回填 upload。
 
 - 修复登录 Cap 人机验证：前端 `cap-solver` 与 Cap 路由测试对齐 `b3a55d4` 之后的统一 API 信封 `{ error_msg, data }`，避免 `challenge` 解构失败。

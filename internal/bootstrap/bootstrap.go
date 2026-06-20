@@ -12,6 +12,7 @@ import (
 	admin_push "github.com/Rain-kl/Wavelet/internal/apps/admin/push"
 	"github.com/Rain-kl/Wavelet/internal/apps/admin/push/custom_events"
 	"github.com/Rain-kl/Wavelet/internal/apps/openflare/chwriter"
+	ofgeoip "github.com/Rain-kl/Wavelet/internal/apps/openflare/geoip"
 	"github.com/Rain-kl/Wavelet/internal/apps/risk_control"
 	"github.com/Rain-kl/Wavelet/internal/lifecycle"
 	taskhandlers "github.com/Rain-kl/Wavelet/internal/task/handlers"
@@ -80,6 +81,9 @@ func RegisterAll() {
 // Call from cmd entry points after wiring registration and database migration, not from router.
 func Init(ctx context.Context, opts Options) {
 	initRuntimeOnce.Do(func() {
+		if err := ofgeoip.EnsureRuntimeProvider(ctx); err != nil {
+			logger.ErrorF(ctx, "[Bootstrap] init GeoIP provider failed: %v", err)
+		}
 		if err := admin_push.SyncEvents(ctx); err != nil {
 			logger.ErrorF(ctx, "[Bootstrap] sync push events failed: %v", err)
 		}

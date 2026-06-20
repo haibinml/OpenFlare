@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	ofgeoip "github.com/Rain-kl/Wavelet/internal/apps/openflare/geoip"
 	"github.com/Rain-kl/Wavelet/internal/apps/openflare/node"
 	"github.com/Rain-kl/Wavelet/internal/db"
 	"github.com/Rain-kl/Wavelet/internal/model"
@@ -17,6 +18,7 @@ import (
 
 // RegisterWithAccessToken registers an agent on a reserved node token.
 func RegisterWithAccessToken(ctx context.Context, authNode *model.OpenFlareNode, payload NodePayload) (*RegistrationResponse, error) {
+	_ = ofgeoip.EnsureRuntimeProvider(ctx)
 	payload = normalizeNodePayload(payload)
 	if authNode == nil {
 		return nil, errors.New(errNodeNotFound)
@@ -24,7 +26,7 @@ func RegisterWithAccessToken(ctx context.Context, authNode *model.OpenFlareNode,
 	if err := validateNodePayload(payload); err != nil {
 		return nil, err
 	}
-	applyNodeRuntime(authNode, payload, true)
+	applyNodeRuntime(ctx, authNode, payload, true)
 	if err := model.SaveOpenFlareNode(ctx, authNode); err != nil {
 		return nil, err
 	}
@@ -38,6 +40,7 @@ func RegisterWithAccessToken(ctx context.Context, authNode *model.OpenFlareNode,
 
 // RegisterWithDiscovery registers a new node using the global discovery token.
 func RegisterWithDiscovery(ctx context.Context, payload NodePayload) (*RegistrationResponse, error) {
+	_ = ofgeoip.EnsureRuntimeProvider(ctx)
 	payload = normalizeNodePayload(payload)
 	if err := validateNodePayload(payload); err != nil {
 		return nil, err
@@ -66,7 +69,7 @@ func RegisterWithDiscovery(ctx context.Context, payload NodePayload) (*Registrat
 		CapabilitiesJSON: "[]",
 		UpdateChannel:    releaseChannelStable,
 	}
-	applyNodeRuntime(record, payload, false)
+	applyNodeRuntime(ctx, record, payload, false)
 
 	if err = model.CreateOpenFlareNode(ctx, record); err != nil {
 		if isUniqueConstraintError(err) {
@@ -84,6 +87,7 @@ func RegisterWithDiscovery(ctx context.Context, payload NodePayload) (*Registrat
 
 // HeartbeatNode updates runtime state and returns agent settings.
 func HeartbeatNode(ctx context.Context, authNode *model.OpenFlareNode, payload NodePayload) (*HeartbeatResponse, error) {
+	_ = ofgeoip.EnsureRuntimeProvider(ctx)
 	if authNode == nil {
 		return nil, errors.New(errNodeNotFound)
 	}
@@ -99,7 +103,7 @@ func HeartbeatNode(ctx context.Context, authNode *model.OpenFlareNode, payload N
 	updateChannel := strings.TrimSpace(authNode.UpdateChannel)
 	updateTag := strings.TrimSpace(authNode.UpdateTag)
 
-	applyNodeRuntime(authNode, payload, true)
+	applyNodeRuntime(ctx, authNode, payload, true)
 	authNode.UpdateRequested = false
 	authNode.UpdateChannel = releaseChannelStable
 	authNode.UpdateTag = ""

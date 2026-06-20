@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/Rain-kl/Wavelet/internal/apps/openflare/agent"
+	ofgeoip "github.com/Rain-kl/Wavelet/internal/apps/openflare/geoip"
 	"github.com/Rain-kl/Wavelet/internal/db"
 	"github.com/Rain-kl/Wavelet/internal/model"
 )
@@ -52,6 +53,21 @@ func Heartbeat(ctx context.Context, node *model.OpenFlareNode, payload Heartbeat
 		changes["ip"] = payload.IP
 		node.IP = payload.IP
 	}
+	if !node.GeoManualOverride {
+		beforeGeo := node.GeoName
+		beforeLat := node.GeoLatitude
+		beforeLon := node.GeoLongitude
+		ofgeoip.ApplyNodeGeoFromIP(ctx, node, node.IP)
+		if node.GeoName != beforeGeo {
+			changes["geo_name"] = node.GeoName
+		}
+		if !coordinatesEqual(beforeLat, node.GeoLatitude) {
+			changes["geo_latitude"] = node.GeoLatitude
+		}
+		if !coordinatesEqual(beforeLon, node.GeoLongitude) {
+			changes["geo_longitude"] = node.GeoLongitude
+		}
+	}
 	if !previous.UpdateRequested {
 		delete(changes, "update_requested")
 	}
@@ -85,4 +101,11 @@ func Heartbeat(ctx context.Context, node *model.OpenFlareNode, payload Heartbeat
 		RelayConfig:   buildRelayConfig(node),
 		RelaySettings: BuildSettings(node, updateNow, updateChannel, updateTag),
 	}, nil
+}
+
+func coordinatesEqual(before *float64, after *float64) bool {
+	if before == nil || after == nil {
+		return before == after
+	}
+	return *before == *after
 }

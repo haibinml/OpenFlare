@@ -136,7 +136,15 @@ func updateOptions(ctx context.Context, options []model.OpenFlareOption) error {
 	if err := validateOptions(options); err != nil {
 		return err
 	}
-	return model.UpdateOpenFlareOptions(ctx, options)
+	if err := model.UpdateOpenFlareOptions(ctx, options); err != nil {
+		return err
+	}
+	for _, item := range options {
+		if item.Key == "GeoIPProvider" {
+			return geoip.RefreshRuntimeProvider(ctx)
+		}
+	}
+	return nil
 }
 
 func getNotice(ctx context.Context) (string, error) {

@@ -82,7 +82,7 @@ func (e payloadError) Error() string { return string(e) }
 
 func errPayload(message string) error { return payloadError(message) }
 
-func applyNodeRuntime(node *model.OpenFlareNode, payload NodePayload, preserveName bool) {
+func applyNodeRuntime(ctx context.Context, node *model.OpenFlareNode, payload NodePayload, preserveName bool) {
 	if !preserveName || strings.TrimSpace(node.Name) == "" {
 		if strings.TrimSpace(payload.Name) != "" {
 			node.Name = strings.TrimSpace(payload.Name)
@@ -101,31 +101,7 @@ func applyNodeRuntime(node *model.OpenFlareNode, payload NodePayload, preserveNa
 	node.LastSeenAt = &now
 	node.LastError = truncateForDatabase(payload.LastError, maxDatabaseTextLength)
 	if !node.GeoManualOverride {
-		applyGeoInfoFromIP(node, node.IP)
-	}
-}
-
-func applyGeoInfoFromIP(node *model.OpenFlareNode, rawIP string) {
-	if node == nil {
-		return
-	}
-	node.GeoName = ""
-	node.GeoLatitude = nil
-	node.GeoLongitude = nil
-	ip := net.ParseIP(strings.TrimSpace(rawIP))
-	if ip == nil {
-		return
-	}
-	info, err := ofgeoip.GeoInfoFromIP(ip)
-	if err != nil || info == nil {
-		return
-	}
-	if strings.TrimSpace(info.Name) != "" {
-		node.GeoName = strings.TrimSpace(info.Name)
-	}
-	if info.Latitude != nil && info.Longitude != nil {
-		node.GeoLatitude = cloneCoordinate(info.Latitude)
-		node.GeoLongitude = cloneCoordinate(info.Longitude)
+		ofgeoip.ApplyNodeGeoFromIP(ctx, node, node.IP)
 	}
 }
 

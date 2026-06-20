@@ -4,9 +4,11 @@
 package agent
 
 import (
+	"context"
 	"net"
 	"testing"
 
+	ofgeoip "github.com/Rain-kl/Wavelet/internal/apps/openflare/geoip"
 	"github.com/Rain-kl/Wavelet/internal/model"
 	pkggeoip "github.com/Rain-kl/Wavelet/pkg/geoip"
 )
@@ -48,7 +50,7 @@ func TestApplyGeoInfoFromIP(t *testing.T) {
 	})
 
 	node := &model.OpenFlareNode{IP: "203.0.113.10"}
-	applyGeoInfoFromIP(node, node.IP)
+	ofgeoip.ApplyNodeGeoFromIP(context.Background(), node, node.IP)
 
 	if node.GeoName != "Shanghai" {
 		t.Fatalf("expected geo_name Shanghai, got %q", node.GeoName)
@@ -70,7 +72,7 @@ func TestApplyGeoInfoFromIPSkipsInvalidIP(t *testing.T) {
 		GeoLatitude:  geoipFloat(1),
 		GeoLongitude: geoipFloat(2),
 	}
-	applyGeoInfoFromIP(node, "not-an-ip")
+	ofgeoip.ApplyNodeGeoFromIP(context.Background(), node, "not-an-ip")
 
 	if node.GeoName != "" || node.GeoLatitude != nil || node.GeoLongitude != nil {
 		t.Fatalf("expected geo fields to be cleared on invalid IP, got %+v", node)
@@ -90,7 +92,7 @@ func TestApplyNodeRuntimeRespectsGeoManualOverride(t *testing.T) {
 		GeoLatitude:       geoipFloat(10),
 		GeoLongitude:      geoipFloat(20),
 	}
-	applyNodeRuntime(node, NodePayload{
+	applyNodeRuntime(context.Background(), node, NodePayload{
 		IP:      "203.0.113.10",
 		Version: "1.0.0",
 	}, true)

@@ -81,9 +81,10 @@ func (s *IPInfoService) GetGeoInfo(ip net.IP) (*GeoInfo, error) {
 	// 实际上，IPinfo 的 'country' 字段就是 ISO 2-letter code。
 	// 如果需要完整的国家名称，可能需要一个本地的 ISO 代码到名称的映射。
 	// 为了与 GetRegionUnicodeEmoji 函数兼容，我们直接使用 country 作为 ISOCode。
+	name := formatIPInfoLocation(apiResp)
 	return &GeoInfo{
 		ISOCode:   apiResp.Country,
-		Name:      apiResp.Country,
+		Name:      name,
 		Latitude:  latitude,
 		Longitude: longitude,
 	}, nil
@@ -114,4 +115,21 @@ func parseIPInfoCoordinates(value string) (*float64, *float64) {
 	}
 
 	return float64Pointer(latitudeValue), float64Pointer(longitudeValue)
+}
+
+func formatIPInfoLocation(resp ipInfoResponse) string {
+	parts := make([]string, 0, 3)
+	if city := strings.TrimSpace(resp.City); city != "" {
+		parts = append(parts, city)
+	}
+	if region := strings.TrimSpace(resp.Region); region != "" {
+		parts = append(parts, region)
+	}
+	if country := strings.TrimSpace(resp.Country); country != "" {
+		parts = append(parts, country)
+	}
+	if len(parts) == 0 {
+		return ""
+	}
+	return strings.Join(parts, ", ")
 }
