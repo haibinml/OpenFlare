@@ -16,13 +16,21 @@ sidebar: false
 
 ## [Unreleased]
 
+### 变更
+
+- 前端页面鉴权改为默认私域：除 `/login`、`/register`、`/callback` 外，未登录访问任意页面（含数据看板 `/`）均重定向至登录页。
+
 ### 修复
 
 - 配置版本列表按 `created_at` 倒序展示，最新发布版本固定显示在列表顶部。
 
 - 修复 WAF 规则组保存/绑定网站时报 `of_waf_rule_group_bindings_pkey` 冲突：PostgreSQL 在迁移导入显式 ID 后同步绑定表序列，并在写入前自动校正序列。
 
+- 修复 PostgreSQL 启动迁移失败：`of_waf_rule_group_bindings` 序列表为空时 `setval(0)` 越界，改为空表重置为 1、有数据时对齐 `MAX(id)`。
+
 - 修复 WAF 规则组 PoW 策略发布后边缘不生效：统一 WAF 绑定站点名与 OpenResty 路由 `site_name` 解析逻辑，并为所有已启用网站生成 `site_rule_groups` 条目（含仅依赖全局规则组的站点）。
+
+- 修复 WAF PoW 已启用但挑战页不弹出：`pow_enabled=true` 且 `pow_config` 为空时补齐默认配置写入 `waf_config.json`，OpenResty 按全局+已绑定规则组解析 PoW 注入，Lua 对空配置使用运行时默认值。
 
 - 收敛子代理站点标识双轨逻辑：新增 `routeidentity` 统一包，`proxy_route`、`config_version`、`uptimekuma`、`flared` 与 OpenResty 渲染共用 `ResolveSiteName` / `DecodeDomains`；移除废弃 `RenderPoWConfig`；PoW Lua 与 WAF 一致仅依赖 `$openflare_waf_site`。
 

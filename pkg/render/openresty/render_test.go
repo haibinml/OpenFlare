@@ -60,6 +60,75 @@ func TestRenderWAFConfigIncludesAllRouteSiteNames(t *testing.T) {
 	}
 }
 
+func TestRenderWAFConfigUsesDefaultPoWConfigWhenEnabledWithoutPayload(t *testing.T) {
+	doc := WAFDocument{
+		RuleGroups: []WAFRuleGroup{
+			{
+				ID:         1,
+				Name:       "global",
+				Enabled:    true,
+				IsGlobal:   true,
+				PoWEnabled: true,
+			},
+		},
+		Bindings: []WAFBinding{
+			{RouteID: 1, SiteName: "example.com", RuleGroupIDs: []uint{}},
+		},
+	}
+
+	wafConfig, err := RenderWAFConfig(doc)
+	if err != nil {
+		t.Fatalf("RenderWAFConfig() error = %v", err)
+	}
+
+	var decoded struct {
+		RuleGroups []struct {
+			PoWEnabled bool       `json:"pow_enabled"`
+			PoWConfig  *PoWConfig `json:"pow_config"`
+		} `json:"rule_groups"`
+	}
+	if err := json.Unmarshal([]byte(wafConfig), &decoded); err != nil {
+		t.Fatalf("json.Unmarshal() error = %v", err)
+	}
+	if len(decoded.RuleGroups) != 1 {
+		t.Fatalf("expected 1 rule group, got %d", len(decoded.RuleGroups))
+	}
+	if !decoded.RuleGroups[0].PoWEnabled {
+		t.Fatal("expected pow_enabled=true")
+	}
+	if decoded.RuleGroups[0].PoWConfig == nil {
+		t.Fatal("expected default pow_config to be emitted")
+	}
+	if decoded.RuleGroups[0].PoWConfig.Difficulty != 4 {
+		t.Fatalf("expected default difficulty 4, got %d", decoded.RuleGroups[0].PoWConfig.Difficulty)
+	}
+}
+
+func TestGetPoWConfigForRouteUsesGlobalGroupWithoutExplicitBinding(t *testing.T) {
+	snapshot := WAFDocument{
+		RuleGroups: []WAFRuleGroup{
+			{
+				ID:         1,
+				Name:       "global",
+				Enabled:    true,
+				IsGlobal:   true,
+				PoWEnabled: true,
+			},
+		},
+		Bindings: []WAFBinding{
+			{RouteID: 42, SiteName: "example.com", RuleGroupIDs: []uint{}},
+		},
+	}
+
+	enabled, config := getPoWConfigForRoute(42, snapshot)
+	if !enabled {
+		t.Fatal("expected pow to be enabled via global rule group")
+	}
+	if config == nil || config.Difficulty != 4 {
+		t.Fatalf("expected default pow config, got %#v", config)
+	}
+}
+
 func TestRenderPagesAPIProxyLocationBlock(t *testing.T) {
 	tests := []struct {
 		name       string

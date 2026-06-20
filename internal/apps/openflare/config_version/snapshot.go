@@ -308,7 +308,7 @@ func buildSnapshotWAFDocument(ctx context.Context, routes []*model.ProxyRoute) (
 			RegionWhitelist:   view.RegionWhitelist,
 			RegionBlacklist:   view.RegionBlacklist,
 			PoWEnabled:        view.PoWEnabled,
-			PoWConfig:         convertPoWConfig(view.PoWConfig),
+			PoWConfig:         convertPoWConfig(view.PoWEnabled, view.PoWConfig),
 		})
 	}
 	ipGroups, err := buildSnapshotWAFIPGroups(ctx, ruleGroups)
@@ -415,9 +415,13 @@ func decodeIPList(raw string) ([]string, error) {
 	return items, nil
 }
 
-func convertPoWConfig(config *waf.PoWConfig) *openrestyrender.PoWConfig {
-	if config == nil {
+func convertPoWConfig(enabled bool, config *waf.PoWConfig) *openrestyrender.PoWConfig {
+	if !enabled {
 		return nil
+	}
+	if config == nil {
+		defaultConfig := openrestyrender.DefaultPoWConfig()
+		return &defaultConfig
 	}
 	return &openrestyrender.PoWConfig{
 		Difficulty:   config.Difficulty,

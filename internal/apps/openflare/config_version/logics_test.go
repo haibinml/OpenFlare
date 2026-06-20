@@ -177,3 +177,52 @@ func TestBuildSnapshotWAFDocumentUsesNormalizedSiteNames(t *testing.T) {
 	assert.Contains(t, bundle.RouteConfig, `set $openflare_waf_site "example.com"`)
 	assert.Contains(t, bundle.RouteConfig, `require("pow.runtime").check()`)
 }
+
+func TestBuildCurrentConfigBundleEnablesGlobalPoWWithoutExplicitBinding(t *testing.T) {
+	cleanup := setupConfigVersionTestDB(t)
+	defer cleanup()
+	ctx := context.Background()
+
+	route := &model.ProxyRoute{
+		Domain:    "pow-global.example.com",
+		Domains:   `["pow-global.example.com"]`,
+		OriginURL: "http://origin.example.com:8080",
+		Upstreams: `["http://origin.example.com:8080"]`,
+		Enabled:   true,
+	}
+	require.NoError(t, model.CreateProxyRouteRecord(ctx, route))
+
+	require.NoError(t, waf.EnsureDefaultRuleGroup(ctx))
+	globalGroup, err := model.GetGlobalOpenFlareWAFRuleGroup(ctx)
+	require.NoError(t, err)
+	globalGroup.PoWEnabled = true
+	globalGroup.PoWConfig = `{"difficulty":4,"algorithm":"fast","session_ttl":600,"challenge_ttl":300}`
+	require.NoError(t, model.UpdateOpenFlareWAFRuleGroup(ctx, globalGroup))
+
+	bundle, err := buildCurrentConfigBundle(ctx, true)
+	require.NoError(t, err)
+	assert.Contains(t, bundle.RouteConfig, `require("pow.runtime").check()`)
+
+	var wafRuntime struct {
+		RuleGroups []struct {
+			ID         uint `json:"id"`
+			PoWEnabled bool `json:"pow_enabled"`
+			PoWConfig  *struct {
+				Difficulty int `json:"difficulty"`
+			} `json:"pow_config"`
+		} `json:"rule_groups"`
+		SiteRuleGroups map[string][]uint `json:"site_rule_groups"`
+	}
+	for _, file := range bundle.SupportFiles {
+		if file.Path != "waf_config.json" {
+			continue
+		}
+		require.NoError(t, json.Unmarshal([]byte(file.Content), &wafRuntime))
+	}
+	require.Contains(t, wafRuntime.SiteRuleGroups, "pow-global.example.com")
+	require.Contains(t, wafRuntime.SiteRuleGroups["pow-global.example.com"], globalGroup.ID)
+	require.NotEmpty(t, wafRuntime.RuleGroups)
+	assert.True(t, wafRuntime.RuleGroups[0].PoWEnabled)
+	require.NotNil(t, wafRuntime.RuleGroups[0].PoWConfig)
+	assert.Equal(t, 4, wafRuntime.RuleGroups[0].PoWConfig.Difficulty)
+}

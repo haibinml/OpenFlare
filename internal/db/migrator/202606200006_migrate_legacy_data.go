@@ -102,7 +102,8 @@ func up202606200006(ctx context.Context, tx *sql.Tx) error {
 		if _, err := tx.ExecContext(ctx, `
 			SELECT setval(
 				pg_get_serial_sequence('of_waf_rule_group_bindings', 'id'),
-				COALESCE((SELECT MAX(id) FROM of_waf_rule_group_bindings), 0)
+				GREATEST(COALESCE((SELECT MAX(id) FROM of_waf_rule_group_bindings), 0), 1),
+				COALESCE((SELECT MAX(id) FROM of_waf_rule_group_bindings), 0) > 0
 			)
 		`); err != nil {
 			return fmt.Errorf("sync of_waf_rule_group_bindings sequence failed: %w", err)

@@ -100,6 +100,19 @@ type PoWConfig struct {
 	Blacklist    PoWListConfig `json:"blacklist"`
 }
 
+// DefaultPoWConfig returns the canonical PoW defaults used when pow_enabled is
+// true but no explicit pow_config payload is available.
+func DefaultPoWConfig() PoWConfig {
+	return PoWConfig{
+		Difficulty:   4,
+		Algorithm:    "fast",
+		SessionTTL:   600,
+		ChallengeTTL: 300,
+		Whitelist:    PoWListConfig{IPs: []string{}, IPCidrs: []string{}, Paths: []string{}, PathRegexes: []string{}, UserAgents: []string{}},
+		Blacklist:    PoWListConfig{IPs: []string{}, IPCidrs: []string{}, Paths: []string{}, PathRegexes: []string{}, UserAgents: []string{}},
+	}
+}
+
 // Route describes a single proxy or pages site entry in the OpenFlare config
 // document, including upstream, TLS, caching, rate-limiting and WAF settings.
 type Route struct {

@@ -149,10 +149,7 @@ func RenderWAFConfig(snapshot WAFDocument) (string, error) {
 			globalGroupIDs = append(globalGroupIDs, group.ID)
 		}
 		enabledGroupIDs[group.ID] = struct{}{}
-		powConfig := group.PoWConfig
-		if !group.PoWEnabled {
-			powConfig = nil
-		}
+		powConfig := ensurePoWConfig(group.PoWEnabled, group.PoWConfig)
 		groups = append(groups, wafRuntimeRuleGroup{
 			ID:                group.ID,
 			Name:              group.Name,
@@ -773,25 +770,52 @@ func validateCertificateCoverage(certPEM string, domains []string) error {
 }
 
 func getPoWConfigForRoute(routeID uint, snapshot WAFDocument) (bool, *PoWConfig) {
+	enabledGroups := make(map[uint]WAFRuleGroup, len(snapshot.RuleGroups))
+	globalGroupIDs := make([]uint, 0)
+	for _, group := range snapshot.RuleGroups {
+		if !group.Enabled {
+			continue
+		}
+		enabledGroups[group.ID] = group
+		if group.IsGlobal {
+			globalGroupIDs = append(globalGroupIDs, group.ID)
+		}
+	}
+	sort.Slice(globalGroupIDs, func(i, j int) bool { return globalGroupIDs[i] < globalGroupIDs[j] })
+
+	var boundGroupIDs []uint
 	for _, binding := range snapshot.Bindings {
 		if binding.RouteID != routeID {
 			continue
 		}
 		for _, groupID := range binding.RuleGroupIDs {
-			for _, group := range snapshot.RuleGroups {
-				if group.ID == groupID && group.PoWEnabled {
-					return true, group.PoWConfig
-				}
+			if _, ok := enabledGroups[groupID]; ok {
+				boundGroupIDs = append(boundGroupIDs, groupID)
 			}
 		}
 		break
 	}
-	for _, group := range snapshot.RuleGroups {
-		if group.IsGlobal && group.PoWEnabled {
-			return true, group.PoWConfig
+
+	activeGroupIDs := uniqueUintIDs(append(append([]uint{}, globalGroupIDs...), boundGroupIDs...))
+	for _, groupID := range activeGroupIDs {
+		group := enabledGroups[groupID]
+		if group.PoWEnabled {
+			config := ensurePoWConfig(true, group.PoWConfig)
+			return true, config
 		}
 	}
 	return false, nil
+}
+
+func ensurePoWConfig(enabled bool, config *PoWConfig) *PoWConfig {
+	if !enabled {
+		return nil
+	}
+	if config != nil {
+		return config
+	}
+	defaultConfig := DefaultPoWConfig()
+	return &defaultConfig
 }
 
 func uniqueUintIDs(values []uint) []uint {

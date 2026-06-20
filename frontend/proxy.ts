@@ -78,7 +78,7 @@ if (typeof setInterval !== 'undefined') {
 
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl
-  const sessionCookieName = process.env.WAVELET_SESSION_COOKIE_NAME || 'wavelet_session_id'
+  const sessionCookieName = process.env.WAVELET_SESSION_COOKIE_NAME || 'openflare_session_id'
   const sessionCookie = request.cookies.get(sessionCookieName)
 
   /* API 请求：速率限制后放行 */
@@ -102,15 +102,10 @@ export function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
-  /* 页面请求：公共路由放行 */
-  const publicRoutes = ['/', '/login', '/register', '/callback', '/privacy', '/terms', '/icon']
-  const publicPrefixes = ['/docs/', '/epay/']
+  /* 页面请求：默认私域，仅登录流程入口无需 session */
+  const authEntryRoutes = ['/login', '/register', '/callback']
 
-  if (publicRoutes.includes(pathname) || publicPrefixes.some(p => pathname.startsWith(p))) {
-    return NextResponse.next()
-  }
-
-  if (!sessionCookie) {
+  if (!authEntryRoutes.includes(pathname) && !sessionCookie) {
     const loginUrl = new URL('/login', request.url)
     loginUrl.searchParams.set('callbackUrl', pathname + search)
     return NextResponse.redirect(loginUrl)

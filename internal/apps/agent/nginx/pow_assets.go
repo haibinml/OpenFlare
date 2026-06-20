@@ -71,7 +71,7 @@ local function load_pow_config()
                     local groups = {}
                     for _, group in ipairs(decoded.rule_groups) do
                         if group.pow_enabled then
-                            groups[tostring(group.id)] = group.pow_config
+                            groups[tostring(group.id)] = group.pow_config or {}
                         end
                     end
                     -- Build site name to pow_config map
@@ -88,12 +88,12 @@ local function load_pow_config()
                         if not pow_config then
                             for _, group in ipairs(decoded.rule_groups) do
                                 if group.is_global and group.pow_enabled then
-                                    pow_config = group.pow_config
+                                    pow_config = group.pow_config or {}
                                     break
                                 end
                             end
                         end
-                        if pow_config then
+                        if pow_config ~= nil then
                             pow_config_dict:set(site, cjson.encode({enabled = true, config = pow_config}), 0)
                             domain_keys[#domain_keys+1] = site
                         end
