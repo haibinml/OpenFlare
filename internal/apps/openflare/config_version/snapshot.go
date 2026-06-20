@@ -314,16 +314,16 @@ func buildSnapshotWAFDocument(ctx context.Context, routes []*model.ProxyRoute) (
 	if err != nil {
 		return snapshotWAFDocument{}, err
 	}
-	enabledRouteIDs := make(map[uint]string, len(routes))
+	enabledRouteSiteNames := make(map[uint]string, len(routes))
 	for _, route := range routes {
 		if route == nil {
 			continue
 		}
-		siteName := strings.TrimSpace(route.SiteName)
-		if siteName == "" {
-			siteName = route.Domain
+		domains, domainErr := decodeStoredDomains(route.Domains, route.Domain)
+		if domainErr != nil {
+			return snapshotWAFDocument{}, fmt.Errorf("route %s domains are invalid", route.Domain)
 		}
-		enabledRouteIDs[route.ID] = siteName
+		enabledRouteSiteNames[route.ID] = normalizeProxyRouteSiteName(route, route.SiteName, domains[0])
 	}
 	rawBindings, err := model.ListOpenFlareWAFRuleGroupBindings(ctx)
 	if err != nil {
@@ -331,17 +331,18 @@ func buildSnapshotWAFDocument(ctx context.Context, routes []*model.ProxyRoute) (
 	}
 	groupIDsByRoute := make(map[uint][]uint, len(rawBindings))
 	for _, binding := range rawBindings {
-		if _, ok := enabledRouteIDs[binding.ProxyRouteID]; !ok {
+		if _, ok := enabledRouteSiteNames[binding.ProxyRouteID]; !ok {
 			continue
 		}
 		groupIDsByRoute[binding.ProxyRouteID] = append(groupIDsByRoute[binding.ProxyRouteID], binding.RuleGroupID)
 	}
-	bindings := make([]snapshotWAFBinding, 0, len(groupIDsByRoute))
-	for routeID, groupIDs := range groupIDsByRoute {
+	bindings := make([]snapshotWAFBinding, 0, len(enabledRouteSiteNames))
+	for routeID, siteName := range enabledRouteSiteNames {
+		groupIDs := groupIDsByRoute[routeID]
 		sort.Slice(groupIDs, func(i, j int) bool { return groupIDs[i] < groupIDs[j] })
 		bindings = append(bindings, snapshotWAFBinding{
 			RouteID:      routeID,
-			SiteName:     enabledRouteIDs[routeID],
+			SiteName:     siteName,
 			RuleGroupIDs: groupIDs,
 		})
 	}

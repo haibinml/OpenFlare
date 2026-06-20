@@ -1,9 +1,67 @@
 package openresty
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 )
+
+func TestRenderWAFConfigIncludesAllRouteSiteNames(t *testing.T) {
+	doc := Document{
+		Routes: []Route{
+			{ID: 1, SiteName: "", Domain: "Example.COM", Domains: []string{"example.com", "www.example.com"}},
+			{ID: 2, SiteName: "named-site", Domain: "other.example.com"},
+		},
+		WAF: WAFDocument{
+			RuleGroups: []WAFRuleGroup{
+				{
+					ID:         1,
+					Name:       "pow-group",
+					Enabled:    true,
+					PoWEnabled: true,
+					PoWConfig:  &PoWConfig{Difficulty: 4, Algorithm: "fast", SessionTTL: 600, ChallengeTTL: 300},
+				},
+			},
+			Bindings: []WAFBinding{
+				{RouteID: 1, SiteName: "example.com", RuleGroupIDs: []uint{1}},
+				{RouteID: 2, SiteName: "named-site", RuleGroupIDs: []uint{1}},
+			},
+		},
+	}
+
+	wafConfig, err := RenderWAFConfig(doc.WAF)
+	if err != nil {
+		t.Fatalf("RenderWAFConfig() error = %v", err)
+	}
+
+	var decoded struct {
+		SiteRuleGroups map[string][]uint `json:"site_rule_groups"`
+	}
+	if err := json.Unmarshal([]byte(wafConfig), &decoded); err != nil {
+		t.Fatalf("json.Unmarshal() error = %v", err)
+	}
+
+	for _, route := range doc.Routes {
+		siteName := strings.TrimSpace(route.SiteName)
+		if siteName == "" {
+			siteName = normalizedRouteDomains(route)[0]
+		}
+		if _, ok := decoded.SiteRuleGroups[siteName]; !ok {
+			t.Fatalf("site_rule_groups missing site %q, got %#v", siteName, decoded.SiteRuleGroups)
+		}
+	}
+
+	routeConfig, err := RenderRouteConfig(doc, nil)
+	if err != nil {
+		t.Fatalf("RenderRouteConfig() error = %v", err)
+	}
+	if !strings.Contains(routeConfig, `set $openflare_waf_site "example.com"`) {
+		t.Fatalf("expected route config to use normalized site name example.com, got:\n%s", routeConfig)
+	}
+	if !strings.Contains(routeConfig, `require("pow.runtime").check()`) {
+		t.Fatalf("expected route config to enable pow runtime, got:\n%s", routeConfig)
+	}
+}
 
 func TestRenderPagesAPIProxyLocationBlock(t *testing.T) {
 	tests := []struct {
