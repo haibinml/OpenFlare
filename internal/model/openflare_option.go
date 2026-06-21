@@ -45,14 +45,8 @@ var (
 	GitHubOAuthEnabled                    = false
 	WeChatAuthEnabled                     = false
 	GitHubClientID                        = ""
-	GitHubClientSecret                    = ""
-	WeChatServerAddress                   = ""
-	WeChatServerToken                     = ""
 	WeChatAccountQRCodeImageURL           = ""
-	SMTPServer                            = ""
 	SMTPPort                              = 587
-	SMTPAccount                           = ""
-	SMTPToken                             = ""
 	AgentDiscoveryToken                   = ""
 	AgentHeartbeatInterval                = 10000
 	AgentWebsocketUpgradeEnabled          = true

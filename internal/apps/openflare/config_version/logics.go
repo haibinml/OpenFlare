@@ -16,6 +16,7 @@ import (
 
 	"github.com/Rain-kl/Wavelet/internal/apps/openflare/routeidentity"
 	"github.com/Rain-kl/Wavelet/internal/model"
+	openrestyrender "github.com/Rain-kl/Wavelet/pkg/render/openresty"
 	"gorm.io/gorm"
 )
 
@@ -398,7 +399,26 @@ func snapshotRouteIdentityEqual(left, right snapshotRoute) bool {
 func snapshotRouteOriginEqual(left, right snapshotRoute) bool {
 	return left.OriginURL == right.OriginURL &&
 		left.OriginHost == right.OriginHost &&
-		left.UpstreamType == right.UpstreamType
+		left.UpstreamType == right.UpstreamType &&
+		snapshotPagesDeploymentEqual(left.PagesDeployment, right.PagesDeployment)
+}
+
+func snapshotPagesDeploymentEqual(left, right *openrestyrender.PagesDeployment) bool {
+	if left == nil && right == nil {
+		return true
+	}
+	if left == nil || right == nil {
+		return false
+	}
+	leftJSON, err := json.Marshal(left)
+	if err != nil {
+		return false
+	}
+	rightJSON, err := json.Marshal(right)
+	if err != nil {
+		return false
+	}
+	return string(leftJSON) == string(rightJSON)
 }
 
 func snapshotRoutePolicyEqual(left, right snapshotRoute) bool {

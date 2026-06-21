@@ -22,6 +22,8 @@ sidebar: false
 
 ### 修复
 
+- 修复 Pages 路由发布失败并报 `pages module is not available`：配置快照发布流程补齐 Pages 项目激活部署解析与 `pages_deployment` 写入。
+
 - 修复仪表盘与节点详情「24 小时网络趋势」误按速率展示：改为 OpenResty 入/出站小时流量与近 24 小时总量摘要，Y 轴与 tooltip 自动换算 B/KB/MB/GB。
 
 - 修复 Pages 上传或节点同步时报 `pages file size out of bounds`：允许 ZIP 包内的 0 字节文件，并兼容未声明解压大小的 ZIP 条目。

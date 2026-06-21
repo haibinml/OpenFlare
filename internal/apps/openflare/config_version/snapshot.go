@@ -20,35 +20,36 @@ import (
 const supportFilesPerCertificate = 2
 
 type snapshotRoute struct {
-	ID                 uint                `json:"id,omitempty"`
-	SiteName           string              `json:"site_name,omitempty"`
-	Domain             string              `json:"domain"`
-	Domains            []string            `json:"domains,omitempty"`
-	OriginURL          string              `json:"origin_url"`
-	OriginHost         string              `json:"origin_host,omitempty"`
-	Upstreams          []string            `json:"upstreams,omitempty"`
-	Enabled            bool                `json:"enabled"`
-	EnableHTTPS        bool                `json:"enable_https"`
-	CertID             *uint               `json:"cert_id,omitempty"`
-	CertIDs            []uint              `json:"cert_ids,omitempty"`
-	DomainCertIDs      []uint              `json:"domain_cert_ids,omitempty"`
-	RedirectHTTP       bool                `json:"redirect_http"`
-	LimitConnPerServer int                 `json:"limit_conn_per_server,omitempty"`
-	LimitConnPerIP     int                 `json:"limit_conn_per_ip,omitempty"`
-	LimitRate          string              `json:"limit_rate,omitempty"`
-	CacheEnabled       bool                `json:"cache_enabled"`
-	CachePolicy        string              `json:"cache_policy,omitempty"`
-	CacheRules         []string            `json:"cache_rules,omitempty"`
-	CustomHeaders      []customHeaderInput `json:"custom_headers,omitempty"`
-	BasicAuthEnabled   bool                `json:"basic_auth_enabled,omitempty"`
-	BasicAuthUsername  string              `json:"basic_auth_username,omitempty"`
-	BasicAuthPassword  string              `json:"basic_auth_password,omitempty"`
-	Remark             string              `json:"remark,omitempty"`
-	UpstreamType       string              `json:"upstream_type,omitempty"`
-	TunnelNodeID       *uint               `json:"tunnel_node_id,omitempty"`
-	TunnelTargetAddr   string              `json:"tunnel_target_addr,omitempty"`
-	TunnelTargetProto  string              `json:"tunnel_target_protocol,omitempty"`
-	PagesProjectID     *uint               `json:"pages_project_id,omitempty"`
+	ID                 uint                             `json:"id,omitempty"`
+	SiteName           string                           `json:"site_name,omitempty"`
+	Domain             string                           `json:"domain"`
+	Domains            []string                         `json:"domains,omitempty"`
+	OriginURL          string                           `json:"origin_url"`
+	OriginHost         string                           `json:"origin_host,omitempty"`
+	Upstreams          []string                         `json:"upstreams,omitempty"`
+	Enabled            bool                             `json:"enabled"`
+	EnableHTTPS        bool                             `json:"enable_https"`
+	CertID             *uint                            `json:"cert_id,omitempty"`
+	CertIDs            []uint                           `json:"cert_ids,omitempty"`
+	DomainCertIDs      []uint                           `json:"domain_cert_ids,omitempty"`
+	RedirectHTTP       bool                             `json:"redirect_http"`
+	LimitConnPerServer int                              `json:"limit_conn_per_server,omitempty"`
+	LimitConnPerIP     int                              `json:"limit_conn_per_ip,omitempty"`
+	LimitRate          string                           `json:"limit_rate,omitempty"`
+	CacheEnabled       bool                             `json:"cache_enabled"`
+	CachePolicy        string                           `json:"cache_policy,omitempty"`
+	CacheRules         []string                         `json:"cache_rules,omitempty"`
+	CustomHeaders      []customHeaderInput              `json:"custom_headers,omitempty"`
+	BasicAuthEnabled   bool                             `json:"basic_auth_enabled,omitempty"`
+	BasicAuthUsername  string                           `json:"basic_auth_username,omitempty"`
+	BasicAuthPassword  string                           `json:"basic_auth_password,omitempty"`
+	Remark             string                           `json:"remark,omitempty"`
+	UpstreamType       string                           `json:"upstream_type,omitempty"`
+	TunnelNodeID       *uint                            `json:"tunnel_node_id,omitempty"`
+	TunnelTargetAddr   string                           `json:"tunnel_target_addr,omitempty"`
+	TunnelTargetProto  string                           `json:"tunnel_target_protocol,omitempty"`
+	PagesProjectID     *uint                            `json:"pages_project_id,omitempty"`
+	PagesDeployment    *openrestyrender.PagesDeployment `json:"pages_deployment,omitempty"`
 }
 
 type snapshotWAFRuleGroup struct {
@@ -230,6 +231,7 @@ func buildSnapshotRoutes(ctx context.Context, routes []*model.ProxyRoute) ([]sna
 		var tunnelTargetAddr string
 		var tunnelTargetProtocol string
 		var pagesProjectID *uint
+		var pagesDeployment *openrestyrender.PagesDeployment
 		switch upstreamType {
 		case "tunnel":
 			originURL = resolveTunnelOpenRestyUpstreamURL(ctx)
@@ -238,7 +240,10 @@ func buildSnapshotRoutes(ctx context.Context, routes []*model.ProxyRoute) ([]sna
 			tunnelTargetAddr = strings.TrimSpace(route.TunnelTargetAddr)
 			tunnelTargetProtocol = normalizeTunnelTargetProtocol(route.TunnelTargetProtocol)
 		case "pages":
-			return nil, fmt.Errorf("路由 %s Pages 配置无效: pages module is not available", route.Domain)
+			originURL, upstreams, pagesProjectID, pagesDeployment, err = buildPagesRouteSnapshot(ctx, route)
+			if err != nil {
+				return nil, err
+			}
 		}
 		cacheRules, err := decodeStoredCacheRules(route.CacheRules)
 		if err != nil {
@@ -274,6 +279,7 @@ func buildSnapshotRoutes(ctx context.Context, routes []*model.ProxyRoute) ([]sna
 			TunnelTargetAddr:   tunnelTargetAddr,
 			TunnelTargetProto:  tunnelTargetProtocol,
 			PagesProjectID:     pagesProjectID,
+			PagesDeployment:    pagesDeployment,
 		})
 	}
 	return items, nil
