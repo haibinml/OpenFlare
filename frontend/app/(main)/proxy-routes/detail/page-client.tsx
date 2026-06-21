@@ -118,7 +118,7 @@ export function ProxyRouteDetailPageClient() {
 
   return (
     <div className="py-6 px-1 space-y-6">
-      <RouteHeader route={route} activeSection={activeSection} saving={sectionSaving} />
+      <RouteHeader route={route} />
 
       <Tabs
         value={activeSection}

@@ -115,3 +115,32 @@ func TestValidateProxyRouteIdentityUniquenessUsesDecodedPrimaryDomain(t *testing
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "site_name already exists")
 }
+
+func TestUpdateProxyRouteAuthConfig(t *testing.T) {
+	cleanup := setupProxyRouteTestDB(t)
+	defer cleanup()
+	ctx := context.Background()
+
+	created, err := CreateProxyRoute(ctx, Input{
+		SiteName:  "auth-site",
+		Domain:    "auth.example.com",
+		OriginURL: "http://origin.example.com:8080",
+		Enabled:   true,
+	})
+	require.NoError(t, err)
+
+	updated, err := UpdateProxyRoute(ctx, created.ID, Input{
+		SiteName:          created.SiteName,
+		Domain:            created.Domain,
+		Domains:           created.Domains,
+		OriginURL:         created.OriginURL,
+		Enabled:           created.Enabled,
+		BasicAuthEnabled:  true,
+		BasicAuthUsername: "admin",
+		BasicAuthPassword: "secret",
+	})
+	require.NoError(t, err)
+	assert.True(t, updated.BasicAuthEnabled)
+	assert.Equal(t, "admin", updated.BasicAuthUsername)
+	assert.Equal(t, "secret", updated.BasicAuthPassword)
+}

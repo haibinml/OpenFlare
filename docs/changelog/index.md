@@ -22,6 +22,8 @@ sidebar: false
 
 ### 修复
 
+- 修复代理路由详情认证配置 Tab：移除 PoW 配置（PoW 仅在 WAF 规则组中设置）；保留 Basic Auth 保存能力；移除页头重复的「保存当前分区」按钮。
+
 - 修复 Pages 路由发布失败并报 `pages module is not available`：配置快照发布流程补齐 Pages 项目激活部署解析与 `pages_deployment` 写入。
 
 - 修复仪表盘与节点详情「24 小时网络趋势」误按速率展示：改为 OpenResty 入/出站小时流量与近 24 小时总量摘要，Y 轴与 tooltip 自动换算 B/KB/MB/GB。

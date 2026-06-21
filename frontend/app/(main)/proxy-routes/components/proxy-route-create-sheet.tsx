@@ -114,8 +114,6 @@ export function ProxyRouteCreateSheet({
         cache_policy: 'url',
         cache_rules: [],
         custom_headers: [],
-        pow_enabled: false,
-        pow_config: '{}',
         basic_auth_enabled: false,
         remark: values.remark.trim(),
         upstream_type: 'direct',

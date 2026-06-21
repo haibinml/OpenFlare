@@ -255,8 +255,6 @@ export interface ProxyRouteItem {
   cache_rule_list: string[];
   custom_headers: string;
   custom_header_list: ProxyRouteCustomHeader[];
-  pow_enabled: boolean;
-  pow_config: ProxyRoutePoWConfig;
   basic_auth_enabled: boolean;
   basic_auth_username: string;
   basic_auth_password: string;
@@ -296,8 +294,6 @@ export interface ProxyRouteMutationPayload {
   cache_policy: string;
   cache_rules: string[];
   custom_headers: ProxyRouteCustomHeader[];
-  pow_enabled: boolean;
-  pow_config: string;
   basic_auth_enabled: boolean;
   basic_auth_username?: string;
   basic_auth_password?: string;

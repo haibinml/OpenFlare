@@ -312,8 +312,6 @@ export function buildPayloadFromRoute(
     cache_rules: route.cache_rule_list,
     custom_headers: route.custom_header_list,
     remark: route.remark || '',
-    pow_enabled: route.pow_enabled,
-    pow_config: JSON.stringify(route.pow_config),
     basic_auth_enabled: route.basic_auth_enabled,
     basic_auth_username: route.basic_auth_username,
     basic_auth_password: route.basic_auth_password,

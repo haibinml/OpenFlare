@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import {useCallback, useState} from 'react';
-import {ArrowLeft, Loader2, Route, Save, Upload} from 'lucide-react';
+import {ArrowLeft, Loader2, Route, Upload} from 'lucide-react';
 import {toast} from 'sonner';
 
 import {
@@ -17,11 +17,10 @@ import {
 import {Badge} from '@/components/ui/badge';
 import {Button} from '@/components/ui/button';
 import {DiffDialog} from '@/app/(main)/config-versions/components/diff-dialog';
-import type {ConfigDiffResult, ProxyRouteConfigSection, ProxyRouteItem} from '@/lib/services/openflare';
+import type {ConfigDiffResult, ProxyRouteItem} from '@/lib/services/openflare';
 import {ConfigVersionService} from '@/lib/services/openflare';
 
 import {getErrorMessage} from '../../components/helpers';
-import {submitProxyRouteSectionForm} from '../helpers';
 
 function hasConfigDiff(diff: ConfigDiffResult) {
   return (
@@ -37,24 +36,15 @@ function hasConfigDiff(diff: ConfigDiffResult) {
 
 interface RouteHeaderProps {
   route: ProxyRouteItem;
-  activeSection: ProxyRouteConfigSection;
-  saving?: boolean;
 }
 
-export function RouteHeader({ route, activeSection, saving = false }: RouteHeaderProps) {
+export function RouteHeader({ route }: RouteHeaderProps) {
   const [diffOpen, setDiffOpen] = useState(false);
   const [publishConfirmOpen, setPublishConfirmOpen] = useState(false);
   const [diff, setDiff] = useState<ConfigDiffResult | null>(null);
   const [diffLoading, setDiffLoading] = useState(false);
   const [diffError, setDiffError] = useState<string | null>(null);
   const [publishing, setPublishing] = useState(false);
-
-  const handleSave = useCallback(() => {
-    const submitted = submitProxyRouteSectionForm(activeSection);
-    if (!submitted) {
-      toast.error('当前分区无法保存');
-    }
-  }, [activeSection]);
 
   const loadDiff = useCallback(async () => {
     setDiffLoading(true);
@@ -122,16 +112,6 @@ export function RouteHeader({ route, activeSection, saving = false }: RouteHeade
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              variant="secondary"
-              className="h-8 gap-1.5 text-xs"
-              disabled={saving}
-              onClick={handleSave}
-            >
-              {saving ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />}
-              {saving ? '保存中...' : '保存当前分区'}
-            </Button>
             <Button
               size="sm"
               className="h-8 gap-1.5 text-xs"
