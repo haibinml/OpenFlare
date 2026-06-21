@@ -31,6 +31,7 @@ import {
   aggregateTrafficBreakdown,
   formatBytes,
   formatBytesPerSecond,
+  formatMetricCount,
   formatPercent,
   formatRelativeTime,
   formatUptime,
@@ -455,11 +456,7 @@ export function NodeObservability({
                   />
                   <MetricBar
                     label="连接数"
-                    value={
-                      latestMetric.openresty_connections
-                        ? String(latestMetric.openresty_connections)
-                        : '—'
-                    }
+                    value={formatMetricCount(latestMetric.openresty_connections)}
                     progress={null}
                     hint={connectionHint}
                   />
@@ -521,11 +518,11 @@ export function NodeObservability({
           }
         />
         <SummaryStat
-          label="当前窗口请求"
-          value={trafficSummary ? trafficSummary.request_count.toLocaleString('zh-CN') : '—'}
+          label="请求/分钟"
+          value={formatMetricCount(trafficSummary?.request_count)}
           hint={
             trafficSummary
-              ? `QPS ${trafficSummary.estimated_qps.toFixed(1)} · 错误率 ${trafficSummary.error_rate_percent.toFixed(1)}%`
+              ? `近 60 秒 · 错误率 ${trafficSummary.error_rate_percent.toFixed(1)}%`
               : '当前没有可展示的请求窗口摘要'
           }
         />
@@ -594,11 +591,7 @@ export function NodeObservability({
                 />
                 <MetricBar
                   label="连接数"
-                  value={
-                    latestMetric.openresty_connections
-                      ? String(latestMetric.openresty_connections)
-                      : '—'
-                  }
+                  value={formatMetricCount(latestMetric.openresty_connections)}
                   progress={null}
                   hint={connectionHint}
                 />
@@ -661,25 +654,23 @@ export function NodeObservability({
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="rounded-lg border px-3 py-3">
                     <p className="text-xs text-muted-foreground uppercase tracking-wide">
-                      最近窗口请求
+                      请求/分钟
                     </p>
                     <p className="mt-3 text-2xl font-semibold">
-                      {trafficSummary
-                        ? trafficSummary.request_count.toLocaleString('zh-CN')
-                        : '—'}
+                      {formatMetricCount(trafficSummary?.request_count)}
                     </p>
                     <p className="mt-2 text-sm text-muted-foreground">
                       {trafficSummary
-                        ? `QPS ${trafficSummary.estimated_qps.toFixed(1)} · UV ${trafficSummary.unique_visitor_count}`
+                        ? `近 60 秒 · UV ${formatMetricCount(trafficSummary.unique_visitor_count)}`
                         : '暂无窗口流量摘要'}
                     </p>
                   </div>
                   <div className="rounded-lg border px-3 py-3">
                     <p className="text-xs text-muted-foreground uppercase tracking-wide">
-                      最近窗口错误
+                      近 60 秒错误
                     </p>
                     <p className="mt-3 text-2xl font-semibold">
-                      {trafficSummary ? trafficSummary.error_count.toLocaleString('zh-CN') : '—'}
+                      {formatMetricCount(trafficSummary?.error_count)}
                     </p>
                     <p className="mt-2 text-sm text-muted-foreground">
                       {trafficSummary

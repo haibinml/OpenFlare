@@ -28,9 +28,9 @@ type NodeQuery struct {
 
 // NodeAnalytics groups node observability analytics.
 type NodeAnalytics struct {
-	Traffic       TrafficWindowSummary `json:"traffic"`
-	Distributions TrafficDistributions `json:"distributions"`
-	Health        HealthSummary        `json:"health"`
+	Traffic       *TrafficWindowSummary `json:"traffic"`
+	Distributions TrafficDistributions  `json:"distributions"`
+	Health        HealthSummary         `json:"health"`
 }
 
 // NodeTrends groups node observability trend series.
@@ -66,7 +66,7 @@ type RelayProxyStat struct {
 type NodeView struct {
 	NodeID          string                            `json:"node_id"`
 	Profile         *model.OpenFlareNodeSystemProfile `json:"profile"`
-	MetricSnapshots []*model.OpenFlareMetricSnapshot  `json:"metric_snapshots"`
+	MetricSnapshots []*NodeMetricSnapshotView         `json:"metric_snapshots"`
 	TrafficReports  []*model.OpenFlareRequestReport   `json:"traffic_reports"`
 	HealthEvents    []*model.OpenFlareHealthEvent     `json:"health_events"`
 	Analytics       NodeAnalytics                     `json:"analytics"`
@@ -103,6 +103,10 @@ func GetNodeObservability(ctx context.Context, id uint, query NodeQuery) (*NodeV
 	if err != nil {
 		return nil, err
 	}
+	openrestyObs, err := model.ListOpenFlareNodeObservationOpenresty(ctx, node.NodeID, since, limit)
+	if err != nil {
+		return nil, err
+	}
 	reports, err := model.ListOpenFlareRequestReportsSince(ctx, node.NodeID, since, limit)
 	if err != nil {
 		return nil, err
@@ -131,7 +135,7 @@ func GetNodeObservability(ctx context.Context, id uint, query NodeQuery) (*NodeV
 	view := &NodeView{
 		NodeID:          node.NodeID,
 		Profile:         profile,
-		MetricSnapshots: snapshots,
+		MetricSnapshots: BuildMetricSnapshotViews(snapshots, openrestyObs),
 		TrafficReports:  reports,
 		HealthEvents:    events,
 		Analytics: NodeAnalytics{

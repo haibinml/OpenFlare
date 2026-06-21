@@ -1,10 +1,4 @@
-import type {
-  ApplyResult,
-  NodeItem,
-  NodeStatus,
-  NodeTrafficReport,
-  OpenrestyStatus,
-} from '@/lib/services/openflare';
+import type {ApplyResult, NodeItem, NodeStatus, NodeTrafficReport, OpenrestyStatus,} from '@/lib/services/openflare';
 
 export const WS_CONNECTED_LAST_SEEN = '__OPENFLARE_WS_CONNECTED__';
 export const FLARED_WS_CONNECTED_LAST_SEEN = '__OPENFLARE_FLARED_WS_CONNECTED__';
@@ -174,6 +168,13 @@ export function formatPercent(value?: number | null) {
     return '—';
   }
   return `${value.toFixed(1)}%`;
+}
+
+export function formatMetricCount(value?: number | null) {
+  if (value === undefined || value === null || !Number.isFinite(value)) {
+    return '—';
+  }
+  return value.toLocaleString('zh-CN');
 }
 
 export function formatBytesPerSecond(

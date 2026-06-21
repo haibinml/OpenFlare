@@ -52,3 +52,66 @@ func TestBuildTrafficTrendPointsBucketsByHour(t *testing.T) {
 		t.Fatalf("current hour error_count = %d, want 0", currentHour.ErrorCount)
 	}
 }
+
+func TestBuildMetricSnapshotViewsMergesOpenrestyObservation(t *testing.T) {
+	t.Parallel()
+
+	capturedAt := time.Date(2026, 6, 19, 12, 0, 0, 0, time.UTC)
+	snapshots := []*model.OpenFlareMetricSnapshot{
+		{
+			ID:              1,
+			NodeID:          "node-a",
+			CapturedAt:      capturedAt,
+			CPUUsagePercent: 12.5,
+		},
+	}
+	openrestyObs := []*model.OpenFlareNodeObservationOpenresty{
+		{
+			NodeID:               "node-a",
+			CapturedAt:           capturedAt.Add(5 * time.Second),
+			OpenrestyRxBytes:     4096,
+			OpenrestyTxBytes:     8192,
+			OpenrestyConnections: 7,
+		},
+	}
+
+	views := BuildMetricSnapshotViews(snapshots, openrestyObs)
+	if len(views) != 1 {
+		t.Fatalf("BuildMetricSnapshotViews() len = %d, want 1", len(views))
+	}
+	if views[0].OpenrestyRxBytes != 4096 {
+		t.Fatalf("OpenrestyRxBytes = %d, want 4096", views[0].OpenrestyRxBytes)
+	}
+	if views[0].OpenrestyTxBytes != 8192 {
+		t.Fatalf("OpenrestyTxBytes = %d, want 8192", views[0].OpenrestyTxBytes)
+	}
+	if views[0].OpenrestyConnections != 7 {
+		t.Fatalf("OpenrestyConnections = %d, want 7", views[0].OpenrestyConnections)
+	}
+}
+
+func TestLatestTrafficReportUsesLatestWindowEndedAt(t *testing.T) {
+	t.Parallel()
+
+	older := &model.OpenFlareRequestReport{
+		WindowEndedAt: time.Date(2026, 6, 19, 10, 0, 0, 0, time.UTC),
+		RequestCount:  3,
+	}
+	newer := &model.OpenFlareRequestReport{
+		WindowEndedAt: time.Date(2026, 6, 19, 11, 0, 0, 0, time.UTC),
+		RequestCount:  9,
+	}
+
+	latest := latestTrafficReport([]*model.OpenFlareRequestReport{older, newer})
+	if latest == nil || latest.RequestCount != 9 {
+		t.Fatalf("latestTrafficReport() = %#v, want newer report with request_count 9", latest)
+	}
+}
+
+func TestBuildTrafficWindowSummaryNilWithoutReport(t *testing.T) {
+	t.Parallel()
+
+	if summary := buildTrafficWindowSummary(nil); summary != nil {
+		t.Fatalf("buildTrafficWindowSummary(nil) = %#v, want nil", summary)
+	}
+}

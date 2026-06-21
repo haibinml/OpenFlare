@@ -5350,7 +5350,7 @@ const docTemplate = `{
                         "SessionCookie": []
                     }
                 ],
-                "description": "返回所有已发布的 OpenResty 配置版本摘要，需要管理员权限",
+                "description": "返回所有已发布的 OpenResty 配置版本摘要，按创建时间倒序排列，需要管理员权限",
                 "produces": [
                     "application/json"
                 ],
@@ -14433,50 +14433,6 @@ const docTemplate = `{
                 }
             }
         },
-        "model.OpenFlareMetricSnapshot": {
-            "type": "object",
-            "properties": {
-                "captured_at": {
-                    "type": "string"
-                },
-                "cpu_usage_percent": {
-                    "type": "number"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "disk_read_bytes": {
-                    "type": "integer"
-                },
-                "disk_write_bytes": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "memory_total_bytes": {
-                    "type": "integer"
-                },
-                "memory_used_bytes": {
-                    "type": "integer"
-                },
-                "network_rx_bytes": {
-                    "type": "integer"
-                },
-                "network_tx_bytes": {
-                    "type": "integer"
-                },
-                "node_id": {
-                    "type": "string"
-                },
-                "storage_total_bytes": {
-                    "type": "integer"
-                },
-                "storage_used_bytes": {
-                    "type": "integer"
-                }
-            }
-        },
         "model.OpenFlareNode": {
             "type": "object",
             "properties": {
@@ -15297,7 +15253,7 @@ const docTemplate = `{
                 "metric_snapshots": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.OpenFlareMetricSnapshot"
+                        "$ref": "#/definitions/observability.NodeMetricSnapshotView"
                     }
                 },
                 "node_id": {
@@ -15928,6 +15884,56 @@ const docTemplate = `{
                 }
             }
         },
+        "observability.NodeMetricSnapshotView": {
+            "type": "object",
+            "properties": {
+                "captured_at": {
+                    "type": "string"
+                },
+                "cpu_usage_percent": {
+                    "type": "number"
+                },
+                "disk_read_bytes": {
+                    "type": "integer"
+                },
+                "disk_write_bytes": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "memory_total_bytes": {
+                    "type": "integer"
+                },
+                "memory_used_bytes": {
+                    "type": "integer"
+                },
+                "network_rx_bytes": {
+                    "type": "integer"
+                },
+                "network_tx_bytes": {
+                    "type": "integer"
+                },
+                "node_id": {
+                    "type": "string"
+                },
+                "openresty_connections": {
+                    "type": "integer"
+                },
+                "openresty_rx_bytes": {
+                    "type": "integer"
+                },
+                "openresty_tx_bytes": {
+                    "type": "integer"
+                },
+                "storage_total_bytes": {
+                    "type": "integer"
+                },
+                "storage_used_bytes": {
+                    "type": "integer"
+                }
+            }
+        },
         "observability.NodeTrends": {
             "type": "object",
             "properties": {
@@ -16371,6 +16377,10 @@ const docTemplate = `{
                 },
                 "total_size": {
                     "type": "integer"
+                },
+                "upload_id": {
+                    "type": "string",
+                    "example": "0"
                 }
             }
         },

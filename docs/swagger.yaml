@@ -1130,35 +1130,6 @@ definitions:
       updated_at:
         type: string
     type: object
-  model.OpenFlareMetricSnapshot:
-    properties:
-      captured_at:
-        type: string
-      cpu_usage_percent:
-        type: number
-      created_at:
-        type: string
-      disk_read_bytes:
-        type: integer
-      disk_write_bytes:
-        type: integer
-      id:
-        type: integer
-      memory_total_bytes:
-        type: integer
-      memory_used_bytes:
-        type: integer
-      network_rx_bytes:
-        type: integer
-      network_tx_bytes:
-        type: integer
-      node_id:
-        type: string
-      storage_total_bytes:
-        type: integer
-      storage_used_bytes:
-        type: integer
-    type: object
   model.OpenFlareNode:
     properties:
       auto_update_enabled:
@@ -1713,7 +1684,7 @@ definitions:
         type: array
       metric_snapshots:
         items:
-          $ref: '#/definitions/model.OpenFlareMetricSnapshot'
+          $ref: '#/definitions/observability.NodeMetricSnapshotView'
         type: array
       node_id:
         type: string
@@ -2126,6 +2097,39 @@ definitions:
       traffic:
         $ref: '#/definitions/observability.TrafficWindowSummary'
     type: object
+  observability.NodeMetricSnapshotView:
+    properties:
+      captured_at:
+        type: string
+      cpu_usage_percent:
+        type: number
+      disk_read_bytes:
+        type: integer
+      disk_write_bytes:
+        type: integer
+      id:
+        type: integer
+      memory_total_bytes:
+        type: integer
+      memory_used_bytes:
+        type: integer
+      network_rx_bytes:
+        type: integer
+      network_tx_bytes:
+        type: integer
+      node_id:
+        type: string
+      openresty_connections:
+        type: integer
+      openresty_rx_bytes:
+        type: integer
+      openresty_tx_bytes:
+        type: integer
+      storage_total_bytes:
+        type: integer
+      storage_used_bytes:
+        type: integer
+    type: object
   observability.NodeTrends:
     properties:
       capacity_24h:
@@ -2416,6 +2420,9 @@ definitions:
         type: string
       total_size:
         type: integer
+      upload_id:
+        example: "0"
+        type: string
     type: object
   pages.Input:
     properties:
@@ -7125,7 +7132,7 @@ paths:
       - openflare-apply-log
   /api/v1/d/config-versions:
     get:
-      description: 返回所有已发布的 OpenResty 配置版本摘要，需要管理员权限
+      description: 返回所有已发布的 OpenResty 配置版本摘要，按创建时间倒序排列，需要管理员权限
       produces:
       - application/json
       responses:

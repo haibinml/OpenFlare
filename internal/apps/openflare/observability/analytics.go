@@ -35,6 +35,27 @@ type TrafficDistributions struct {
 	SourceCountries []DistributionItem `json:"source_countries"`
 }
 
+const metricSnapshotOpenrestyMatchWindow = 2 * time.Minute
+
+// NodeMetricSnapshotView is a metric snapshot enriched with OpenResty observations.
+type NodeMetricSnapshotView struct {
+	ID                   uint      `json:"id,omitempty"`
+	NodeID               string    `json:"node_id,omitempty"`
+	CapturedAt           time.Time `json:"captured_at"`
+	CPUUsagePercent      float64   `json:"cpu_usage_percent"`
+	MemoryUsedBytes      int64     `json:"memory_used_bytes"`
+	MemoryTotalBytes     int64     `json:"memory_total_bytes"`
+	StorageUsedBytes     int64     `json:"storage_used_bytes"`
+	StorageTotalBytes    int64     `json:"storage_total_bytes"`
+	DiskReadBytes        int64     `json:"disk_read_bytes"`
+	DiskWriteBytes       int64     `json:"disk_write_bytes"`
+	NetworkRxBytes       int64     `json:"network_rx_bytes"`
+	NetworkTxBytes       int64     `json:"network_tx_bytes"`
+	OpenrestyRxBytes     int64     `json:"openresty_rx_bytes"`
+	OpenrestyTxBytes     int64     `json:"openresty_tx_bytes"`
+	OpenrestyConnections int64     `json:"openresty_connections"`
+}
+
 // TrafficWindowSummary summarizes a traffic reporting window.
 type TrafficWindowSummary struct {
 	WindowStartedAt    time.Time `json:"window_started_at"`
@@ -112,9 +133,9 @@ type diskCounterState struct {
 	seen  bool
 }
 
-func buildTrafficWindowSummary(report *model.OpenFlareRequestReport) TrafficWindowSummary {
+func buildTrafficWindowSummary(report *model.OpenFlareRequestReport) *TrafficWindowSummary {
 	if report == nil {
-		return TrafficWindowSummary{}
+		return nil
 	}
 	summary := TrafficWindowSummary{
 		WindowStartedAt:    report.WindowStartedAt,
@@ -129,7 +150,44 @@ func buildTrafficWindowSummary(report *model.OpenFlareRequestReport) TrafficWind
 	if report.RequestCount > 0 {
 		summary.ErrorRatePercent = (float64(report.ErrorCount) / float64(report.RequestCount)) * 100
 	}
-	return summary
+	return &summary
+}
+
+// BuildMetricSnapshotViews merges metric snapshots with OpenResty observations for API responses.
+func BuildMetricSnapshotViews(
+	snapshots []*model.OpenFlareMetricSnapshot,
+	openrestyObs []*model.OpenFlareNodeObservationOpenresty,
+) []*NodeMetricSnapshotView {
+	if len(snapshots) == 0 {
+		return []*NodeMetricSnapshotView{}
+	}
+	views := make([]*NodeMetricSnapshotView, 0, len(snapshots))
+	for _, snapshot := range snapshots {
+		if snapshot == nil {
+			continue
+		}
+		view := &NodeMetricSnapshotView{
+			ID:                snapshot.ID,
+			NodeID:            snapshot.NodeID,
+			CapturedAt:        snapshot.CapturedAt,
+			CPUUsagePercent:   snapshot.CPUUsagePercent,
+			MemoryUsedBytes:   snapshot.MemoryUsedBytes,
+			MemoryTotalBytes:  snapshot.MemoryTotalBytes,
+			StorageUsedBytes:  snapshot.StorageUsedBytes,
+			StorageTotalBytes: snapshot.StorageTotalBytes,
+			DiskReadBytes:     snapshot.DiskReadBytes,
+			DiskWriteBytes:    snapshot.DiskWriteBytes,
+			NetworkRxBytes:    snapshot.NetworkRxBytes,
+			NetworkTxBytes:    snapshot.NetworkTxBytes,
+		}
+		if matched := matchOpenrestyObservation(snapshot.CapturedAt, openrestyObs); matched != nil {
+			view.OpenrestyRxBytes = matched.OpenrestyRxBytes
+			view.OpenrestyTxBytes = matched.OpenrestyTxBytes
+			view.OpenrestyConnections = matched.OpenrestyConnections
+		}
+		views = append(views, view)
+	}
+	return views
 }
 
 // BuildTrafficDistributions aggregates traffic distribution charts.
@@ -352,21 +410,54 @@ func BuildDiskIOTrendPoints(now time.Time, snapshots []*model.OpenFlareMetricSna
 }
 
 func latestMetricSnapshot(snapshots []*model.OpenFlareMetricSnapshot) *model.OpenFlareMetricSnapshot {
+	var latest *model.OpenFlareMetricSnapshot
 	for _, snapshot := range snapshots {
-		if snapshot != nil {
-			return snapshot
+		if snapshot == nil {
+			continue
+		}
+		if latest == nil || snapshot.CapturedAt.After(latest.CapturedAt) {
+			latest = snapshot
 		}
 	}
-	return nil
+	return latest
 }
 
 func latestTrafficReport(reports []*model.OpenFlareRequestReport) *model.OpenFlareRequestReport {
+	var latest *model.OpenFlareRequestReport
 	for _, report := range reports {
-		if report != nil {
-			return report
+		if report == nil {
+			continue
+		}
+		if latest == nil || report.WindowEndedAt.After(latest.WindowEndedAt) {
+			latest = report
 		}
 	}
-	return nil
+	return latest
+}
+
+func matchOpenrestyObservation(
+	capturedAt time.Time,
+	observations []*model.OpenFlareNodeObservationOpenresty,
+) *model.OpenFlareNodeObservationOpenresty {
+	var matched *model.OpenFlareNodeObservationOpenresty
+	var bestDelta time.Duration = metricSnapshotOpenrestyMatchWindow + time.Second
+	for _, observation := range observations {
+		if observation == nil {
+			continue
+		}
+		delta := capturedAt.Sub(observation.CapturedAt)
+		if delta < 0 {
+			delta = -delta
+		}
+		if delta > metricSnapshotOpenrestyMatchWindow {
+			continue
+		}
+		if matched == nil || delta < bestDelta {
+			matched = observation
+			bestDelta = delta
+		}
+	}
+	return matched
 }
 
 // LatestMetricSnapshotsByNode returns the latest snapshot per node.
