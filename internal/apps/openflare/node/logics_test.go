@@ -331,3 +331,28 @@ type roundTripFunc func(req *http.Request) (*http.Response, error)
 func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
 	return f(req)
 }
+
+func TestCompareVersions(t *testing.T) {
+	tests := []struct {
+		local    string
+		remote   string
+		expected int
+	}{
+		{"v3.0.0-beta", "v3.0.0-beta.1", -1},
+		{"v3.0.0-beta", "v3.0.0", -1},
+		{"v3.0.0-beta.1", "v3.0.0", -1},
+		{"dev", "v3.0.0", -1},
+		{"v3.0.0", "v3.0.0", 0},
+		{"v3.0.0", "v2.9.9", 1},
+		{"v3.0.0", "v3.0.1", -1},
+		{"v3.0.0-beta.1", "v3.0.0-beta.2", -1},
+		{"v3.0.0-beta.11", "v3.0.0-beta.2", 1},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.local+"_vs_"+tt.remote, func(t *testing.T) {
+			res := compareVersions(tt.local, tt.remote)
+			assert.Equal(t, tt.expected, res)
+		})
+	}
+}

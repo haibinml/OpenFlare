@@ -12,12 +12,12 @@ import (
 	"io"
 	"net"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
 	ofws "github.com/Rain-kl/Wavelet/internal/apps/openflare/websocket"
 	"github.com/Rain-kl/Wavelet/internal/model"
+	"github.com/Rain-kl/Wavelet/pkg/utils"
 )
 
 const (
@@ -298,82 +298,7 @@ func isVersionNewer(current string, latest string) bool {
 }
 
 func compareVersions(local, remote string) int {
-	left := parseVersionInfo(local)
-	right := parseVersionInfo(remote)
-	if left.isDev {
-		if right.valid {
-			return -1
-		}
-		return 0
-	}
-	if !left.valid || !right.valid {
-		return 0
-	}
-
-	maxLen := len(left.numbers)
-	if len(right.numbers) > maxLen {
-		maxLen = len(right.numbers)
-	}
-	for index := 0; index < maxLen; index++ {
-		leftValue := 0
-		rightValue := 0
-		if index < len(left.numbers) {
-			leftValue = left.numbers[index]
-		}
-		if index < len(right.numbers) {
-			rightValue = right.numbers[index]
-		}
-		if leftValue < rightValue {
-			return -1
-		}
-		if leftValue > rightValue {
-			return 1
-		}
-	}
-	return 0
-}
-
-type versionInfo struct {
-	valid   bool
-	isDev   bool
-	numbers []int
-}
-
-func parseVersionInfo(version string) versionInfo {
-	normalized := strings.TrimSpace(strings.TrimPrefix(version, "v"))
-	if normalized == "" || normalized == "dev" {
-		return versionInfo{isDev: strings.EqualFold(normalized, "dev")}
-	}
-	base := normalized
-	if separator := strings.IndexRune(normalized, '-'); separator >= 0 {
-		base = normalized[:separator]
-	}
-	segments := strings.Split(base, ".")
-	parts := make([]int, 0, len(segments))
-	for _, segment := range segments {
-		segment = strings.TrimSpace(segment)
-		if segment == "" {
-			parts = append(parts, 0)
-			continue
-		}
-		numeric := strings.Builder{}
-		for _, r := range segment {
-			if r < '0' || r > '9' {
-				break
-			}
-			numeric.WriteRune(r)
-		}
-		if numeric.Len() == 0 {
-			parts = append(parts, 0)
-			continue
-		}
-		value, err := strconv.Atoi(numeric.String())
-		if err != nil {
-			return versionInfo{}
-		}
-		parts = append(parts, value)
-	}
-	return versionInfo{valid: len(parts) > 0, numbers: parts}
+	return utils.CompareVersions(local, remote)
 }
 
 func fetchLatestGitHubRelease(ctx context.Context, repo string, channel releaseChannel) (*githubReleaseResponse, error) {

@@ -28,6 +28,8 @@ sidebar: false
 
 ### 修复
 
+- 修复 Agent 升级版本比对逻辑：使用统一的 `pkg/utils.CompareVersions` 对比版本，正确处理预览/预发布版本（如 `v3.0.0-beta` 升级到 `v3.0.0-beta.1`），避免升级按钮非预期禁用的问题。
+
 - 修复 Agent 以 `openflare` 非 root 运行时 OpenResty `-t`/reload 失败：nginx `pid` 与 `client_body_temp`/`proxy_temp` 等临时目录改写入 `data_dir/var/run` 与 `data_dir/var/cache/nginx`（`__OPENFLARE_PID_PATH__` / `__OPENFLARE_NGINX_CACHE_DIR__` 占位符），不再使用 OpenResty 安装目录下不可写路径。
 
 - 修复 OpenResty 响应泄露版本号：默认主配置模板与 safe fallback 模板补充 `server_tokens off;`，隐藏 `Server` 头与错误页中的 nginx/OpenResty 版本信息。
