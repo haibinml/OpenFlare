@@ -9,11 +9,8 @@ import (
 	service "github.com/Rain-kl/Wavelet/pkg/protocol"
 )
 
-// APIResponse is the standard JSON envelope returned by the Wavelet API.
-type APIResponse[T any] struct {
-	ErrorMsg string `json:"error_msg"`
-	Data     T      `json:"data"`
-}
+// APIResponse is an alias for service.APIResponse.
+type APIResponse[T any] = service.APIResponse[T]
 
 // Client is the HTTP client for the flared tunnel API.
 type Client struct {

@@ -26,6 +26,8 @@ sidebar: false
 
 - 前端页面鉴权改为默认私域：除 `/login`、`/register`、`/callback` 外，未登录访问任意页面（含数据看板 `/`）均重定向至登录页。
 
+- 重构优化：收敛 `flared` 和 `relay` 客户端模块中重复声明的 `APIResponse` 结构体，统一通过类型别名复用 `pkg/protocol.APIResponse`。
+
 ### 修复
 
 - 修复 Agent 升级版本比对逻辑：使用统一的 `pkg/utils.CompareVersions` 对比版本，正确处理预览/预发布版本（如 `v3.0.0-beta` 升级到 `v3.0.0-beta.1`），避免升级按钮非预期禁用的问题。

@@ -22,5 +22,5 @@ func RegisterV1Routes(apiV1Router *gin.RouterGroup, apiGroup *gin.RouterGroup) {
 	ofrouter.RegisterRoutes(apiV1Router)
 
 	// 4. Custom business routes (example only)
-	RegisterCustomRoutes(apiV1Router)
+	RegisterCustomRoutes()
 }

@@ -9,11 +9,8 @@ import (
 	service "github.com/Rain-kl/Wavelet/pkg/protocol"
 )
 
-// APIResponse wraps a control-plane API response with an optional error message.
-type APIResponse[T any] struct {
-	ErrorMsg string `json:"error_msg"`
-	Data     T      `json:"data"`
-}
+// APIResponse is an alias for service.APIResponse.
+type APIResponse[T any] = service.APIResponse[T]
 
 // Client sends authenticated requests to the relay control-plane API.
 type Client struct {
