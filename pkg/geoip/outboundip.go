@@ -109,7 +109,16 @@ func (s *HTTPOutboundIPStrategy) GetOutboundIP(ctx context.Context) (net.IP, err
 			ExpectContinueTimeout: 1 * time.Second,
 		},
 	}
-	return s.query(ctx, fallbackClient)
+	ip, err = s.query(ctx, fallbackClient)
+	if err != nil {
+		return nil, err
+	}
+	// Always prioritize IPv4 for relay compatibility
+	if ipv4 := ip.To4(); ipv4 != nil {
+		return ipv4, nil
+	}
+	// Return IPv6 only if no IPv4 is available
+	return ip, nil
 }
 
 func (s *HTTPOutboundIPStrategy) query(ctx context.Context, client *http.Client) (net.IP, error) {

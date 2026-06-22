@@ -80,3 +80,45 @@ func TestHTTPOutboundIPStrategyRejectsPrivateIP(t *testing.T) {
 		t.Fatal("expected private IP to be rejected")
 	}
 }
+
+func TestHTTPOutboundIPStrategyPrioritizesIPv4(t *testing.T) {
+	tests := []struct {
+		name     string
+		response string
+		want     string
+	}{
+		{
+			name:     "IPv4 address",
+			response: `{"ip":"8.8.8.8"}`,
+			want:     "8.8.8.8",
+		},
+		{
+			name:     "IPv6 address normalized to IPv4",
+			response: `{"ip":"::ffff:8.8.8.8"}`,
+			want:     "8.8.8.8",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = w.Write([]byte(tt.response))
+			}))
+			defer server.Close()
+
+			strategy := NewHTTPOutboundIPStrategy(RealIPCCAdapter{URL: server.URL}, server.Client())
+			ip, err := strategy.GetOutboundIP(context.Background())
+			if err != nil {
+				t.Fatalf("GetOutboundIP failed: %v", err)
+			}
+			if ip.String() != tt.want {
+				t.Errorf("GetOutboundIP() = %v, want %v", ip.String(), tt.want)
+			}
+			// Ensure it's an IPv4 address (4 bytes)
+			if ipv4 := ip.To4(); ipv4 == nil {
+				t.Errorf("expected IPv4 address, got %v", ip)
+			}
+		})
+	}
+}

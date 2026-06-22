@@ -25,6 +25,7 @@ sidebar: false
 
 - 修复 openflared（Tunnel Client）WebSocket 连接在 Cloudflare 代理环境下频繁收到 EOF 断连的问题。根本原因：服务端 `read_pump` 仅在收到 WebSocket 协议层 Pong 帧时刷新读超时，而客户端（`golang.org/x/net/websocket`）以 JSON 应用层 `{"type":"pong"}` 响应 ping，服务端 90s 读超时到期后主动关闭连接，客户端收到 EOF 并进入无限重连循环。修复方式：在 `clientPongType` 分支中同步调用 `conn.SetReadDeadline` 刷新超时。
 - 修复 openflared frpc 子进程异常退出（`exit status 1`）时缺乏详细诊断信息的问题。现捕获 frpc stderr 并在进程退出时将其输出记录到结构化日志 `stderr` 字段，便于排查配置格式错误、Auth Token 鉴权失败、relay 端不可达等具体原因。
+- 修复 Relay 节点启动时在双栈网络环境可能上报 IPv6 地址，导致 Tunnel frpc 客户端无法连接 frps 的问题。强化 `pkg/geoip.HTTPOutboundIPStrategy` 在回退到双栈客户端后仍优先返回 IPv4 地址，确保 Relay 心跳上报的 IP 与 frpc 连接兼容。
 
 ### 变更
 
