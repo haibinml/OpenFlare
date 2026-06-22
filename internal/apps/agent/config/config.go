@@ -67,6 +67,7 @@ type Config struct {
 	HeartbeatInterval          MillisecondDuration `json:"heartbeat_interval"`
 	RequestTimeout             MillisecondDuration `json:"request_timeout"`
 	configPath                 string              `json:"-"`
+	NodeIPConfigured           bool                `json:"-"`
 }
 
 type configFile struct {
@@ -129,6 +130,7 @@ func Load(path string) (*Config, error) {
 	}
 	cfg.configPath = path
 	applyEnvOverrides(cfg)
+	cfg.NodeIPConfigured = cfg.NodeIP != ""
 	applyDefaults(cfg, filepath.Dir(path))
 	if err = validate(cfg); err != nil {
 		return nil, err

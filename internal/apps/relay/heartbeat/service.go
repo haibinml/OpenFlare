@@ -6,6 +6,7 @@ import (
 	"log/slog"
 
 	edgeheartbeat "github.com/Rain-kl/Wavelet/internal/apps/edge/heartbeat"
+	"github.com/Rain-kl/Wavelet/internal/apps/edge/nodeip"
 	"github.com/Rain-kl/Wavelet/internal/apps/relay/config"
 	"github.com/Rain-kl/Wavelet/internal/apps/relay/frps"
 	"github.com/Rain-kl/Wavelet/internal/apps/relay/httpclient"
@@ -46,6 +47,12 @@ func (s *Service) doHeartbeat(ctx context.Context) {
 	slog.Debug("sending heartbeat")
 
 	runtimeStatus := s.frpsManager.GetRuntimeStatus()
+
+	ip := s.config.NodeIP
+	if !s.config.NodeIPConfigured {
+		ip = nodeip.DetectWithContext(ctx)
+	}
+
 	payload := service.RelayHeartbeatPayload{
 		Version:         config.Version,
 		ExtVersion:      s.frpsManager.GetVersion(ctx),
@@ -55,7 +62,7 @@ func (s *Service) doHeartbeat(ctx context.Context) {
 		FrpsClientCount: runtimeStatus.ClientCount,
 		FrpsProxies:     runtimeStatus.Proxies,
 		Name:            s.config.NodeName,
-		IP:              s.config.NodeIP,
+		IP:              ip,
 		Profile:         observability.BuildProfile(s.config, s.stateStore),
 		Snapshot:        observability.BuildSnapshot(s.config, s.stateStore),
 		HealthEvents:    observability.BuildHealthEvents(runtimeStatus),

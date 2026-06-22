@@ -62,10 +62,57 @@ func (s *HTTPOutboundIPStrategy) GetOutboundIP(ctx context.Context) (net.IP, err
 	if ctx == nil {
 		return nil, errors.New("context is required")
 	}
-	client := s.Client
-	if client == nil {
-		client = &http.Client{Timeout: defaultOutboundIPLookupTimeout}
+
+	if s.Client != nil {
+		return s.query(ctx, s.Client)
 	}
+
+	dialer := &net.Dialer{
+		Timeout:   defaultOutboundIPLookupTimeout,
+		KeepAlive: 30 * time.Second,
+	}
+
+	// Try IPv4 first
+	ipv4Client := &http.Client{
+		Timeout: defaultOutboundIPLookupTimeout,
+		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			DialContext: func(ctx context.Context, _, addr string) (net.Conn, error) {
+				return dialer.DialContext(ctx, "tcp4", addr)
+			},
+			ForceAttemptHTTP2:     true,
+			MaxIdleConns:          100,
+			IdleConnTimeout:       90 * time.Second,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+		},
+	}
+	ip, err := s.query(ctx, ipv4Client)
+	if err == nil && ip != nil {
+		if ipv4 := ip.To4(); ipv4 != nil {
+			return ipv4, nil
+		}
+	}
+
+	// Fallback to standard client (dual-stack: tcp)
+	fallbackClient := &http.Client{
+		Timeout: defaultOutboundIPLookupTimeout,
+		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			DialContext: func(ctx context.Context, _, addr string) (net.Conn, error) {
+				return dialer.DialContext(ctx, "tcp", addr)
+			},
+			ForceAttemptHTTP2:     true,
+			MaxIdleConns:          100,
+			IdleConnTimeout:       90 * time.Second,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+		},
+	}
+	return s.query(ctx, fallbackClient)
+}
+
+func (s *HTTPOutboundIPStrategy) query(ctx context.Context, client *http.Client) (net.IP, error) {
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, s.Adapter.Endpoint(), nil)
 	if err != nil {
 		return nil, fmt.Errorf("%s create request failed: %w", s.Name(), err)

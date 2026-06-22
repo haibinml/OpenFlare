@@ -28,6 +28,10 @@ sidebar: false
 
 ### 变更
 
+- 优化并统一 `agent`、`relay`、`flared` 的 IP 探测与上报逻辑，均复用公用 `nodeip` 包；在未指定 `node_ip` 时实现心跳 Tick 动态探测上报。
+- 优化 `pkg/geoip.GetOutboundIP` 出口 IP 探测策略，优先通过 `tcp4` 建立 HTTP 连接以获得 IPv4 公网地址，并在纯 IPv6/无 IPv4 路由环境下自动降级为双栈 `tcp` 握手。
+- 优化 `agent` 系统指纹缓存算法，计算指纹时排除 `UptimeSeconds` 和 `ReportedAtUnix` 动态字段，防止周期心跳时不断触发冗余完整的系统 Profile 数据上报。
+
 - 彻底移除废弃的 GitHub OAuth 和微信登录相关遗留设置项（包括 `GitHubOAuthEnabled`、`GitHubClientId`、`GitHubClientSecret`、`WeChatAuthEnabled` 等），从公开状态接口 `/api/v1/d/status` 移除这些字段的返回。
 
 - 前端路由调整：将 TLS 证书和 DNS 账号的路由地址移出 `/websites`（分别变更为顶级路由 `/certificates` 和 `/dns-accounts`），将 WAF IP 组的路由地址移出 `/waf`（变更为顶级路由 `/ip-groups`）。

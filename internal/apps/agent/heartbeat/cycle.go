@@ -14,6 +14,7 @@ import (
 	"github.com/Rain-kl/Wavelet/internal/apps/agent/state"
 	"github.com/Rain-kl/Wavelet/internal/apps/agent/updater"
 	edgeheartbeat "github.com/Rain-kl/Wavelet/internal/apps/edge/heartbeat"
+	"github.com/Rain-kl/Wavelet/internal/apps/edge/nodeip"
 )
 
 // SyncService is the interface used by Cycle to sync active configuration and WAF IP groups.
@@ -97,10 +98,16 @@ func (c *Cycle) NodePayload(ctx context.Context, nodeID string) protocol.NodePay
 	metricSnapshot := observability.BuildSnapshot(c.Config, c.StateStore)
 	openrestyObservation := observability.BuildOpenrestyObservation(managedOpenRestyMetrics)
 	healthEvents := observability.BuildHealthEvents(snapshot)
+
+	ip := c.Config.NodeIP
+	if !c.Config.NodeIPConfigured {
+		ip = nodeip.DetectWithContext(ctx)
+	}
+
 	payload := protocol.NodePayload{
 		NodeID:               nodeID,
 		Name:                 c.Config.NodeName,
-		IP:                   c.Config.NodeIP,
+		IP:                   ip,
 		Version:              c.Config.Version,
 		ExtVersion:           c.Config.ExtVersion,
 		CurrentVersion:       snapshot.CurrentVersion,
