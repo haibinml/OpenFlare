@@ -105,7 +105,7 @@ services:
       - ./data/agent/:/data
     environment:
       OPENFLARE_SERVER_URL: "http://host.docker.internal:3000"
-      OPENFLARE_AGENT_TOKEN: "6ef051dba8b1b7c7e8a4b5dc1b138593"
+      OPENFLARE_AGENT_TOKEN: "3f7b66c9329a0cf253e71a86681223aa"
       LOG_LEVEL: "debug"
     extra_hosts:
       - "host.docker.internal:host-gateway"

@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/Rain-kl/Wavelet/internal/apps/openflare/routeidentity"
+	oftls "github.com/Rain-kl/Wavelet/internal/apps/openflare/tls"
 	"github.com/Rain-kl/Wavelet/internal/apps/openflare/waf"
 	"github.com/Rain-kl/Wavelet/internal/model"
 	"github.com/Rain-kl/Wavelet/internal/repository"
@@ -538,7 +539,15 @@ func buildOpenRestyConfigSnapshot(ctx context.Context) openRestyConfigSnapshot {
 func buildCertificateSupportFiles(ctx context.Context, routes []snapshotRoute) ([]SupportFile, error) {
 	certIDSet := make(map[uint]struct{})
 	for _, route := range routes {
+		if route.CertID != nil && *route.CertID != 0 {
+			certIDSet[*route.CertID] = struct{}{}
+		}
 		for _, certID := range route.CertIDs {
+			if certID != 0 {
+				certIDSet[certID] = struct{}{}
+			}
+		}
+		for _, certID := range route.DomainCertIDs {
 			if certID != 0 {
 				certIDSet[certID] = struct{}{}
 			}
@@ -558,9 +567,16 @@ func buildCertificateSupportFiles(ctx context.Context, routes []snapshotRoute) (
 		if err != nil {
 			return nil, err
 		}
+		keyPEM, err := oftls.OpenKeyPEM(certificate.KeyPEM)
+		if err != nil {
+			return nil, fmt.Errorf("certificate %d private key: %w", certificate.ID, err)
+		}
+		if strings.TrimSpace(keyPEM) == "" {
+			return nil, fmt.Errorf("certificate %d has no private key", certificate.ID)
+		}
 		files = append(files,
 			SupportFile{Path: certificateCertFileName(certificate.ID), Content: normalizePEM(certificate.CertPEM)},
-			SupportFile{Path: certificateKeyFileName(certificate.ID), Content: normalizePEM(certificate.KeyPEM)},
+			SupportFile{Path: certificateKeyFileName(certificate.ID), Content: normalizePEM(keyPEM)},
 		)
 	}
 	return dedupeSupportFiles(files), nil

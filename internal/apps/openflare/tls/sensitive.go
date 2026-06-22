@@ -39,6 +39,11 @@ func sealSensitive(plaintext string) (string, error) {
 	return sensitiveValuePrefix + encrypted, nil
 }
 
+// OpenKeyPEM decrypts a stored certificate private key for runtime distribution.
+func OpenKeyPEM(stored string) (string, error) {
+	return openSensitive(stored)
+}
+
 func openSensitive(stored string) (string, error) {
 	stored = strings.TrimSpace(stored)
 	if stored == "" {
