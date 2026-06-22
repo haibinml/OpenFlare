@@ -37,7 +37,7 @@ func EnsureRuntimeProvider(ctx context.Context) error {
 			runtimeInitErr = err
 			return
 		}
-		runtimeInitErr = applyProviderFromModel()
+		runtimeInitErr = applyProviderFromModel(ctx)
 	})
 	return runtimeInitErr
 }
@@ -47,18 +47,18 @@ func RefreshRuntimeProvider(ctx context.Context) error {
 	if err := model.InitOptionMap(ctx); err != nil {
 		return err
 	}
-	return applyProviderFromModel()
+	return applyProviderFromModel(ctx)
 }
 
-func applyProviderFromModel() error {
+func applyProviderFromModel(ctx context.Context) error {
 	model.OptionMapRWMutex.RLock()
 	provider := strings.TrimSpace(model.GeoIPProvider)
 	model.OptionMapRWMutex.RUnlock()
-	return ApplyProvider(provider)
+	return ApplyProvider(ctx, provider)
 }
 
 // ApplyProvider switches the process-wide GeoIP backend.
-func ApplyProvider(provider string) error {
+func ApplyProvider(ctx context.Context, provider string) error {
 	normalized := strings.TrimSpace(strings.ToLower(provider))
 	if normalized == "" {
 		normalized = pkggeoip.ProviderDisabled
@@ -75,7 +75,7 @@ func ApplyProvider(provider string) error {
 	if normalized == pkggeoip.ProviderMaxMind {
 		path, err := ensureServerMMDB()
 		if err != nil {
-			logger.WarnF(context.Background(), "[GeoIP] seed MaxMind database failed: %v", err)
+			logger.WarnF(ctx, "[GeoIP] seed MaxMind database failed: %v", err)
 		}
 		if path != "" {
 			pkggeoip.GeoIPFilePath = path

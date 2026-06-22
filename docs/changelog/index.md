@@ -18,6 +18,7 @@ sidebar: false
 
 ### 新增
 
+- 新增可配置的 FRPS 内置 WebUI 开关和监听端口。在数据库 w_system_configs 中新增 `relay_frps_web_ui_enabled` 与 `relay_frps_web_ui_port`，支持通过后台系统设置页进行图形化管理与动态同步至 Relay 节点。
 - 将 TLS 证书续签逻辑接入 Asynq 异步任务框架。新增单证书续期任务 `of_ssl_single_renew`（`openflare:ssl_single_renew`），支持在管理后台查看每步的申请状态和详细日志，并提供失败重试能力。
 
 ### 变更
@@ -31,6 +32,8 @@ sidebar: false
 - 重构优化：收敛 `flared` 和 `relay` 客户端模块中重复声明的 `APIResponse` 结构体，统一通过类型别名复用 `pkg/protocol.APIResponse`。
 
 ### 修复
+
+- 修复由于生成的 Docker 安装/部署命令硬编码拉取 `:latest` 镜像，导致使用 v3 新版协议的控制端与 v2 旧版协议的 Relay 节点无法通信的问题。前端改用动态获取当前控制端版本（serverVersion）并自动拉取与当前控制端匹配的 `:beta` 或具体版本镜像。
 
 - 修复点击「打开 FRPS WebUI」跳转到 `about:blank#blocked`：在 Relay 节点详情页的 WebUI 磁贴卡片中增加展示具体 URL 地址，并提供一键复制按钮。解决因 Chrome 浏览器限制从公网安全源（HTTPS）跨域直接访问本地/私有网络 HTTP 端口（Private Network Access 限制）而导致新页面打开被拦截的问题。
 

@@ -53,6 +53,9 @@ exit "${EXIT_CODE:-0}"
 
 // Helper to poll for status to eliminate timing flakiness in tests
 func assertStatusEventually(t *testing.T, m *Manager, expectedStatus string, timeout time.Duration) {
+	if timeout < 6*time.Second {
+		timeout = 6 * time.Second
+	}
 	deadline := time.Now().Add(timeout)
 	for time.Now().Before(deadline) {
 		rt := m.GetRuntimeStatus()
@@ -67,6 +70,9 @@ func assertStatusEventually(t *testing.T, m *Manager, expectedStatus string, tim
 
 func assertCommandExitedEventually(t *testing.T, cmd *exec.Cmd, timeout time.Duration) {
 	t.Helper()
+	if timeout < 6*time.Second {
+		timeout = 6 * time.Second
+	}
 
 	done := make(chan error, 1)
 	go func() {

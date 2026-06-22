@@ -12,6 +12,7 @@ import (
 	"github.com/Rain-kl/Wavelet/internal/config"
 	"github.com/Rain-kl/Wavelet/internal/db"
 	"github.com/Rain-kl/Wavelet/internal/model"
+	"github.com/Rain-kl/Wavelet/internal/task"
 	"github.com/glebarez/sqlite"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -21,11 +22,13 @@ import (
 func setupSSLRenewTestDB(t *testing.T) func() {
 	t.Helper()
 
+	task.RegisterTaskMeta(tls.SSLSingleRenewMeta)
+
 	sqliteDB, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{
 		DisableForeignKeyConstraintWhenMigrating: true,
 	})
 	require.NoError(t, err)
-	require.NoError(t, sqliteDB.AutoMigrate(&model.TLSCertificate{}))
+	require.NoError(t, sqliteDB.AutoMigrate(&model.TLSCertificate{}, &model.TaskExecution{}))
 
 	db.SetDB(sqliteDB)
 	oldSecret := config.Config.App.SessionSecret

@@ -313,7 +313,7 @@ func ListOpenFlareWAFRuleGroupBindingsByRouteID(ctx context.Context, routeID uin
 }
 
 func syncWAFBindingIDSequence(tx *gorm.DB) error {
-	if tx == nil || tx.Dialector.Name() != "postgres" {
+	if tx == nil || tx.Dialector.Name() != "postgres" { //nolint:staticcheck // QF1008: keep explicit Dialector field access
 		return nil
 	}
 	return tx.Exec(`

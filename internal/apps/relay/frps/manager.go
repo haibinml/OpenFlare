@@ -127,7 +127,8 @@ func (m *Manager) UpdateConfig(ctx context.Context, cfg *service.RelayConfig) {
 		m.activeConfig.BindPort == cfg.BindPort &&
 		m.activeConfig.VhostHTTPPort == cfg.VhostHTTPPort &&
 		m.activeConfig.AuthToken == cfg.AuthToken &&
-		m.activeConfig.WebServerEnabled == cfg.WebServerEnabled {
+		m.activeConfig.WebServerEnabled == cfg.WebServerEnabled &&
+		m.activeConfig.WebServerPort == cfg.WebServerPort {
 		if m.cmd == nil && !m.stopping {
 			slog.Warn("frps config unchanged but process is not running, restarting")
 			m.stopping = false
@@ -188,7 +189,11 @@ func (m *Manager) renderConfig(cfg *service.RelayConfig) error {
 	} else {
 		buf.WriteString("addr = \"127.0.0.1\"\n")
 	}
-	fmt.Fprintf(&buf, "port = %d\n", defaultFrpsWebServerPort)
+	port := cfg.WebServerPort
+	if port <= 0 {
+		port = defaultFrpsWebServerPort
+	}
+	fmt.Fprintf(&buf, "port = %d\n", port)
 	buf.WriteString("user = \"admin\"\n")
 
 	password := m.agentToken

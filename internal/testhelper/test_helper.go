@@ -20,9 +20,10 @@ import (
 )
 
 const (
-	configTypeSystem = "system"
-	configValueTrue  = "true"
-	configValueFalse = "false"
+	configTypeSystem   = "system"
+	configTypeBusiness = "business"
+	configValueTrue    = "true"
+	configValueFalse   = "false"
 )
 
 // SetupTestEnvironment initializes an in-memory SQLite DB, seeds default configurations,
@@ -274,6 +275,18 @@ func getSeedConfigsPart2() []model.SystemConfig {
 			Value:       `{"driver":"local","local":{"root":"."},"s3":{"region":"us-east-1"},"r2":{"region":"auto"},"minio":{"region":"us-east-1","path_style":true},"oss":{},"webdav":{}}`,
 			Type:        configTypeSystem,
 			Description: "文件存储驱动及连接配置（JSON）",
+		},
+		{
+			Key:         model.ConfigKeyRelayFRPSWebUIEnabled,
+			Value:       configValueFalse,
+			Type:        configTypeBusiness,
+			Description: "是否启用 FRPS 内置 Web 界面",
+		},
+		{
+			Key:         model.ConfigKeyRelayFRPSWebUIPort,
+			Value:       "17500",
+			Type:        configTypeBusiness,
+			Description: "FRPS 内置 Web 界面端口",
 		},
 	}
 }

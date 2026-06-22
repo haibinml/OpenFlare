@@ -2,14 +2,15 @@
 
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
-import {useMutation, useQueryClient} from '@tanstack/react-query';
-import {useState} from 'react';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {useEffect, useMemo, useState} from 'react';
 import {
   Activity,
   Copy,
   ExternalLink,
   FileText,
   Fingerprint,
+  Loader2,
   Network,
   RefreshCw,
   RotateCcw,
@@ -30,11 +31,14 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import {Button} from '@/components/ui/button';
+import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
 import {Switch} from '@/components/ui/switch';
 import {formatDateTime} from '@/lib/utils';
 import type {NodeAgentReleaseInfo, NodeItem, ReleaseChannel} from '@/lib/services/openflare';
 import {NodeService} from '@/lib/services/openflare';
+import services from '@/lib/services';
+import type {SystemConfig} from '@/lib/services/admin';
 
 import {AgentUpdateDialog} from './agent-update-dialog';
 import {InstallCommand} from './install-command';
@@ -58,12 +62,56 @@ import {
 
 const nodesQueryKey = ['openflare', 'nodes'];
 
+function systemConfigMap(configs: SystemConfig[]) {
+  return configs.reduce<Record<string, SystemConfig>>((accumulator, config) => {
+    accumulator[config.key] = config;
+    return accumulator;
+  }, {});
+}
+
 export function RelayNodeDetail({ node }: { node: NodeItem }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [editorOpen, setEditorOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+
+  const [webServerPort, setWebServerPort] = useState('17500');
+
+  const systemConfigsQuery = useQuery({
+    queryKey: ['admin', 'system-configs'],
+    queryFn: () => services.adminSystemConfig.listSystemConfigs(),
+  });
+
+  const configs = useMemo(
+    () => systemConfigMap(systemConfigsQuery.data ?? []),
+    [systemConfigsQuery.data]
+  );
+
+  useEffect(() => {
+    if (systemConfigsQuery.data) {
+      setWebServerPort(configs['relay_frps_web_ui_port']?.value || '17500');
+    }
+  }, [systemConfigsQuery.data, configs]);
+
+  const savePortMutation = useMutation({
+    mutationFn: async (port: string) => {
+      const portNum = parseInt(port, 10);
+      if (isNaN(portNum) || portNum < 1 || portNum > 65535) {
+        throw new Error('端口号必须在 1 ~ 65535 范围内');
+      }
+      const portCfg = configs['relay_frps_web_ui_port'];
+      await services.adminSystemConfig.updateSystemConfig('relay_frps_web_ui_port', {
+        value: String(portNum),
+        description: portCfg?.description || 'FRPS 内置 Web 管理界面端口',
+      });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['admin', 'system-configs'] });
+      toast.success('FRPS WebUI 端口配置已更新');
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : '更新端口失败'),
+  });
 
   const saveMutation = useMutation({
     mutationFn: (payload: Parameters<typeof NodeService.updateNode>[1]) =>
@@ -147,9 +195,14 @@ export function RelayNodeDetail({ node }: { node: NodeItem }) {
     ]);
   };
 
+  const webServerPortNum = parseInt(configs['relay_frps_web_ui_port']?.value || '', 10);
+  const resolvedPort = !isNaN(webServerPortNum) && webServerPortNum > 0
+    ? webServerPortNum
+    : (node.relay_bind_port || 7000) + 500;
+
   const webUiUrl =
     node.relay_web_server_enabled && node.relay_bind_port
-      ? `http://${node.ip || '127.0.0.1'}:${node.relay_bind_port + 500}`
+      ? `http://${node.ip || '127.0.0.1'}:${resolvedPort}`
       : null;
 
   const headerActions = (
@@ -257,14 +310,13 @@ export function RelayNodeDetail({ node }: { node: NodeItem }) {
 
   const manageTab = (
     <div className="space-y-6">
-      <NodeSectionCard title="FRPS WebUI" description="控制 frps 内置 Web 管理界面是否启用">
+      <NodeSectionCard title="FRPS WebUI" description="控制 frps 内置 Web 管理界面是否启用及其监听端口">
         <div className="space-y-4">
           <div className="flex items-center justify-between rounded-xl border px-4 py-4">
             <div className="space-y-1">
               <Label>启用 Web 管理界面</Label>
               <p className="text-xs text-muted-foreground">
-                默认监听绑定端口 + 500，例如 {node.relay_bind_port || 7000} →{' '}
-                {(node.relay_bind_port || 7000) + 500}
+                开启后，节点将启动 frps 的内置管理服务。
               </p>
             </div>
             <Switch
@@ -272,6 +324,38 @@ export function RelayNodeDetail({ node }: { node: NodeItem }) {
               disabled={webServerMutation.isPending}
               onCheckedChange={(checked) => webServerMutation.mutate(checked)}
             />
+          </div>
+
+          <div className="rounded-xl border p-4 space-y-3">
+            <Label htmlFor="web_server_port" className="text-xs font-semibold">Web 管理界面端口</Label>
+            <div className="flex max-w-sm items-center gap-2">
+              <Input
+                id="web_server_port"
+                type="number"
+                min={1}
+                max={65535}
+                value={webServerPort}
+                onChange={(e) => setWebServerPort(e.target.value)}
+                placeholder="例如: 17500"
+                className="bg-card text-xs h-9"
+                disabled={savePortMutation.isPending || systemConfigsQuery.isLoading}
+              />
+              <Button
+                size="sm"
+                className="h-9"
+                onClick={() => savePortMutation.mutate(webServerPort)}
+                disabled={savePortMutation.isPending || systemConfigsQuery.isLoading}
+              >
+                {savePortMutation.isPending ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  '保存'
+                )}
+              </Button>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              当前实际监听端口：{resolvedPort} （修改后在下次节点心跳同步时生效，默认为绑定端口 + 500）。
+            </p>
           </div>
 
           {webUiUrl ? (

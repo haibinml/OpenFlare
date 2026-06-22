@@ -4,10 +4,12 @@
 package relay
 
 import (
+	"context"
 	"net"
 	"strings"
 
 	"github.com/Rain-kl/Wavelet/internal/model"
+	"github.com/Rain-kl/Wavelet/internal/repository"
 )
 
 const (
@@ -83,9 +85,13 @@ func isPublicNodeIP(raw string) bool {
 	return true
 }
 
-func buildRelayConfig(node *model.OpenFlareNode) *Config {
+func buildRelayConfig(ctx context.Context, node *model.OpenFlareNode) *Config {
 	if node == nil {
 		return nil
+	}
+	webServerPort, err := repository.GetIntByKey(ctx, model.ConfigKeyRelayFRPSWebUIPort)
+	if err != nil || webServerPort <= 0 {
+		webServerPort = node.RelayBindPort + 500
 	}
 	return &Config{
 		BindPort:         node.RelayBindPort,
@@ -93,6 +99,7 @@ func buildRelayConfig(node *model.OpenFlareNode) *Config {
 		AuthToken:        node.RelayAuthToken,
 		LogLevel:         "info",
 		WebServerEnabled: node.RelayWebServerEnabled,
+		WebServerPort:    webServerPort,
 	}
 }
 

@@ -43,6 +43,7 @@ type RelayConfig struct {
 	AuthToken        string `json:"auth_token"`
 	LogLevel         string `json:"log_level"`
 	WebServerEnabled bool   `json:"web_server_enabled"`
+	WebServerPort    int    `json:"web_server_port"`
 }
 
 // RelaySettings holds relay runtime settings.

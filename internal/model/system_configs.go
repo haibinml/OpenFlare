@@ -37,6 +37,8 @@ const (
 	ConfigKeyLoginSessionTTLHours             = "login_session_ttl_hours"             // 登录会话过期时间 (小时，0表示浏览器关闭后自动退出登录，-1表示永不过期)
 	ConfigKeyUpdateUpstreamRepository         = "update_upstream_repository"          // GitHub Actions Release 上游仓库
 	ConfigKeyStorageConfig                    = "storage_config"                      // 文件存储配置 (JSON)
+	ConfigKeyRelayFRPSWebUIEnabled            = "relay_frps_web_ui_enabled"            // 是否启用 FRPS 内置 Web 界面
+	ConfigKeyRelayFRPSWebUIPort               = "relay_frps_web_ui_port"               // FRPS 内置 Web 界面端口
 )
 
 const (

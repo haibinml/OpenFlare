@@ -39,7 +39,7 @@ var (
 	OpenStoredUpload    = ingest.OpenActiveObject
 	ActiveUploadHash    = ingest.ActiveHash
 	ResolveLocalFile    = ingest.ResolveLocalFile
-	IngestFromLocalPath = ingest.IngestFromLocalPath
+	IngestFromLocalPath = ingest.FromLocalPath
 )
 
 type (

@@ -27,7 +27,7 @@ import (
 	"github.com/Rain-kl/Wavelet/internal/common/response"
 )
 
-const expectedDefaultConfigsCount = 30
+const expectedDefaultConfigsCount = 32
 
 func setupTestRouter(authUser *model.User) *gin.Engine {
 	r := testhelper.NewTestGinEngine()
@@ -168,8 +168,8 @@ func TestListSystemConfigs(t *testing.T) {
 		var configs []model.SystemConfig
 		_ = json.Unmarshal(dataBytes, &configs)
 
-		if len(configs) != 1 || configs[0].Key != model.ConfigKeyMaxAPIKeysPerUser {
-			t.Errorf("expected 1 business config (max_api_keys_per_user), got %d: %v", len(configs), configs)
+		if len(configs) != 3 {
+			t.Errorf("expected 3 business configs, got %d: %v", len(configs), configs)
 		}
 	})
 }

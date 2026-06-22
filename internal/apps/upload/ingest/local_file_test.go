@@ -28,8 +28,8 @@ func TestResolveLocalFileFindsStoredPath(t *testing.T) {
 	}
 }
 
-func TestIngestFromLocalPathRequiresPath(t *testing.T) {
-	_, err := IngestFromLocalPath(context.Background(), "", Request{})
+func TestFromLocalPathRequiresPath(t *testing.T) {
+	_, err := FromLocalPath(context.Background(), "", Request{})
 	if err == nil {
 		t.Fatal("expected error for empty local path")
 	}

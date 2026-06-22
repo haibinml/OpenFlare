@@ -118,7 +118,7 @@ func parseIPInfoCoordinates(value string) (*float64, *float64) {
 }
 
 func formatIPInfoLocation(resp ipInfoResponse) string {
-	parts := make([]string, 0, 3)
+	parts := make([]string, 0, 3) //nolint:mnd // 3 parts: city, region, country
 	if city := strings.TrimSpace(resp.City); city != "" {
 		parts = append(parts, city)
 	}

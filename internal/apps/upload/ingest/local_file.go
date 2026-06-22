@@ -31,8 +31,8 @@ func ResolveLocalFile(ctx context.Context, req LocalFileCandidateRequest) (strin
 	return "", 0, os.ErrNotExist
 }
 
-// IngestFromLocalPath ingests a local regular file through the standard upload ingest path.
-func IngestFromLocalPath(ctx context.Context, localPath string, req Request) (Result, error) {
+// FromLocalPath ingests a local regular file through the standard upload ingest path.
+func FromLocalPath(ctx context.Context, localPath string, req Request) (Result, error) {
 	localPath = strings.TrimSpace(localPath)
 	if localPath == "" {
 		return Result{}, errors.New("local path is required")
@@ -59,7 +59,11 @@ func IngestFromLocalPath(ctx context.Context, localPath string, req Request) (Re
 
 func buildLocalFileCandidates(ctx context.Context, req LocalFileCandidateRequest) []string {
 	seen := make(map[string]struct{})
-	candidates := make([]string, 0, 8+len(req.RelativePaths)*4)
+	const (
+		initialCandidatesCap = 8
+		relativePathsWeight  = 4
+	)
+	candidates := make([]string, 0, initialCandidatesCap+len(req.RelativePaths)*relativePathsWeight)
 	add := func(raw string) {
 		value := strings.TrimSpace(raw)
 		if value == "" {

@@ -180,6 +180,7 @@ var countryCentroidsByName = map[string]countryCentroid{
 	"Zimbabwe":                         {lat: -19.006775, lon: 29.850564},
 }
 
+// CountryCentroidByName returns latitude and longitude for a country name, if found.
 func CountryCentroidByName(name string) (lat float64, lon float64, ok bool) {
 	name = strings.TrimSpace(name)
 	if name == "" {
@@ -191,6 +192,7 @@ func CountryCentroidByName(name string) (lat float64, lon float64, ok bool) {
 	return 0, 0, false
 }
 
+// CountryCentroidByISO returns latitude and longitude for an ISO country code, if found.
 func CountryCentroidByISO(iso string) (lat float64, lon float64, ok bool) {
 	name, ok := isoToCountryName[strings.ToUpper(strings.TrimSpace(iso))]
 	if !ok {

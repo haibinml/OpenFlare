@@ -440,7 +440,7 @@ func matchOpenrestyObservation(
 	observations []*model.OpenFlareNodeObservationOpenresty,
 ) *model.OpenFlareNodeObservationOpenresty {
 	var matched *model.OpenFlareNodeObservationOpenresty
-	var bestDelta time.Duration = metricSnapshotOpenrestyMatchWindow + time.Second
+	bestDelta := metricSnapshotOpenrestyMatchWindow + time.Second
 	for _, observation := range observations {
 		if observation == nil {
 			continue

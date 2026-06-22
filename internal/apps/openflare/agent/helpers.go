@@ -105,14 +105,6 @@ func applyNodeRuntime(ctx context.Context, node *model.OpenFlareNode, payload No
 	}
 }
 
-func cloneCoordinate(value *float64) *float64 {
-	if value == nil {
-		return nil
-	}
-	cloned := *value
-	return &cloned
-}
-
 func truncateForDatabase(value string, maxVal int) string {
 	if maxVal <= 0 {
 		return ""

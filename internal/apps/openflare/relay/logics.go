@@ -98,7 +98,7 @@ func Heartbeat(ctx context.Context, node *model.OpenFlareNode, payload Heartbeat
 	persistRelayHeartbeatObservability(ctx, node.NodeID, payload, now)
 
 	return &HeartbeatResponse{
-		RelayConfig:   buildRelayConfig(node),
+		RelayConfig:   buildRelayConfig(ctx, node),
 		RelaySettings: BuildSettings(node, updateNow, updateChannel, updateTag),
 	}, nil
 }
