@@ -42,6 +42,13 @@ func runReadPump(
 		case messageTypePing:
 			_ = sendPong(nodeID)
 		case clientPongType:
+			// Refresh read deadline when the client replies with a JSON pong.
+			// This keeps the connection alive when the WebSocket is proxied
+			// through Cloudflare, which enforces a 100-second idle timeout on
+			// the TCP stream. Without this refresh, the server's 90-second read
+			// deadline expires and terminates the connection even though the
+			// client is actively responding to pings.
+			_ = conn.SetReadDeadline(time.Now().Add(wsReadDeadline))
 		default:
 			slog.Debug(logLabel+" unsupported message", "node_id", nodeID, "type", message.Type)
 		}

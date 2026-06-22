@@ -192,6 +192,8 @@ func (m *Manager) restartProcess(ctx context.Context, relayID string, configPath
 			ensureNoOrphanProcess(pidPath)
 
 			cmd := exec.CommandContext(procCtx, m.cfg.FrpcPath, "-c", configPath) //nolint:gosec // FrpcPath and configPath are managed trusted locations
+			var stderrBuf bytes.Buffer
+			cmd.Stderr = &stderrBuf
 
 			m.mu.Lock()
 			proc.Cmd = cmd
@@ -213,10 +215,15 @@ func (m *Manager) restartProcess(ctx context.Context, relayID string, configPath
 				return
 			}
 
+			stderrOutput := strings.TrimSpace(stderrBuf.String())
 			if err != nil {
 				proc.LastError = err.Error()
 				proc.Status = "error"
-				slog.Error("frpc process exited unexpectedly", "relay_id", relayID, "error", err)
+				if stderrOutput != "" {
+					slog.Error("frpc process exited unexpectedly", "relay_id", relayID, "error", err, "stderr", stderrOutput)
+				} else {
+					slog.Error("frpc process exited unexpectedly", "relay_id", relayID, "error", err)
+				}
 			} else {
 				proc.Status = "stopped"
 				proc.LastError = "exited unexpectedly with code 0"
