@@ -31,6 +31,7 @@ func setupConfigVersionTestDB(t *testing.T) func() {
 		&model.OpenFlareWAFRuleGroup{},
 		&model.OpenFlareWAFRuleGroupBinding{},
 		&model.OpenFlareWAFIPGroup{},
+		&model.SystemConfig{},
 	))
 
 	db.SetDB(sqliteDB)
@@ -64,7 +65,6 @@ func TestListConfigVersionsOrdersByCreatedAtDesc(t *testing.T) {
 	}
 	require.NoError(t, conn.Create(newer).Error)
 	require.NoError(t, conn.Create(older).Error)
-	require.Greater(t, older.ID, newer.ID)
 
 	versions, err := ListConfigVersions(ctx)
 	require.NoError(t, err)
@@ -91,7 +91,7 @@ func TestPublishConfigVersionCreatesVersion(t *testing.T) {
 	version, err := PublishConfigVersion(ctx, "tester", false)
 	require.NoError(t, err)
 	require.NotNil(t, version)
-	assert.NotZero(t, version.ID)
+	assert.NotEmpty(t, version.ID)
 	assert.True(t, version.IsActive)
 	assert.Equal(t, "tester", version.CreatedBy)
 	assert.NotEmpty(t, version.Version)

@@ -79,9 +79,9 @@ func ListConfigVersions(ctx context.Context) ([]*model.ConfigVersionSummary, err
 	return model.ListConfigVersionSummaries(ctx)
 }
 
-// GetConfigVersionDetail returns a config version by id.
-func GetConfigVersionDetail(ctx context.Context, id uint) (*model.ConfigVersion, error) {
-	return model.GetConfigVersionByID(ctx, id)
+// GetConfigVersionDetail returns a config version by version.
+func GetConfigVersionDetail(ctx context.Context, version string) (*model.ConfigVersion, error) {
+	return model.GetConfigVersionByVersion(ctx, version)
 }
 
 // GetActiveConfigVersion returns the active config version.
@@ -243,12 +243,12 @@ func PublishConfigVersion(ctx context.Context, createdBy string, force bool) (*m
 }
 
 // ActivateConfigVersion activates an existing config version.
-func ActivateConfigVersion(ctx context.Context, id uint) (*model.ConfigVersion, error) {
-	version, err := model.GetConfigVersionByID(ctx, id)
+func ActivateConfigVersion(ctx context.Context, versionStr string) (*model.ConfigVersion, error) {
+	version, err := model.GetConfigVersionByVersion(ctx, versionStr)
 	if err != nil {
 		return nil, err
 	}
-	if err = model.ActivateConfigVersionTx(ctx, id); err != nil {
+	if err = model.ActivateConfigVersionTx(ctx, versionStr); err != nil {
 		return nil, err
 	}
 	version.IsActive = true
@@ -271,7 +271,7 @@ func CleanupConfigVersions(ctx context.Context, keepCount int) (*CleanupResult, 
 	if len(versions) <= keepCount {
 		return &CleanupResult{DeletedCount: 0, Message: cleanupSuccessMessage}, nil
 	}
-	var deleteIDs []uint
+	var deleteVersions []string
 	for index, version := range versions {
 		if index < keepCount {
 			continue
@@ -279,12 +279,12 @@ func CleanupConfigVersions(ctx context.Context, keepCount int) (*CleanupResult, 
 		if version.IsActive {
 			continue
 		}
-		deleteIDs = append(deleteIDs, version.ID)
+		deleteVersions = append(deleteVersions, version.Version)
 	}
-	if len(deleteIDs) == 0 {
+	if len(deleteVersions) == 0 {
 		return &CleanupResult{DeletedCount: 0, Message: cleanupSuccessMessage}, nil
 	}
-	deletedCount, err := model.DeleteConfigVersionsByIDs(ctx, deleteIDs)
+	deletedCount, err := model.DeleteConfigVersionsByVersions(ctx, deleteVersions)
 	if err != nil {
 		return nil, err
 	}

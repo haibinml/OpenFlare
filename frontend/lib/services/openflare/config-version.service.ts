@@ -29,7 +29,7 @@ export class ConfigVersionService extends OpenFlareBaseService {
     return this.get<ConfigDiffResult>('/diff');
   }
 
-  static getById(id: number): Promise<ConfigVersionDetail> {
+  static getById(id: string): Promise<ConfigVersionDetail> {
     return this.get<ConfigVersionDetail>(`/${id}`);
   }
 
@@ -43,7 +43,7 @@ export class ConfigVersionService extends OpenFlareBaseService {
     );
   }
 
-  static activate(id: number): Promise<ConfigVersionDetail> {
+  static activate(id: string): Promise<ConfigVersionDetail> {
     return this.post<ConfigVersionDetail>(`/${id}/activate`);
   }
 

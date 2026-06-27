@@ -18,6 +18,15 @@ func handleLogicError(c *gin.Context, err error) bool {
 	return apiutil.AbortNotFoundIfMissing(c, err, "记录不存在")
 }
 
+func versionParam(c *gin.Context) (string, bool) {
+	version := c.Param("id")
+	if version == "" {
+		response.AbortBadRequest(c, "无效的版本号")
+		return "", false
+	}
+	return version, true
+}
+
 // ListConfigVersionsHandler lists config versions.
 // @Summary 获取配置版本列表
 // @Description 返回所有已发布的 OpenResty 配置版本摘要，按创建时间倒序排列，需要管理员权限
@@ -50,11 +59,11 @@ func ListConfigVersionsHandler(c *gin.Context) {
 // @Failure 404 {object} response.Any "无权限或版本不存在"
 // @Router /api/v1/d/config-versions/{id} [get]
 func GetConfigVersionHandler(c *gin.Context) {
-	id, ok := apiutil.IDParam(c)
+	versionStr, ok := versionParam(c)
 	if !ok {
 		return
 	}
-	version, err := GetConfigVersionDetail(c.Request.Context(), id)
+	version, err := GetConfigVersionDetail(c.Request.Context(), versionStr)
 	if handleLogicError(c, err) {
 		return
 	}
@@ -152,11 +161,11 @@ func PublishConfigVersionHandler(c *gin.Context) {
 // @Failure 404 {object} response.Any "无权限或版本不存在"
 // @Router /api/v1/d/config-versions/{id}/activate [post]
 func ActivateConfigVersionHandler(c *gin.Context) {
-	id, ok := apiutil.IDParam(c)
+	versionStr, ok := versionParam(c)
 	if !ok {
 		return
 	}
-	version, err := ActivateConfigVersion(c.Request.Context(), id)
+	version, err := ActivateConfigVersion(c.Request.Context(), versionStr)
 	if handleLogicError(c, err) {
 		return
 	}

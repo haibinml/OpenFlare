@@ -14,18 +14,24 @@ import (
 
 // ConfigVersionSummary is the list view for config versions.
 type ConfigVersionSummary struct {
-	ID        uint      `json:"id"`
-	Version   string    `json:"version"`
+	ID        string    `json:"id" gorm:"-"`
+	Version   string    `json:"version" gorm:"primaryKey;column:version"`
 	Checksum  string    `json:"checksum"`
 	IsActive  bool      `json:"is_active"`
 	CreatedBy string    `json:"created_by"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
+// AfterFind hook for ConfigVersionSummary.
+func (cvs *ConfigVersionSummary) AfterFind(_ *gorm.DB) (err error) {
+	cvs.ID = cvs.Version
+	return
+}
+
 // ConfigVersion stores a published OpenResty configuration snapshot.
 type ConfigVersion struct {
-	ID               uint      `json:"id" gorm:"primaryKey;autoIncrement"`
-	Version          string    `json:"version" gorm:"uniqueIndex;size:32;not null"`
+	ID               string    `json:"id" gorm:"-"`
+	Version          string    `json:"version" gorm:"primaryKey;size:32;not null"`
 	SnapshotJSON     string    `json:"snapshot_json" gorm:"type:text;not null"`
 	MainConfig       string    `json:"main_config" gorm:"type:text;not null;default:''"`
 	RenderedConfig   string    `json:"rendered_config" gorm:"type:text;not null"`
@@ -34,6 +40,18 @@ type ConfigVersion struct {
 	IsActive         bool      `json:"is_active" gorm:"not null;default:false;index"`
 	CreatedBy        string    `json:"created_by" gorm:"size:64;not null"`
 	CreatedAt        time.Time `json:"created_at" gorm:"autoCreateTime"`
+}
+
+// AfterFind hook for ConfigVersion.
+func (cv *ConfigVersion) AfterFind(_ *gorm.DB) (err error) {
+	cv.ID = cv.Version
+	return
+}
+
+// AfterCreate hook for ConfigVersion.
+func (cv *ConfigVersion) AfterCreate(_ *gorm.DB) (err error) {
+	cv.ID = cv.Version
+	return
 }
 
 // TableName returns the GORM table name.
@@ -49,23 +67,23 @@ func ListConfigVersionSummaries(ctx context.Context) ([]*ConfigVersionSummary, e
 	}
 	var versions []*ConfigVersionSummary
 	err := conn.Model(&ConfigVersion{}).
-		Select("id", "version", "checksum", "is_active", "created_by", "created_at").
-		Order("created_at desc, id desc").
+		Select("version", "checksum", "is_active", "created_by", "created_at").
+		Order("created_at desc, version desc").
 		Find(&versions).Error
 	return versions, err
 }
 
-// GetConfigVersionByID returns a config version by primary key.
-func GetConfigVersionByID(ctx context.Context, id uint) (*ConfigVersion, error) {
+// GetConfigVersionByVersion returns a config version by version string.
+func GetConfigVersionByVersion(ctx context.Context, version string) (*ConfigVersion, error) {
 	conn := db.DB(ctx)
 	if conn == nil {
 		return nil, errors.New(errDatabaseNotInitialized)
 	}
-	var version ConfigVersion
-	if err := conn.First(&version, id).Error; err != nil {
+	var cv ConfigVersion
+	if err := conn.First(&cv, "version = ?", version).Error; err != nil {
 		return nil, err
 	}
-	return &version, nil
+	return &cv, nil
 }
 
 // GetActiveConfigVersion returns the currently active config version.
@@ -75,7 +93,7 @@ func GetActiveConfigVersion(ctx context.Context) (*ConfigVersion, error) {
 		return nil, errors.New(errDatabaseNotInitialized)
 	}
 	var version ConfigVersion
-	if err := conn.Where("is_active = ?", true).Order("id desc").First(&version).Error; err != nil {
+	if err := conn.Where("is_active = ?", true).Order("version desc").First(&version).Error; err != nil {
 		return nil, err
 	}
 	return &version, nil
@@ -123,7 +141,7 @@ func PublishConfigVersionTx(ctx context.Context, version *ConfigVersion) error {
 }
 
 // ActivateConfigVersionTx marks the given version active and deactivates others.
-func ActivateConfigVersionTx(ctx context.Context, id uint) error {
+func ActivateConfigVersionTx(ctx context.Context, version string) error {
 	conn := db.DB(ctx)
 	if conn == nil {
 		return errors.New(errDatabaseNotInitialized)
@@ -132,20 +150,20 @@ func ActivateConfigVersionTx(ctx context.Context, id uint) error {
 		if err := tx.Model(&ConfigVersion{}).Where("is_active = ?", true).Update("is_active", false).Error; err != nil {
 			return err
 		}
-		return tx.Model(&ConfigVersion{}).Where("id = ?", id).Update("is_active", true).Error
+		return tx.Model(&ConfigVersion{}).Where("version = ?", version).Update("is_active", true).Error
 	})
 }
 
-// DeleteConfigVersionsByIDs removes config versions by ids.
-func DeleteConfigVersionsByIDs(ctx context.Context, ids []uint) (int64, error) {
-	if len(ids) == 0 {
+// DeleteConfigVersionsByVersions removes config versions by versions.
+func DeleteConfigVersionsByVersions(ctx context.Context, versions []string) (int64, error) {
+	if len(versions) == 0 {
 		return 0, nil
 	}
 	conn := db.DB(ctx)
 	if conn == nil {
 		return 0, errors.New(errDatabaseNotInitialized)
 	}
-	result := conn.Where("id IN ?", ids).Delete(&ConfigVersion{})
+	result := conn.Where("version IN ?", versions).Delete(&ConfigVersion{})
 	return result.RowsAffected, result.Error
 }
 

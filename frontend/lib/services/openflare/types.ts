@@ -307,7 +307,7 @@ export interface ProxyRouteMutationPayload {
 }
 
 export interface ConfigVersionSummary {
-  id: number;
+  id: string;
   version: string;
   checksum: string;
   is_active: boolean;
