@@ -117,22 +117,6 @@ go run main.go all
 
 Docker 部署是 Agent 推荐的部署方式。Docker 部署时直接运行 Agent 镜像，该镜像基于 OpenResty 镜像制作，内置 Agent 控制器与 OpenResty 二进制。未显式配置 `node_ip` 时，Agent 会优先通过第三方 API 获取真实出口 IP，避免把 Docker 网桥地址登记为节点 IP。
 
-> [!NOTE]
-> Agent 镜像已完成非 Root 安全加固，统一以普通用户 `openflare` 权限运行，通过内核 capabilities 授权（`cap_net_bind_service`）监听 80/443 特权端口，并自动重定向临时文件和 PID 路径至容器内 `/data` 目录以防止写入冲突。
-
-挂载配置文件：
-
-```bash
-docker pull ghcr.io/rain-kl/openflare-agent:latest
-docker rm -f openflare-agent 2>/dev/null || true
-docker run -d --name openflare-agent --restart unless-stopped \
-  -p 80:80 -p 443:443/tcp -p 443:443/udp \
-  -v ./agent.json:/etc/openflare/agent.json:ro \
-  ghcr.io/rain-kl/openflare-agent:latest
-```
-
-使用环境变量：
-
 ```bash
 docker pull ghcr.io/rain-kl/openflare-agent:latest
 docker rm -f openflare-agent 2>/dev/null || true
@@ -219,26 +203,3 @@ export LOG_LEVEL='info'
 默认情况下，Agent 在 HTTP 心跳成功后会尝试升级为 WebSocket。升级成功时，Server 发布或激活配置会立即通知 Agent；如果 WebSocket 无法建立或意外断开，Agent 会自动退回 HTTP 心跳同步。
 
 WAF 地域规则依赖 Agent 本地 `GeoLite2-Country.mmdb`。Agent 启动时会在 `data_dir/etc/openflare/GeoLite2-Country.mmdb` 初始化内置数据库，并按配置周期尝试更新；更新失败只记录警告，不影响配置同步与 OpenResty reload。
-
-## 升级与卸载
-
-Server：
-
-* Root 用户可在管理端顶栏检查并升级正式版。
-* 如需尝试 preview 版本，可手动检查对应发布。
-* 也可通过上传 Server 二进制的方式执行确认升级。
-
-Agent：
-
-* Agent 默认只跟随正式版自动更新。
-* Agent 自更新从 GitHub Release 拉取目标二进制，优先使用 Release API 的 `digest` 字段做 SHA-256 校验；仅当 digest 为空（历史 Release）时才回退读取同名 `.sha256` 侧车文件，校验通过后才替换本地可执行文件。
-* 安装脚本可重复执行，用于重装或升级 Agent。
-* preview 升级需要手动触发。
-
-卸载 Agent：
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/Rain-kl/OpenFlare/main/scripts/uninstall-agent.sh | bash
-```
-
-卸载脚本会停止 Agent、删除 systemd 服务和安装目录，不会删除本机 OpenResty。
