@@ -352,5 +352,6 @@ frontend/lib/services/<service-name>/
 ```
 
 - 服务类继承 `BaseService`，定义 `basePath`，并暴露有类型的静态方法。
+- **防止回调 `this` 上下文丢失（核心规范）**：在传递服务类的静态方法作为组件事件回调（如 `onClick`）或 React Query 的 `mutationFn`/`queryFn` 时，**禁止直接传递静态方法引用**（如 `mutationFn: DnsAccountService.create`），必须使用箭头函数包裹以防止 `this` 上下文丢失导致运行时崩溃（如 `mutationFn: (payload) => DnsAccountService.create(payload)`）。
 - 在 `frontend/lib/services/index.ts` 中注册新服务。
 
