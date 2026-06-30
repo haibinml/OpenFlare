@@ -16,7 +16,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import {Badge} from "@/components/ui/badge"
 import {Button} from "@/components/ui/button"
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card"
 import {Input} from "@/components/ui/input"
@@ -28,9 +27,6 @@ import {ErrorInline} from "@/components/layout/error"
 import {LoadingStateWithBorder} from "@/components/layout/loading"
 import type {DatabaseCleanupTarget} from "@/lib/services/openflare"
 import {NodeService, OptionService, StatusService, UptimeKumaService,} from "@/lib/services/openflare"
-import {AdminStatusService} from "@/lib/services/admin"
-import {VersionUpgradeDialog} from "@/app/(main)/components/version-upgrade-dialog"
-import {adminUpdateStatusQueryKey, openflarePublicStatusQueryKey,} from "@/lib/hooks/use-openflare-server-upgrade"
 
 import {
   agentOptionEntries,
@@ -47,6 +43,7 @@ import {
 import {UptimeKumaSiteSelectModal} from "./uptimekuma-site-modal"
 
 const optionsQueryKey = ["openflare", "options"] as const
+const openflarePublicStatusQueryKey = ["openflare", "public-status"] as const
 
 const cleanupTargets: Array<{
   target: DatabaseCleanupTarget
@@ -85,7 +82,6 @@ export function OpenFlareOpsSettings() {
     label: string
   } | null>(null)
   const [cleanupRetentionDays, setCleanupRetentionDays] = useState("")
-  const [versionDialogOpen, setVersionDialogOpen] = useState(false)
 
   const optionsQuery = useQuery({
     queryKey: optionsQueryKey,
@@ -102,10 +98,6 @@ export function OpenFlareOpsSettings() {
     queryFn: () => NodeService.getBootstrapToken(),
   })
 
-  const releaseQuery = useQuery({
-    queryKey: adminUpdateStatusQueryKey,
-    queryFn: () => AdminStatusService.getUpdateStatus(),
-  })
 
   useEffect(() => {
     if (!optionsQuery.data) return
@@ -605,50 +597,6 @@ export function OpenFlareOpsSettings() {
         </Card>
       </div>
 
-      <Card className="border-dashed shadow-none">
-        <CardHeader className="flex flex-row items-center justify-between gap-4">
-          <div>
-            <CardTitle className="text-base">版本信息</CardTitle>
-            <CardDescription>
-              检查上游 GitHub Release 并升级当前服务。
-            </CardDescription>
-          </div>
-          <Button type="button" size="sm" onClick={() => setVersionDialogOpen(true)}>
-            管理升级
-          </Button>
-        </CardHeader>
-        <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <InfoCell label="当前版本" value={statusQuery.data?.version ?? releaseQuery.data?.current_version ?? "—"} />
-          <InfoCell
-            label="最新 Release"
-            value={releaseQuery.data?.latest_version ?? "—"}
-          />
-          <div className="rounded-lg border border-dashed px-3 py-2">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">更新状态</p>
-            <div className="mt-2">
-              {releaseQuery.data?.update_available ? (
-                <Badge variant="secondary">有新版本</Badge>
-              ) : (
-                <Badge variant="outline">已是最新</Badge>
-              )}
-            </div>
-          </div>
-          <InfoCell
-            label="启动时间"
-            value={
-              statusQuery.data?.start_time
-                ? new Date(statusQuery.data.start_time * 1000).toLocaleString()
-                : "—"
-            }
-          />
-        </CardContent>
-      </Card>
-
-      <VersionUpgradeDialog
-        open={versionDialogOpen}
-        onOpenChange={setVersionDialogOpen}
-        canUpgrade
-      />
 
       <UptimeKumaSiteSelectModal
         open={uptimeKumaModalOpen}

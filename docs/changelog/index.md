@@ -24,6 +24,7 @@ sidebar: false
 - 修复全局搜索数据源覆盖不全的问题，补全了所有核心业务控制台页面（节点、规则、域名、证书、DNS、源站、WAF、IP组、Pages、版本发布、访问日志、应用记录和性能调优）及缺失的管理员专有页面（存储、数据、推送、日志）的搜索检索支持。
 - 修复系统自更新（Updater）检测上游 GitHub Action Release 时，因资产包名称前缀（`openflare-server`）与仓库名不完全一致导致匹配失败并报错“未找到兼容的 Release”的问题。
 - 修复系统设置页面（`/admin/settings`）基于 URL `tab` 参数的定位逻辑，补全缺失的 `openflare-ops` (OpenFlare) Tab，且在不带参数时默认选中 OpenFlare 选项卡。
+- 移除系统设置中 OpenFlare 标签页下的“版本信息”卡片及对应的升级管理弹窗逻辑。
 
 ## [v3.0.2] - 2026-06-30
 
