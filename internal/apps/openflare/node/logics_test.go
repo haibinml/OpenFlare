@@ -227,6 +227,8 @@ func TestValidateDiscoveryToken(t *testing.T) {
 
 	require.NoError(t, ValidateDiscoveryToken(ctx, bootstrap.DiscoveryToken))
 	require.Error(t, ValidateDiscoveryToken(ctx, "invalid-token"))
+	require.Error(t, ValidateDiscoveryToken(ctx, ""))
+	require.Error(t, ValidateDiscoveryToken(ctx, bootstrap.DiscoveryToken[:len(bootstrap.DiscoveryToken)-1]+"x"))
 }
 
 func TestRequestAgentUpdateWithPreviewTag(t *testing.T) {

@@ -6,6 +6,8 @@ package node
 import (
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -62,6 +64,12 @@ func newRandomToken() (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(buf), nil
+}
+
+func tokenEqual(got, want string) bool {
+	sumGot := sha256.Sum256([]byte(got))
+	sumWant := sha256.Sum256([]byte(want))
+	return subtle.ConstantTimeCompare(sumGot[:], sumWant[:]) == 1
 }
 
 func newServerNodeID() (string, error) {

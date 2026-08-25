@@ -420,7 +420,7 @@ func ValidateDiscoveryToken(ctx context.Context, token string) error {
 	if err != nil {
 		return err
 	}
-	if token != discoveryToken {
+	if !tokenEqual(token, discoveryToken) {
 		return errors.New("discovery Token 无效") // error 消息首字母小写
 	}
 	return nil
