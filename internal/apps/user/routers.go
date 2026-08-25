@@ -15,7 +15,7 @@ import (
 	"github.com/Rain-kl/Wavelet/internal/listener"
 	"github.com/Rain-kl/Wavelet/internal/model"
 	"github.com/Rain-kl/Wavelet/internal/repository"
-	"github.com/Rain-kl/Wavelet/internal/shared"
+	pkgu "github.com/Rain-kl/Wavelet/pkg/util"
 	"github.com/Rain-kl/Wavelet/internal/shared/response"
 	"github.com/Rain-kl/Wavelet/pkg/logger"
 	"github.com/gin-contrib/sessions"
@@ -96,7 +96,7 @@ func setLoginSession(ctx context.Context, c *gin.Context, user *model.User) erro
 // @Produce json
 // @Param request body user.loginRequest true "登录请求参数"
 // @Success 200 {object} response.Any{data=oauth.BasicUserInfo} "登录成功，返回用户信息"
-// @Failure 400 {object} response.Any "用户名或密码错误、帐号已禁用等"
+// @Failure 400 {object} response.Any "用户名或密码错误"
 // @Failure 500 {object} response.Any "服务内部错误"
 // @Router /api/v1/user/login [post]
 func Login(c *gin.Context) {
@@ -118,13 +118,14 @@ func Login(c *gin.Context) {
 
 	user, err := getUserByUsernameOrEmail(ctx, req.Username)
 	if err != nil {
+		pkgu.DummyCheckPassword(req.Password)
 		logger.WarnF(ctx, "[LoginAudit] failed login attempt (username not found) for input: %s, IP: %s", req.Username, c.ClientIP())
 		response.AbortBadRequest(c, errUsernameOrPasswordWrong)
 		return
 	}
 	if !user.IsActive {
 		logger.WarnF(ctx, "[LoginAudit] banned user login attempt for username: %s, ID: %d, IP: %s", user.Username, user.ID, c.ClientIP())
-		response.AbortBadRequest(c, shared.BannedAccount)
+		response.AbortBadRequest(c, errUsernameOrPasswordWrong)
 		return
 	}
 
