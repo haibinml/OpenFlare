@@ -6,6 +6,8 @@ package user
 import (
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -161,7 +163,9 @@ func verifyEmailCode(ctx context.Context, email, scene, code string) bool {
 	if err := db.GetJSON(ctx, codeKey, &storedCode); err != nil {
 		return false
 	}
-	if storedCode != code {
+	sumGot := sha256.Sum256([]byte(strings.TrimSpace(code)))
+	sumWant := sha256.Sum256([]byte(strings.TrimSpace(storedCode)))
+	if subtle.ConstantTimeCompare(sumGot[:], sumWant[:]) != 1 {
 		return false
 	}
 	_ = db.Redis.Del(ctx, db.PrefixedKey(codeKey)).Err()
