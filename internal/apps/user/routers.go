@@ -4,17 +4,14 @@
 package user
 
 import (
-	"context"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/Rain-kl/Wavelet/internal/apps/oauth"
-	"github.com/Rain-kl/Wavelet/internal/infra/config"
 	"github.com/Rain-kl/Wavelet/internal/infra/persistence/idgen"
 	"github.com/Rain-kl/Wavelet/internal/listener"
 	"github.com/Rain-kl/Wavelet/internal/model"
-	"github.com/Rain-kl/Wavelet/internal/repository"
 	pkgu "github.com/Rain-kl/Wavelet/pkg/util"
 	"github.com/Rain-kl/Wavelet/internal/shared/response"
 	"github.com/Rain-kl/Wavelet/pkg/logger"
@@ -53,40 +50,6 @@ type updateProfileRequest struct {
 	Location  string `json:"location"`
 }
 
-func setLoginSession(ctx context.Context, c *gin.Context, user *model.User) error {
-	session := sessions.Default(c)
-	session.Set(oauth.UserIDKey, user.ID)
-	session.Set(oauth.UserNameKey, user.Username)
-	session.Set(oauth.PasswordHashKey, user.Password)
-
-	// 根据系统配置动态设置 Session 过期时间
-	maxAge := config.Config.App.SessionAge
-	isSessionCookie := false
-
-	ttlHours, err := repository.GetIntByKey(ctx, model.ConfigKeyLoginSessionTTLHours)
-	if err == nil {
-		switch {
-		case ttlHours == -1:
-			// 永不过期，设置为 10 年
-			maxAge = 10 * 365 * 24 * 3600
-		case ttlHours > 0:
-			maxAge = ttlHours * 3600
-		case ttlHours == 0:
-			isSessionCookie = true
-		}
-	}
-	session.Options(oauth.GetSessionOptions(maxAge))
-
-	if err := session.Save(); err != nil {
-		return err
-	}
-
-	if isSessionCookie {
-		oauth.StripCookieMaxAgeAndExpires(c.Writer.Header(), config.Config.App.SessionCookieName)
-	}
-
-	return nil
-}
 
 // Login 用户密码登录
 // @Summary 用户密码登录
@@ -150,21 +113,18 @@ func Login(c *gin.Context) {
 		}
 	}
 
-	session := sessions.Default(c)
 	needChangePassword := isPlaintext
-
-	if isPlaintext {
-		session.Set("need_change_password", true)
-	} else {
-		session.Delete("need_change_password")
-	}
 
 	user.LastLoginAt = time.Now()
 	if err := updateLastLogin(ctx, user); err != nil {
 		response.AbortBadRequest(c, "更新登录时间失败，请稍后再试")
 		return
 	}
-	if err := setLoginSession(ctx, c, user); err != nil {
+	extras := map[string]any{}
+	if isPlaintext {
+		extras["need_change_password"] = true
+	}
+	if err := oauth.SetLoginSession(ctx, c, user, extras); err != nil {
 		response.AbortBadRequest(c, errSaveSessionFailed)
 		return
 	}
@@ -254,7 +214,7 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	if err := setLoginSession(ctx, c, &user); err != nil {
+	if err := oauth.SetLoginSession(ctx, c, &user); err != nil {
 		response.AbortBadRequest(c, errSaveSessionFailed)
 		return
 	}

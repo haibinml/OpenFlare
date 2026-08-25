@@ -14,6 +14,7 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	gsessions "github.com/gorilla/sessions"
 )
 
 // GetUserIDFromSession 从 Session 中提取用户 ID
@@ -47,13 +48,29 @@ func hashSessionToken(token string) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-func setLoginSession(ctx context.Context, c *gin.Context, user *model.User) error {
+func rotateSessionID(s sessions.Session) {
+	if inner, ok := s.(interface{ Session() *gsessions.Session }); ok {
+		if sess := inner.Session(); sess != nil {
+			sess.ID = ""
+		}
+	}
+}
+
+// SetLoginSession writes the authenticated user into a freshly rotated session.
+func SetLoginSession(ctx context.Context, c *gin.Context, user *model.User, extras ...map[string]any) error {
 	session := sessions.Default(c)
+	session.Clear()
+	rotateSessionID(session)
+
 	session.Set(UserIDKey, user.ID)
 	session.Set(UserNameKey, user.Username)
 	session.Set(PasswordHashKey, user.Password)
+	if len(extras) > 0 {
+		for key, value := range extras[0] {
+			session.Set(key, value)
+		}
+	}
 
-	// 根据系统配置动态设置 Session 过期时间
 	maxAge := config.Config.App.SessionAge
 	isSessionCookie := false
 
@@ -61,7 +78,6 @@ func setLoginSession(ctx context.Context, c *gin.Context, user *model.User) erro
 	if err == nil {
 		switch {
 		case ttlHours == -1:
-			// 永不过期，设置为 10 年
 			maxAge = 10 * 365 * 24 * 3600
 		case ttlHours > 0:
 			maxAge = ttlHours * 3600

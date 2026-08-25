@@ -176,7 +176,7 @@ func handleCallbackLogin(ctx context.Context, c *gin.Context, source *model.Auth
 
 	user.LastLoginAt = time.Now()
 	_ = repository.UpdateUserLastLoginAt(ctx, user.ID, user.LastLoginAt)
-	if err := setLoginSession(ctx, c, &user); err != nil {
+	if err := SetLoginSession(ctx, c, &user); err != nil {
 		response.AbortInternal(c, err.Error())
 		return
 	}
