@@ -43,6 +43,10 @@ func Challenge(c *gin.Context) {
 	}
 
 	mgr := GetDefaultManager()
+	if mgr == nil {
+		response.AbortInternal(c, "captcha is not configured")
+		return
+	}
 	resp, err := mgr.Generate(c.Request.Context(), req.Scope)
 	if err != nil {
 		response.AbortInternal(c, err.Error())
@@ -75,6 +79,10 @@ func Redeem(c *gin.Context) {
 	}
 
 	mgr := GetDefaultManager()
+	if mgr == nil {
+		response.AbortInternal(c, "captcha is not configured")
+		return
+	}
 	resp, err := mgr.Redeem(c.Request.Context(), req.Token, req.Solutions, req.Scope)
 	if err != nil {
 		response.AbortInternal(c, err.Error())

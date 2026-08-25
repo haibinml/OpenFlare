@@ -9,10 +9,12 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/Rain-kl/Wavelet/internal/infra/config"
 	"github.com/Rain-kl/Wavelet/internal/model"
 	"github.com/Rain-kl/Wavelet/internal/repository"
 	"github.com/Rain-kl/Wavelet/internal/shared/response"
@@ -39,6 +41,15 @@ func TestCapEndpointsAndMiddleware(t *testing.T) {
 	sqliteDB, _, cleanup := testhelper.SetupTestEnvironment(t)
 	defer cleanup()
 
+	oldSecret := config.Config.App.SessionSecret
+	config.Config.App.SessionSecret = "test-captcha-session-secret"
+	once = sync.Once{}
+	defaultManager = nil
+	t.Cleanup(func() {
+		config.Config.App.SessionSecret = oldSecret
+		once = sync.Once{}
+		defaultManager = nil
+	})
 	r := testhelper.NewTestGinEngine()
 
 	// Mount CAPTCHA API endpoints
