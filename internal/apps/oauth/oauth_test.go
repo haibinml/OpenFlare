@@ -691,6 +691,11 @@ func TestCallbackLoginAndUserInfo(t *testing.T) {
 	dbConn := setupTestDB(t)
 	mockRedis := newMockRedisClient()
 	seedTestAuthSource(t, dbConn)
+	dbConn.Create(&model.SystemConfig{
+		Key:   model.ConfigKeyRegistrationEnabled,
+		Value: "true",
+		Type:  "system",
+	})
 
 	var state string
 
@@ -815,14 +820,14 @@ func TestCallbackLoginAndUserInfo(t *testing.T) {
 	}
 
 	t.Run("OIDC login when registration disabled - need bind", func(t *testing.T) {
-		// Disable registration in database
-		dbConn.Create(&model.SystemConfig{
-			Key:   model.ConfigKeyRegistrationEnabled,
-			Value: "false",
+		dbConn.Model(&model.SystemConfig{}).Where("key = ?", model.ConfigKeyRegistrationEnabled).Update("value", "false")
+		repository.ResetSystemConfigRAMCacheForTest()
+		mockRedis.Del(context.Background(), db.PrefixedKey(repository.SystemConfigRedisHashKey)+":"+model.ConfigKeyRegistrationEnabled)
+		t.Cleanup(func() {
+			dbConn.Model(&model.SystemConfig{}).Where("key = ?", model.ConfigKeyRegistrationEnabled).Update("value", "true")
+			repository.ResetSystemConfigRAMCacheForTest()
+			mockRedis.Del(context.Background(), db.PrefixedKey(repository.SystemConfigRedisHashKey)+":"+model.ConfigKeyRegistrationEnabled)
 		})
-		defer func() {
-			dbConn.Where("key = ?", model.ConfigKeyRegistrationEnabled).Delete(&model.SystemConfig{})
-		}()
 
 		var state4 string
 		httpMock4 := newMockOIDCClient(testIssuerURL, testClientID, &state4, "77777", "need_bind_user", "needbind@linux.do", "Need Bind User")

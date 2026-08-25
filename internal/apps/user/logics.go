@@ -62,7 +62,7 @@ func isPasswordLoginEnabled(ctx context.Context) bool {
 func isPasswordRegisterEnabled(ctx context.Context) bool {
 	enabled, err := repository.GetBoolByKey(ctx, model.ConfigKeyPasswordRegisterEnabled)
 	if err != nil {
-		return true
+		return false
 	}
 	return enabled
 }
@@ -70,7 +70,7 @@ func isPasswordRegisterEnabled(ctx context.Context) bool {
 func isRegistrationEnabled(ctx context.Context) bool {
 	enabled, err := repository.GetBoolByKey(ctx, model.ConfigKeyRegistrationEnabled)
 	if err != nil {
-		return true
+		return false
 	}
 	return enabled
 }
