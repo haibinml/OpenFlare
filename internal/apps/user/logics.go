@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"math/big"
 	"strings"
+	"time"
 
 	"github.com/Rain-kl/Wavelet/internal/apps/oauth"
 	db "github.com/Rain-kl/Wavelet/internal/infra/persistence"
@@ -51,6 +52,47 @@ type updateProfileInput struct {
 	Location  string
 }
 
+const (
+	loginFailLimitKeyFormat = "login:fail:%s"
+	loginFailLimitMax       = 20
+	loginFailLimitWindow    = 10 * time.Minute
+)
+
+func loginFailLimitKey(ip string) string {
+	return fmt.Sprintf(loginFailLimitKeyFormat, strings.TrimSpace(ip))
+}
+
+func loginAttemptsBlocked(ctx context.Context, ip string) bool {
+	if db.Redis == nil {
+		return false
+	}
+	n, err := db.Redis.Get(ctx, db.PrefixedKey(loginFailLimitKey(ip))).Int()
+	if err != nil {
+		return false
+	}
+	return n >= loginFailLimitMax
+}
+
+func recordFailedLogin(ctx context.Context, ip string) {
+	if db.Redis == nil {
+		return
+	}
+	key := db.PrefixedKey(loginFailLimitKey(ip))
+	n, err := db.Redis.Incr(ctx, key).Result()
+	if err != nil {
+		return
+	}
+	if n == 1 {
+		_ = db.Redis.Expire(ctx, key, loginFailLimitWindow).Err()
+	}
+}
+
+func clearFailedLogins(ctx context.Context, ip string) {
+	if db.Redis == nil {
+		return
+	}
+	_ = db.Redis.Del(ctx, db.PrefixedKey(loginFailLimitKey(ip))).Err()
+}
 func isPasswordLoginEnabled(ctx context.Context) bool {
 	enabled, err := repository.GetBoolByKey(ctx, model.ConfigKeyPasswordLoginEnabled)
 	if err != nil {

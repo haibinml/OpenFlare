@@ -68,6 +68,10 @@ func Login(c *gin.Context) {
 		response.AbortBadRequest(c, errPasswordLoginDisabled)
 		return
 	}
+	if loginAttemptsBlocked(ctx, c.ClientIP()) {
+		response.AbortBadRequest(c, errLoginRateLimited)
+		return
+	}
 	var req loginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.AbortBadRequest(c, err.Error())
@@ -82,11 +86,13 @@ func Login(c *gin.Context) {
 	user, err := getUserByUsernameOrEmail(ctx, req.Username)
 	if err != nil {
 		pkgu.DummyCheckPassword(req.Password)
+		recordFailedLogin(ctx, c.ClientIP())
 		logger.WarnF(ctx, "[LoginAudit] failed login attempt (username not found) for input: %s, IP: %s", req.Username, c.ClientIP())
 		response.AbortBadRequest(c, errUsernameOrPasswordWrong)
 		return
 	}
 	if !user.IsActive {
+		recordFailedLogin(ctx, c.ClientIP())
 		logger.WarnF(ctx, "[LoginAudit] banned user login attempt for username: %s, ID: %d, IP: %s", user.Username, user.ID, c.ClientIP())
 		response.AbortBadRequest(c, errUsernameOrPasswordWrong)
 		return
@@ -96,6 +102,7 @@ func Login(c *gin.Context) {
 	isPlaintext := !user.IsPasswordEncrypted()
 
 	if !user.CheckPassword(req.Password) {
+		recordFailedLogin(ctx, c.ClientIP())
 		logger.WarnF(ctx, "[LoginAudit] failed login attempt (incorrect password) for username: %s, ID: %d, IP: %s", user.Username, user.ID, c.ClientIP())
 		response.AbortBadRequest(c, errUsernameOrPasswordWrong)
 		return
@@ -124,6 +131,7 @@ func Login(c *gin.Context) {
 	if isPlaintext {
 		extras["need_change_password"] = true
 	}
+	clearFailedLogins(ctx, c.ClientIP())
 	if err := oauth.SetLoginSession(ctx, c, user, extras); err != nil {
 		response.AbortBadRequest(c, errSaveSessionFailed)
 		return

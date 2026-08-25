@@ -27,6 +27,7 @@ const (
 	errUnsupportedEmailScene        = "不支持的验证场景"
 	errEmailAlreadyRegistered       = "该邮箱已被注册"
 	errEmailCodeCooldown            = "验证码发送频繁，请稍后再试"
+	errLoginRateLimited             = "登录尝试过于频繁，请稍后再试"
 	errEmailFormatInvalid           = "邮箱格式不正确"
 	errEmailAlreadyBound            = "该邮箱已被其他账号绑定"
 	errRenderEmailTemplateFailed    = "渲染验证邮件模板失败：%w"
