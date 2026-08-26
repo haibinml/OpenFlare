@@ -110,14 +110,9 @@ func SendFlaredPong(nodeID string) bool {
 	if client == nil {
 		return false
 	}
-	select {
-	case <-client.done:
-		return false
-	case client.send <- Message{Type: flaredMessageTypePong}:
-		return true
-	default:
-		return false
-	}
+	// 委托 enqueue：closed 检查与发送不能合并在同一个 select（两 case 同时
+	// 就绪时 Go 随机选择，close 后仍可能投递成功）。
+	return client.enqueue(Message{Type: flaredMessageTypePong})
 }
 
 func (c *flaredClient) readPump() {
