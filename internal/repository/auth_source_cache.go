@@ -119,11 +119,12 @@ func startAuthSourceCacheInvalidationListener() {
 	authSourceListenerCtx, authSourceListenerCancel = context.WithCancel(context.Background())
 	authSourceListenerDone = make(chan struct{})
 
+	redisClient := db.Redis // 捕获当前客户端：goroutine 不读可变全局，避免与测试置空 db.Redis 竞争
 	go func() {
 		listenerCtx := authSourceListenerCtx
 		defer close(authSourceListenerDone)
 
-		pubsub := db.Redis.Subscribe(listenerCtx, authSourceInvalidationChannel)
+		pubsub := redisClient.Subscribe(listenerCtx, authSourceInvalidationChannel)
 		defer func() {
 			_ = pubsub.Close()
 		}()

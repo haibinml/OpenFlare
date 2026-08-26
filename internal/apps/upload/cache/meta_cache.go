@@ -30,6 +30,7 @@ var (
 	uploadMetaListenerOnce   sync.Once
 	uploadMetaListenerCtx    context.Context
 	uploadMetaListenerCancel context.CancelFunc
+	uploadMetaListenerDone   chan struct{}
 )
 
 func uploadMetaRedisKey(id uint64) string {
@@ -49,9 +50,13 @@ func ensureUploadMetaCacheListener() {
 
 func startUploadMetaCacheInvalidationListener() {
 	uploadMetaListenerCtx, uploadMetaListenerCancel = context.WithCancel(context.Background())
+	uploadMetaListenerDone = make(chan struct{})
+	// 捕获当前客户端：goroutine 不再读可变全局 db.Redis，测试置空/替换全局时不会数据竞争
+	redisClient := db.Redis
 
 	go func() {
-		pubsub := db.Redis.Subscribe(uploadMetaListenerCtx, uploadMetaInvalidationChan)
+		defer close(uploadMetaListenerDone)
+		pubsub := redisClient.Subscribe(uploadMetaListenerCtx, uploadMetaInvalidationChan)
 		defer func() {
 			_ = pubsub.Close()
 		}()
@@ -144,7 +149,11 @@ func ResetUploadMetaCacheForTest() {
 func StopUploadMetaCacheListener() {
 	if uploadMetaListenerCancel != nil {
 		uploadMetaListenerCancel()
+		if uploadMetaListenerDone != nil {
+			<-uploadMetaListenerDone // 等待 goroutine 退出，保证之后置空 db.Redis 不再竞争
+		}
 		uploadMetaListenerCancel = nil
+		uploadMetaListenerDone = nil
 	}
 	uploadMetaListenerOnce = sync.Once{}
 }

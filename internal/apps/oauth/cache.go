@@ -59,11 +59,12 @@ func startTokenCacheInvalidationListener() {
 	tokenListenerCtx, tokenListenerCancel = context.WithCancel(context.Background())
 	tokenListenerDone = make(chan struct{})
 
+	redisClient := db.Redis // 捕获当前客户端：goroutine 不读可变全局，避免与测试置空 db.Redis 竞争
 	go func() {
 		listenerCtx := tokenListenerCtx
 		defer close(tokenListenerDone)
 
-		pubsub := db.Redis.Subscribe(listenerCtx, oauthTokenInvalidationChannel)
+		pubsub := redisClient.Subscribe(listenerCtx, oauthTokenInvalidationChannel)
 		defer func() {
 			_ = pubsub.Close()
 		}()
@@ -102,11 +103,12 @@ func startUserCacheInvalidationListener() {
 	userListenerCtx, userListenerCancel = context.WithCancel(context.Background())
 	userListenerDone = make(chan struct{})
 
+	redisClient := db.Redis // 捕获当前客户端：goroutine 不读可变全局，避免与测试置空 db.Redis 竞争
 	go func() {
 		listenerCtx := userListenerCtx
 		defer close(userListenerDone)
 
-		pubsub := db.Redis.Subscribe(listenerCtx, oauthUserInvalidationChannel)
+		pubsub := redisClient.Subscribe(listenerCtx, oauthUserInvalidationChannel)
 		defer func() {
 			_ = pubsub.Close()
 		}()

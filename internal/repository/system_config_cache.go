@@ -105,11 +105,12 @@ func startSystemConfigCacheInvalidationListener() {
 	systemConfigListenerCtx, systemConfigListenerCancel = context.WithCancel(context.Background())
 	systemConfigListenerDone = make(chan struct{})
 
+	redisClient := db.Redis // 捕获当前客户端：goroutine 不读可变全局，避免与测试置空 db.Redis 竞争
 	go func() {
 		listenerCtx := systemConfigListenerCtx
 		defer close(systemConfigListenerDone)
 
-		pubsub := db.Redis.Subscribe(listenerCtx, SystemConfigBroadcastChannel)
+		pubsub := redisClient.Subscribe(listenerCtx, SystemConfigBroadcastChannel)
 		defer func() {
 			_ = pubsub.Close()
 		}()

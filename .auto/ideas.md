@@ -38,3 +38,23 @@
   frpc/frps 慢测试注入 backoff（为省 ~40s 改生产时序逻辑，不值）。
 - 未来如继续：可周期跑 `go test -race ./...` 全量（frpc/frps 慢套件）；
   或前端 a11y 用 axe 做浏览器级审计（超出 eslint 静态规则）。
+
+## 本会话新增（runs #39-#43）
+
+已修复：
+- agent auth_cache negative 缓存无上限 → 10k 上限+过期清理（DoS 防护）
+- relay/flared 与 agent 三份重复 authenticateAccessToken → 共享 agent 版（负缓存共享，DB 压力下降）
+- websocket 三 hub：runWritePump 抽取、wsClientCore 嵌入（close/enqueue 单份）、broadcastAgent 合并
+- frps/frpc TOML 注入 → pkg/protocol/toml.go TOMLQuote 转义全部插值
+
+评估后不修/暂缓：
+- cloudflare listMemberItems、config_version snapshot 证书循环的 N+1：管理端小 N 低频，
+  加批量 repo API 属投机优化；若未来组员数量变大再做 ListZoneDomainsByIDs。
+- fatcontext ×3（oauth/upload/auth_source cache listener）：别名赋值误报，非嵌套包装。
+- objectstore newOSSBackend/newWebDAVBackend 恒 nil error：跨后端工厂签名统一，刻意设计。
+- edge/updater assetNameForGOOSGOARCH 恒 "linux"：跨平台预留参数，刻意泛化。
+- agent ResolverDirective explicitResolvers 原样插入 nginx conf：管理员配置属可信输入；
+  若未来开放给低权限角色需加格式校验（IP 解析）。
+- pkg/render/openresty 管理端旋钮（ClientMaxBodySize 等）原样插值：管理员权限范围内。
+- frontend/settings/profile.tsx（858 行）超 AGENTS.md ~600 行指引：存量组件，拆分属
+  纯重构无质量增益，暂缓；若后续要改该页面功能时顺手拆 components/。
