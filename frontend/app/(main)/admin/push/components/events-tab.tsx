@@ -434,6 +434,7 @@ export function EventsTab() {
                       onCheckedChange={() =>
                         toggleEventMutation.mutate(event.id)
                       }
+                      aria-label={t('colStatus')}
                       className='scale-75'
                     />
                   </TableCell>
@@ -448,6 +449,7 @@ export function EventsTab() {
                             <Button
                               variant='ghost'
                               size='icon'
+                              aria-label={t('configure')}
                               className='h-6 w-6 text-muted-foreground hover:text-foreground'
                               onClick={() => handleEditEventClick(event)}
                             >
@@ -466,6 +468,7 @@ export function EventsTab() {
                             <Button
                               variant='ghost'
                               size='icon'
+                              aria-label={t('delete')}
                               className='h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-destructive/10'
                               disabled={deleteEventMutation.isPending}
                               onClick={() => setDeleteTarget(event)}

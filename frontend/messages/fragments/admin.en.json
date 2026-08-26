@@ -1237,7 +1237,8 @@
         "fetchFailed": "Failed to fetch analytics",
         "requestVolume": "Requests",
         "requestCount": "Request count",
-        "countTimes": "{count} ({percent}%)"
+        "countTimes": "{count} ({percent}%)",
+        "refresh": "Refresh"
       },
       "appLogs": {
         "loading": "Loading...",

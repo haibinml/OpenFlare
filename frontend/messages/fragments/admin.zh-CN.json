@@ -1237,7 +1237,8 @@
         "fetchFailed": "获取数据统计失败",
         "requestVolume": "请求量",
         "requestCount": "请求次数",
-        "countTimes": "{count} 次 ({percent}%)"
+        "countTimes": "{count} 次 ({percent}%)",
+        "refresh": "刷新"
       },
       "appLogs": {
         "loading": "加载中...",

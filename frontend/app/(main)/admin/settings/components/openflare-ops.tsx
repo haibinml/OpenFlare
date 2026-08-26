@@ -311,7 +311,7 @@ export function OpenFlareOpsSettings() {
                 value={fields.geoip_provider}
                 onValueChange={(value) => updateField('geoip_provider', value)}
               >
-                <SelectTrigger>
+                <SelectTrigger aria-label={t('geo.mode')}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -443,8 +443,9 @@ export function OpenFlareOpsSettings() {
             </p>
           </div>
           <div className='space-y-1.5'>
-            <Label>{t('discovery.command')}</Label>
+            <Label htmlFor='discovery-command'>{t('discovery.command')}</Label>
             <Textarea
+              id='discovery-command'
               readOnly
               value={discoveryCommand || t('discovery.commandHint')}
               className='min-h-24 font-mono text-xs'
@@ -542,7 +543,7 @@ export function OpenFlareOpsSettings() {
                       updateField('uptime_kuma_monitor_scope', value)
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger aria-label={t('kuma.scope')}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -644,8 +645,9 @@ function FieldInput({
 }) {
   return (
     <div className='space-y-1.5'>
-      <Label>{label}</Label>
+      <Label htmlFor={`field-${label}`}>{label}</Label>
       <Input
+        id={`field-${label}`}
         type={type}
         value={value}
         placeholder={placeholder}
@@ -677,7 +679,7 @@ function ToggleRow({
           </p>
         ) : null}
       </div>
-      <Switch checked={checked} onCheckedChange={onChange} />
+      <Switch checked={checked} onCheckedChange={onChange} aria-label={label} />
     </div>
   );
 }

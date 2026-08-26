@@ -100,3 +100,18 @@
   task AppendLog 走 DB 非内存累积；push escapeJSONString 用法正确。
 - 结论：Go 静态可发现的低垂果实已穷尽。剩余方向：frontend axe a11y 浏览器级审计、
   周期性 -race 重跑（上次 #49 干净）、运维类增长审查。
+
+## Run #54（认证页 axe a11y 审计+修复，451ce525）
+
+已修（复扫验证生效）：
+- 布局级全局：sidebar 折叠按钮 aria-label、Sidebar role=navigation（region 18 节点/页清零）、
+  header Kbd 对比度 text-foreground/70、空态/错误/加载 h3→p（heading-order 清零）。
+- 页面级：dashboard 4 个 Progress aria-label、users 分页 prev/next aria-label、
+  admin/system 无内容 Tabs→aria-pressed 按钮组（aria-valid-attr-value critical 清零）。
+- / 与 /admin/system 现 axe 0 违规。
+
+后续可做（页面级批量，工作量大）：
+- admin 数据表格行内操作图标按钮（编辑/删除）与 Switch 开关无 aria-label —— 每张管理表逐个补；
+- muted 文本对比度（card description、radix tabs trigger、primary 按钮文字）—— shadcn 默认色在浅色主题下 axe 判 fail，改主题变量影响面大需设计确认。
+- 审计环境复用：后端 :3100 + CONFIG_PATH=/tmp/of-audit/config.yaml（sqlite）、docker redis --network host、
+  pnpm dev --port 3002 WAVELET_BACKEND_URL=:3100；admin 密码 reset-passwd 重置。注意 :3000 是生产实例勿动。
