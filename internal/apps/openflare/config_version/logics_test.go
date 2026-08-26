@@ -15,6 +15,7 @@ import (
 	"github.com/Rain-kl/Wavelet/internal/apps/openflare/waf"
 	db "github.com/Rain-kl/Wavelet/internal/infra/persistence"
 	"github.com/Rain-kl/Wavelet/internal/model"
+	"github.com/Rain-kl/Wavelet/pkg/cache/ram"
 	openrestyrender "github.com/Rain-kl/Wavelet/pkg/render/openresty"
 	"github.com/glebarez/sqlite"
 	"github.com/stretchr/testify/assert"
@@ -24,6 +25,9 @@ import (
 
 func setupConfigVersionTestDB(t *testing.T) func() {
 	t.Helper()
+
+	// 同 origin_error_page_snapshot_test.go：换 DB 前后重置进程级 RAM 配置缓存。
+	ram.ResetForTest()
 
 	sqliteDB, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{
 		DisableForeignKeyConstraintWhenMigrating: true,
@@ -43,6 +47,7 @@ func setupConfigVersionTestDB(t *testing.T) func() {
 	db.SetDB(sqliteDB)
 	return func() {
 		db.SetDB(nil)
+		ram.ResetForTest()
 	}
 }
 

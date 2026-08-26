@@ -10,6 +10,7 @@ import (
 
 	db "github.com/Rain-kl/Wavelet/internal/infra/persistence"
 	"github.com/Rain-kl/Wavelet/internal/model"
+	"github.com/Rain-kl/Wavelet/pkg/cache/ram"
 	"github.com/glebarez/sqlite"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,6 +19,10 @@ import (
 
 func setupOriginErrorPageSnapshotDB(t *testing.T) func() {
 	t.Helper()
+
+	// repository 读配置会写进程级 RAM 缓存（跨测试存活），换 DB 前后必须
+	// 重置，否则 shuffle 下先跑的用例会污染后跑的用例。
+	ram.ResetForTest()
 
 	sqliteDB, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{
 		DisableForeignKeyConstraintWhenMigrating: true,
@@ -28,6 +33,7 @@ func setupOriginErrorPageSnapshotDB(t *testing.T) func() {
 
 	return func() {
 		db.SetDB(nil)
+		ram.ResetForTest()
 	}
 }
 
