@@ -141,3 +141,17 @@ value='' 时 placeholder 不显示，combobox 无名需 aria-label 兜底。
 - 抽查其余页面（websites/[zoneId]、origins/detail、responses 编辑器等富交互页）
   ——contrast 已由主题修复覆盖，预期只剩个别控件名。
 - 周期性 go test -race ./... 全量重跑（上次干净为 run #49 后）。
+
+## Run #56（富交互页抽查，keep，63e3b852）
+
+- 扫描 11 页：websites/origins/proxy-routes/certificates/dns-accounts 直接 0 违规
+  （indigo-600 主题修复已覆盖全站 contrast）。
+- 修复 3 处并复扫归零：
+  1. cloudflare/components/sync-tasks-panel.tsx 状态筛选 SelectTrigger 加 aria-label
+     （Radix SelectValue value='' 时 placeholder 不渲染，combobox 无名）。
+  2. components/common/settings/access-token.tsx 安全提示 text-amber-600→amber-700
+     （12px 小字对比度不足）。
+  3. settings/notifications 面包屑页缺 h1 → sr-only h1。教训：h1 不能作为
+     BreadcrumbList 子元素（axe list 规则报 list 语义破坏），须放 <Breadcrumb> 外；
+     BreadcrumbPage 无 asChild 支持。
+- a11y 维度至此穷尽：累计 14 页 axe 全部 0 违规。

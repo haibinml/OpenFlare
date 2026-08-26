@@ -23,7 +23,6 @@ type flaredClient struct {
 	wsClientCore
 }
 
-
 type flaredHub struct {
 	mu      sync.RWMutex
 	clients map[string]*flaredClient

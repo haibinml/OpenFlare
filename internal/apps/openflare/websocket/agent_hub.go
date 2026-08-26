@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-
 )
 
 const (
@@ -34,8 +33,6 @@ type agentClient struct {
 	remoteAddr string
 	onStatus   AgentStatusHandler
 }
-
-
 
 type agentHub struct {
 	mu      sync.RWMutex

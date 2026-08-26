@@ -35,8 +35,12 @@ func TestWSClientCoreEnqueueFailsAfterClose(t *testing.T) {
 		done: make(chan struct{}),
 	}
 	core.close()
-	if core.enqueue(Message{Type: messageTypePing}) {
-		t.Fatal("enqueue must fail after close")
+	// 循环多次：若 close 检查与发送合并在同一个 select，两 case 同时就绪时
+	// Go 随机选择，单次调用可能碰巧通过。
+	for range 50 {
+		if core.enqueue(Message{Type: messageTypePing}) {
+			t.Fatal("enqueue must fail after close")
+		}
 	}
 }
 

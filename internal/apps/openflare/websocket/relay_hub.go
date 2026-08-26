@@ -17,7 +17,6 @@ type relayClient struct {
 	wsClientCore
 }
 
-
 type relayHub struct {
 	mu      sync.RWMutex
 	clients map[string]*relayClient
