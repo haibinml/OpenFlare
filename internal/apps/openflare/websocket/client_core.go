@@ -27,7 +27,9 @@ func (c *wsClientCore) close() {
 	}
 	c.once.Do(func() {
 		close(c.done)
-		_ = c.conn.Close()
+		if c.conn != nil {
+			_ = c.conn.Close()
+		}
 	})
 }
 
