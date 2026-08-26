@@ -115,3 +115,29 @@
 - muted 文本对比度（card description、radix tabs trigger、primary 按钮文字）—— shadcn 默认色在浅色主题下 axe 判 fail，改主题变量影响面大需设计确认。
 - 审计环境复用：后端 :3100 + CONFIG_PATH=/tmp/of-audit/config.yaml（sqlite）、docker redis --network host、
   pnpm dev --port 3002 WAVELET_BACKEND_URL=:3100；admin 密码 reset-passwd 重置。注意 :3000 是生产实例勿动。
+
+## Run #54-#55（认证页 a11y 审计，两轮 keep）
+
+已修复（浏览器 axe 复扫验证）：
+- 全局布局：sidebar 折叠按钮 aria-label、Sidebar role=navigation、header Kbd 对比度、
+  dashboard Progress aria-label、分页 prev/next、空态/加载 h3→p、admin/system Tabs→aria-pressed。
+- 主题级根因：--primary indigo-500(#6366f1) 白字对比度仅 4.27(AA 需 4.5) → indigo-600
+  oklch(51.1% 0.262 276.966) ≈6.8，一处修复全站 contrast 清零。
+- 控件名：access-analytics 刷新、events-tab Switch/编辑/删除、openflare-ops Switch/Select/
+  Input(htmlFor)/Textarea、table-browser/sql-console SelectTrigger；heading-order：眉题
+  h4→p(cache-manager/user-detail-sheet)、卡片题 h3→p(task-manager/file-manager)。
+- 结果：dashboard、admin/system、admin/settings、admin/logs、admin/push、admin/tasks、
+  admin/database、files 共 8 页 axe 0 违规。
+
+审计方法（可复用）：后端 :3100（CONFIG_PATH=/tmp/of-audit/config.yaml，sqlite，
+api_prefix 必须显式 /api）+ docker redis --network host（本机 bridge NAT 坏）+
+pnpm dev --port 3002 WAVELET_BACKEND_URL=:3100 + admin 密码经 reset-passwd 重置。
+axe 注入：eval 建 CDN script → Promise 轮询 window.axe → axe.run。
+教训：表单页异步渲染，须 wait≥5s 再扫否则漏报 label 规则；Radix SelectValue
+value='' 时 placeholder 不显示，combobox 无名需 aria-label 兜底。
+
+## 剩余可做
+
+- 抽查其余页面（websites/[zoneId]、origins/detail、responses 编辑器等富交互页）
+  ——contrast 已由主题修复覆盖，预期只剩个别控件名。
+- 周期性 go test -race ./... 全量重跑（上次干净为 run #49 后）。

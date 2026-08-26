@@ -222,7 +222,7 @@ export function SyncTasksPanel() {
               setPage(1);
             }}
           >
-            <SelectTrigger size='sm' className='w-[120px]'>
+            <SelectTrigger size='sm' className='w-[120px]' aria-label={t('statusPlaceholder')}>
               <SelectValue placeholder={t('statusPlaceholder')} />
             </SelectTrigger>
             <SelectContent>
