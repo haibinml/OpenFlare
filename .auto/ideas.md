@@ -87,3 +87,16 @@
   scripts/update_go_license.sh（license-check 会拦）。
 - 已过期记录：go test ./internal/... ./pkg/... 现全过（94 ok）——"main 上测试失败"
   不再成立。scripts/、docs/ 下 Go 文件用扩展 linter 扫过：0 issues。
+
+## Run #50（发现型 linter 扫描，全证伪——勿重跑这些维度）
+
+- errchkjson 12 处：全部为不可能失败的 json.Marshal（纯 string/int/[]string
+  结构体；admin/logs/routers.go:131 与 waf/ip_group_sync.go:255 的 "unsafe type"
+  是传递性保守标记，RawMessage/time.Time 内容来自必然成功的 marshal）。
+- spancheck 1 处（pkg/trace/trace.go:61）：误报，helper 正常返回 span，
+  唯一调用方 internal/infra/task/executor.go:242 有 defer span.End()。
+- unparam ×2（objectstore oss/webdav 恒 nil error）：已在 #43 前评估为跨后端工厂签名统一。
+- 性能排查：正则全部包级编译（无函数内 MustCompile）；包级 map 全为有界静态注册表；
+  task AppendLog 走 DB 非内存累积；push escapeJSONString 用法正确。
+- 结论：Go 静态可发现的低垂果实已穷尽。剩余方向：frontend axe a11y 浏览器级审计、
+  周期性 -race 重跑（上次 #49 干净）、运维类增长审查。
