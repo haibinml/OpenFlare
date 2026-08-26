@@ -20,6 +20,7 @@ import (
 	"github.com/Rain-kl/Wavelet/internal/model"
 	"github.com/Rain-kl/Wavelet/internal/repository"
 	"github.com/Rain-kl/Wavelet/pkg/logger"
+	"github.com/Rain-kl/Wavelet/pkg/util"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -91,7 +92,7 @@ func startSourceLeaseHeartbeat(
 	workCtx, cancel := context.WithCancel(ctx)
 	done := make(chan error, 1)
 	heartbeat := &sourceLeaseHeartbeat{cancel: cancel, done: done}
-	go func() {
+	util.Go(func() {
 		ticker := time.NewTicker(interval)
 		defer ticker.Stop()
 		for {
@@ -117,7 +118,7 @@ func startSourceLeaseHeartbeat(
 				}
 			}
 		}
-	}()
+	})
 	return workCtx, heartbeat, nil
 }
 

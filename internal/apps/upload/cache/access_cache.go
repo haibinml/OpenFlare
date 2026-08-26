@@ -17,6 +17,7 @@ import (
 	db "github.com/Rain-kl/Wavelet/internal/infra/persistence"
 	"github.com/Rain-kl/Wavelet/internal/model"
 	"github.com/Rain-kl/Wavelet/internal/repository"
+	"github.com/Rain-kl/Wavelet/pkg/util"
 )
 
 const fileAccessInvalidationChannel = "upload:file_access_invalidation"
@@ -57,7 +58,7 @@ func startAccessCacheInvalidationListener() {
 		return
 	}
 
-	go func() {
+	util.Go(func() {
 		pubsub := redis.Subscribe(
 			context.Background(),
 			objectstore.ConfigInvalidationChannel,
@@ -70,7 +71,7 @@ func startAccessCacheInvalidationListener() {
 		for range pubsub.Channel() {
 			ResetAccessCaches()
 		}
-	}()
+	})
 }
 
 // IsFilePublic reports whether uploadType is in the public access whitelist.

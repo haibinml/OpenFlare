@@ -18,6 +18,7 @@ import (
 	"github.com/Rain-kl/Wavelet/internal/apps/agent/state"
 	"github.com/Rain-kl/Wavelet/internal/apps/agent/wsclient"
 	edgeheartbeat "github.com/Rain-kl/Wavelet/internal/apps/edge/heartbeat"
+	"github.com/Rain-kl/Wavelet/pkg/util"
 )
 
 // HeartbeatService handles node registration and periodic heartbeat reporting.
@@ -200,12 +201,12 @@ func (r *Runner) startWebSocket(ctx context.Context, nodeID string) (<-chan erro
 		return nil, err
 	}
 	done := make(chan error, 1)
-	go func() {
+	util.Go(func() {
 		defer func() {
 			_ = conn.Close()
 		}()
 		done <- r.runWebSocket(ctx, nodeID, conn)
-	}()
+	})
 	return done, nil
 }
 
@@ -251,7 +252,7 @@ func (r *Runner) runWebSocket(ctx context.Context, nodeID string, conn protocol.
 	childCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	go func() {
+	util.Go(func() {
 		for {
 			select {
 			case <-childCtx.Done():
@@ -264,7 +265,7 @@ func (r *Runner) runWebSocket(ctx context.Context, nodeID string, conn protocol.
 				}
 			}
 		}
-	}()
+	})
 
 	wsConn, ok := conn.(*wsclient.Connection)
 	if !ok {

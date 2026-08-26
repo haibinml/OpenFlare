@@ -22,6 +22,7 @@ import (
 
 	"github.com/Rain-kl/Wavelet/internal/apps/flared/config"
 	service "github.com/Rain-kl/Wavelet/pkg/protocol"
+	"github.com/Rain-kl/Wavelet/pkg/util"
 )
 
 const (
@@ -180,7 +181,7 @@ func (m *Manager) restartProcess(ctx context.Context, relayID string, configPath
 	}
 	m.processes[relayID] = proc
 
-	go func() {
+	util.Go(func() {
 		backoff := 1 * time.Second
 		const maxBackoff = 60 * time.Second
 
@@ -262,7 +263,7 @@ func (m *Manager) restartProcess(ctx context.Context, relayID string, configPath
 			}
 			t.Stop()
 		}
-	}()
+	})
 }
 
 // Stop cancels and removes all managed frpc processes.

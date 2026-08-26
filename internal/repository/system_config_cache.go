@@ -14,6 +14,7 @@ import (
 
 	db "github.com/Rain-kl/Wavelet/internal/infra/persistence"
 	"github.com/Rain-kl/Wavelet/pkg/cache/ram"
+	"github.com/Rain-kl/Wavelet/pkg/util"
 )
 
 const (
@@ -106,7 +107,7 @@ func startSystemConfigCacheInvalidationListener() {
 	systemConfigListenerDone = make(chan struct{})
 
 	redisClient := db.Redis // 捕获当前客户端：goroutine 不读可变全局，避免与测试置空 db.Redis 竞争
-	go func() {
+	util.Go(func() {
 		listenerCtx := systemConfigListenerCtx
 		defer close(systemConfigListenerDone)
 
@@ -115,10 +116,10 @@ func startSystemConfigCacheInvalidationListener() {
 			_ = pubsub.Close()
 		}()
 
-		go func() {
+		util.Go(func() {
 			<-listenerCtx.Done()
 			_ = pubsub.Close()
-		}()
+		})
 
 		for msg := range pubsub.Channel() {
 			var payload systemConfigBroadcastMessage
@@ -134,7 +135,7 @@ func startSystemConfigCacheInvalidationListener() {
 				ram.Delete(payload.Type, key)
 			}
 		}
-	}()
+	})
 }
 
 // StopSystemConfigCacheListener stops the Redis Pub/Sub subscription listener and resets the sync.Once guard.

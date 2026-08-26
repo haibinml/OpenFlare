@@ -13,6 +13,7 @@ import (
 	db "github.com/Rain-kl/Wavelet/internal/infra/persistence"
 	"github.com/Rain-kl/Wavelet/internal/model"
 	"github.com/Rain-kl/Wavelet/pkg/cache/ram"
+	"github.com/Rain-kl/Wavelet/pkg/util"
 )
 
 const (
@@ -120,7 +121,7 @@ func startAuthSourceCacheInvalidationListener() {
 	authSourceListenerDone = make(chan struct{})
 
 	redisClient := db.Redis // 捕获当前客户端：goroutine 不读可变全局，避免与测试置空 db.Redis 竞争
-	go func() {
+	util.Go(func() {
 		listenerCtx := authSourceListenerCtx
 		defer close(authSourceListenerDone)
 
@@ -129,16 +130,16 @@ func startAuthSourceCacheInvalidationListener() {
 			_ = pubsub.Close()
 		}()
 
-		go func() {
+		util.Go(func() {
 			<-listenerCtx.Done()
 			_ = pubsub.Close()
-		}()
+		})
 
 		for range pubsub.Channel() {
 			authSourceActiveRAM.InvalidateAll()
 			authSourceByNameRAM.InvalidateAll()
 		}
-	}()
+	})
 }
 
 func publishAuthSourceRAMInvalidation(ctx context.Context) {

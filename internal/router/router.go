@@ -23,6 +23,7 @@ import (
 	"github.com/Rain-kl/Wavelet/internal/apps/oauth"
 	"github.com/Rain-kl/Wavelet/internal/infra/config"
 	otel_trace "github.com/Rain-kl/Wavelet/pkg/trace"
+	"github.com/Rain-kl/Wavelet/pkg/util"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/redis"
 	"github.com/gin-gonic/gin"
@@ -93,12 +94,12 @@ func Serve(onStarted func()) {
 		onStarted()
 	}
 
-	go func() {
+	util.Go(func() {
 		log.Printf("[API] server listening on %s\n", config.Config.App.Addr)
 		if err := srv.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("[API] server failed: %v\n", err)
 		}
-	}()
+	})
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)

@@ -13,6 +13,7 @@ import (
 	"github.com/Rain-kl/Wavelet/internal/model"
 	"github.com/Rain-kl/Wavelet/internal/repository"
 	"github.com/Rain-kl/Wavelet/pkg/cache/ram"
+	"github.com/Rain-kl/Wavelet/pkg/util"
 )
 
 const (
@@ -54,17 +55,17 @@ func startUploadMetaCacheInvalidationListener() {
 	// 捕获当前客户端：goroutine 不再读可变全局 db.Redis，测试置空/替换全局时不会数据竞争
 	redisClient := db.Redis
 
-	go func() {
+	util.Go(func() {
 		defer close(uploadMetaListenerDone)
 		pubsub := redisClient.Subscribe(uploadMetaListenerCtx, uploadMetaInvalidationChan)
 		defer func() {
 			_ = pubsub.Close()
 		}()
 
-		go func() {
+		util.Go(func() {
 			<-uploadMetaListenerCtx.Done()
 			_ = pubsub.Close()
-		}()
+		})
 
 		for msg := range pubsub.Channel() {
 			var payload uploadMetaInvalidationMessage
@@ -74,7 +75,7 @@ func startUploadMetaCacheInvalidationListener() {
 			}
 			uploadMetaRAM.Invalidate(payload.ID)
 		}
-	}()
+	})
 }
 
 func publishUploadMetaRAMInvalidation(ctx context.Context, id uint64) {

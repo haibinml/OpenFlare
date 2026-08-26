@@ -14,6 +14,7 @@ import (
 	db "github.com/Rain-kl/Wavelet/internal/infra/persistence"
 	"github.com/Rain-kl/Wavelet/internal/model"
 	"github.com/Rain-kl/Wavelet/pkg/cache/ram"
+	"github.com/Rain-kl/Wavelet/pkg/util"
 )
 
 const (
@@ -60,7 +61,7 @@ func startTokenCacheInvalidationListener() {
 	tokenListenerDone = make(chan struct{})
 
 	redisClient := db.Redis // 捕获当前客户端：goroutine 不读可变全局，避免与测试置空 db.Redis 竞争
-	go func() {
+	util.Go(func() {
 		listenerCtx := tokenListenerCtx
 		defer close(tokenListenerDone)
 
@@ -69,10 +70,10 @@ func startTokenCacheInvalidationListener() {
 			_ = pubsub.Close()
 		}()
 
-		go func() {
+		util.Go(func() {
 			<-listenerCtx.Done()
 			_ = pubsub.Close()
-		}()
+		})
 
 		for msg := range pubsub.Channel() {
 			tokenHash := msg.Payload
@@ -82,7 +83,7 @@ func startTokenCacheInvalidationListener() {
 				tokenRAM.Invalidate(tokenHash)
 			}
 		}
-	}()
+	})
 }
 
 func publishTokenRAMInvalidation(ctx context.Context, tokenHash string) {
@@ -104,7 +105,7 @@ func startUserCacheInvalidationListener() {
 	userListenerDone = make(chan struct{})
 
 	redisClient := db.Redis // 捕获当前客户端：goroutine 不读可变全局，避免与测试置空 db.Redis 竞争
-	go func() {
+	util.Go(func() {
 		listenerCtx := userListenerCtx
 		defer close(userListenerDone)
 
@@ -113,10 +114,10 @@ func startUserCacheInvalidationListener() {
 			_ = pubsub.Close()
 		}()
 
-		go func() {
+		util.Go(func() {
 			<-listenerCtx.Done()
 			_ = pubsub.Close()
-		}()
+		})
 
 		for msg := range pubsub.Channel() {
 			userIDStr := msg.Payload
@@ -126,7 +127,7 @@ func startUserCacheInvalidationListener() {
 				userRAM.Invalidate(userID)
 			}
 		}
-	}()
+	})
 }
 
 func publishUserRAMInvalidation(ctx context.Context, userID uint64) {

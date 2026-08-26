@@ -16,6 +16,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Rain-kl/Wavelet/pkg/util"
 	"golang.org/x/net/websocket"
 )
 
@@ -198,13 +199,13 @@ func (conn *Connection) RunReceiveLoop(ctx context.Context, handler MessageHandl
 	doneChan := make(chan struct{})
 	defer close(doneChan)
 
-	go func() {
+	util.Go(func() {
 		select {
 		case <-ctx.Done():
 			_ = conn.Close()
 		case <-doneChan:
 		}
-	}()
+	})
 
 	if err := handler.OnConnect(ctx); err != nil {
 		handler.OnClose(err)

@@ -73,7 +73,7 @@
 - 已修：analytics/node_access_log_filter.go、analytics/access_log_filter.go、
   logstore/postgres_store.go×2（PG/SQLite 加 ESCAPE '\'，CH 用默认反斜杠转义）。
   新助手 pkg/util/like.go EscapeLike + 单测。
-- 遗留同类（低风险，用户名/关键词搜索）：repository/upload.go:53 keyword contains、
-  repository/user.go:73/76/188 username/email 前缀+contains、task_execution.go:155
-  task_type 前缀。user.go:228 `base+"-%"` 与 config_version.go:65 为系统生成模式，
-  刻意通配勿动。GORM 站点加 ESCAPE 子句即可复用 EscapeLike。
+- Run #47 已收尾全部 GORM 站点：upload.go keyword、user.go:73/76/188/229
+  （含 OAuth uniqueUsername base 转义——外部输入含 _ 曾误报用户名冲突）、
+  task_execution.go task_type 前缀。均加显式 ESCAPE '\'。
+- 刻意保留：upload.go:199 `image/%`（系统常量）、config_version.go:65（系统生成）。

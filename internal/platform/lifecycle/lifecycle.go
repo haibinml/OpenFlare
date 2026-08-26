@@ -8,6 +8,8 @@ import (
 	"context"
 	"log"
 	"sync"
+
+	"github.com/Rain-kl/Wavelet/pkg/util"
 )
 
 // ShutdownFunc defines the signature for a graceful shutdown callback.
@@ -52,10 +54,10 @@ func Stop(ctx context.Context) {
 	}
 
 	done := make(chan struct{})
-	go func() {
+	util.Go(func() {
 		wg.Wait()
 		close(done)
-	}()
+	})
 
 	select {
 	case <-done:

@@ -24,6 +24,7 @@ import (
 	"github.com/Rain-kl/Wavelet/internal/infra/task"
 	"github.com/Rain-kl/Wavelet/internal/model"
 	"github.com/Rain-kl/Wavelet/internal/repository"
+	"github.com/Rain-kl/Wavelet/pkg/util"
 )
 
 const (
@@ -101,7 +102,7 @@ func (h *MigrationHandler) Execute(ctx context.Context, payload []byte) (*task.T
 		}()
 
 		//nolint:contextcheck,gosec
-		go func() {
+		util.Go(func() {
 			ticker := time.NewTicker(renewalInterval)
 			defer ticker.Stop()
 			for {
@@ -116,7 +117,7 @@ func (h *MigrationHandler) Execute(ctx context.Context, payload []byte) (*task.T
 					return
 				}
 			}
-		}()
+		})
 	}
 
 	active, err := objectstore.LoadConfig(ctx)
