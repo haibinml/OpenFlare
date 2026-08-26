@@ -285,23 +285,27 @@ func buildFrpcToml(relay service.FlaredRelayInfo, proxies []service.FlaredProxyE
 
 	host, port := parseAddr(relay.Address)
 
-	fmt.Fprintf(&buf, "serverAddr = \"%s\"\nserverPort = %s\n", host, port)
+	fmt.Fprintf(&buf, "serverAddr = %s\nserverPort = %s\n", service.TOMLQuote(host), service.TOMLQuote(port))
 
 	if relay.AuthToken != "" {
-		fmt.Fprintf(&buf, "auth.method = \"token\"\nauth.token = \"%s\"\n", relay.AuthToken)
+		fmt.Fprintf(&buf, "auth.method = \"token\"\nauth.token = %s\n", service.TOMLQuote(relay.AuthToken))
 	}
 
 	if relay.ProxyURL != "" {
-		fmt.Fprintf(&buf, "transport.proxyURL = \"%s\"\n", relay.ProxyURL)
+		fmt.Fprintf(&buf, "transport.proxyURL = %s\n", service.TOMLQuote(relay.ProxyURL))
 	}
 
 	buf.WriteString("\n")
 
 	for _, proxy := range proxies {
-		fmt.Fprintf(&buf, "[[proxies]]\nname = \"%s\"\ntype = \"%s\"\nlocalIP = \"%s\"\nlocalPort = %d\n",
-			proxy.Name, proxy.Type, proxy.LocalAddr, proxy.LocalPort)
+		fmt.Fprintf(&buf, "[[proxies]]\nname = %s\ntype = %s\nlocalIP = %s\nlocalPort = %d\n",
+			service.TOMLQuote(proxy.Name), service.TOMLQuote(proxy.Type), service.TOMLQuote(proxy.LocalAddr), proxy.LocalPort)
 		if len(proxy.CustomDomains) > 0 {
-			fmt.Fprintf(&buf, "customDomains = [\"%s\"]\n", strings.Join(proxy.CustomDomains, "\", \""))
+			quoted := make([]string, len(proxy.CustomDomains))
+			for i := range proxy.CustomDomains {
+				quoted[i] = service.TOMLQuote(proxy.CustomDomains[i])
+			}
+			fmt.Fprintf(&buf, "customDomains = [%s]\n", strings.Join(quoted, ", "))
 		}
 		buf.WriteString("\n")
 	}

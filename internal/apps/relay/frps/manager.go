@@ -182,7 +182,7 @@ func (m *Manager) renderConfig(cfg *service.RelayConfig) error {
 	if cfg.AuthToken != "" {
 		buf.WriteString("[auth]\n")
 		buf.WriteString("method = \"token\"\n")
-		fmt.Fprintf(&buf, "token = \"%s\"\n", cfg.AuthToken)
+		buf.WriteString("token = " + service.TOMLQuote(cfg.AuthToken) + "\n")
 	}
 
 	// WebServer configuration
@@ -203,8 +203,7 @@ func (m *Manager) renderConfig(cfg *service.RelayConfig) error {
 	if password == "" {
 		password = "admin"
 	}
-	fmt.Fprintf(&buf, "password = \"%s\"\n", password)
-
+	fmt.Fprintf(&buf, "password = %s\n", service.TOMLQuote(password))
 	return os.WriteFile(m.configPath, buf.Bytes(), frpsConfigFilePerm)
 }
 
