@@ -77,7 +77,7 @@ function SummaryMetric({
         {value}
       </span>
       {typeof progress === 'number' ? (
-        <Progress value={progress} className='h-1' />
+        <Progress value={progress} aria-label={label} className='h-1' />
       ) : null}
       <span className='truncate text-[10px] text-muted-foreground'>{hint}</span>
     </div>
@@ -109,7 +109,7 @@ function DetailMetric({
         <Icon className='size-3.5 shrink-0 text-muted-foreground' />
       </div>
       {typeof progress === 'number' ? (
-        <Progress value={progress} className='h-1' />
+        <Progress value={progress} aria-label={label} className='h-1' />
       ) : null}
       <p className='truncate text-[10px] text-muted-foreground'>{hint}</p>
     </div>

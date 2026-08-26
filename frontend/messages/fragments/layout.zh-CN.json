@@ -134,6 +134,8 @@
     "empty": {
       "noData": "暂无数据",
       "noContent": "当前没有任何记录"
-    }
+    },
+    "toggleSidebar": "切换侧边栏",
+    "mainNavigation": "主导航"
   }
 }

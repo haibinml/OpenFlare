@@ -10,7 +10,9 @@
     "settings": "Settings",
     "search": "Search",
     "unknownError": "Something went wrong. Please try again.",
-    "loadFailed": "Load failed"
+    "loadFailed": "Load failed",
+    "previousPage": "Previous page",
+    "nextPage": "Next page"
   },
   "contexts": {
     "adminUsers": {

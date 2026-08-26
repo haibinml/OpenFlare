@@ -67,6 +67,7 @@ export function DashboardStatCards({
           </div>
           <Progress
             value={capacity.average_cpu_usage_percent}
+            aria-label={t('clusterCapacity')}
             className='h-1.5'
           />
           <p className='text-[10px] text-muted-foreground'>
@@ -95,7 +96,7 @@ export function DashboardStatCards({
               {t('onlineOf', { total: summary.total_nodes })}
             </span>
           </div>
-          <Progress value={onlineRate} className='h-1.5' />
+          <Progress value={onlineRate} aria-label={t('nodeOverview')} className='h-1.5' />
           <p className='text-[10px] text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1'>
             <span className='inline-flex items-center gap-1'>
               <Users className='size-3' />

@@ -134,6 +134,8 @@
     "empty": {
       "noData": "No data",
       "noContent": "No records found"
-    }
+    },
+    "toggleSidebar": "Toggle sidebar",
+    "mainNavigation": "Main navigation"
   }
 }

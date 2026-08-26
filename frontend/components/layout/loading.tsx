@@ -115,7 +115,7 @@ export function LoadingState({
       </div>
 
       {title && (
-        <h3 className='text-sm font-medium mb-1 animate-pulse'>{title}</h3>
+        <p className='text-sm font-medium mb-1 animate-pulse'>{title}</p>
       )}
 
       {description && (
