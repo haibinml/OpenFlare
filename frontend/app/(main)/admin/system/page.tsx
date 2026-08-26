@@ -269,7 +269,7 @@ export function SystemConfigs() {
                 'h-full rounded-sm text-[11px] font-medium transition-colors',
                 activeTab === tab
                   ? 'bg-background shadow-sm text-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
+                  : 'text-muted-foreground hover:text-foreground',
               )}
             >
               {tab === 'business' ? t('businessConfig') : t('systemConfig')}

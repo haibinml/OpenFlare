@@ -12,9 +12,9 @@ import (
 	"github.com/Rain-kl/Wavelet/internal/infra/persistence/idgen"
 	"github.com/Rain-kl/Wavelet/internal/listener"
 	"github.com/Rain-kl/Wavelet/internal/model"
-	pkgu "github.com/Rain-kl/Wavelet/pkg/util"
 	"github.com/Rain-kl/Wavelet/internal/shared/response"
 	"github.com/Rain-kl/Wavelet/pkg/logger"
+	pkgu "github.com/Rain-kl/Wavelet/pkg/util"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
@@ -49,7 +49,6 @@ type updateProfileRequest struct {
 	Website   string `json:"website"`
 	Location  string `json:"location"`
 }
-
 
 // Login 用户密码登录
 // @Summary 用户密码登录

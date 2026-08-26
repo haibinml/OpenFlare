@@ -10,7 +10,6 @@ import (
 
 	"github.com/Rain-kl/Wavelet/internal/shared/response"
 	"github.com/gin-gonic/gin"
-
 )
 
 const ctxFlaredNodeKey = "flared_node"

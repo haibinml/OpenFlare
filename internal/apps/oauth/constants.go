@@ -27,6 +27,7 @@ const (
 	oauthStateLimitKeyFormat     = "oauth:state-limit:%s"
 	oauthStateLimitMax           = 20
 )
+
 // OAuth 授权用途常量
 const (
 	OAuthPurposeLogin = "login"
