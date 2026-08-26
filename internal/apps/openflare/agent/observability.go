@@ -6,7 +6,6 @@ package agent
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
 	"strings"
 	"time"
 
@@ -36,7 +35,7 @@ func PersistHeartbeatObservability(ctx context.Context, nodeID string, payload N
 		return
 	}
 
-	accessLogRecords, err := buildNodeAccessLogRecords(nodeID, payload.AccessLogs, payload.Buffered, reportedAt)
+	accessLogRecords, err := buildNodeAccessLogRecords(ctx, nodeID, payload.AccessLogs, payload.Buffered, reportedAt)
 	if err != nil {
 		zap.L().Error("build heartbeat access logs failed", zap.String("node_id", nodeID), zap.Error(err))
 		return
@@ -159,21 +158,13 @@ func persistNodeMetricSnapshot(ctx context.Context, nodeID string, snapshot *Nod
 	return repository.InsertOpenFlareMetricSnapshot(ctx, record)
 }
 
-func buildNodeAccessLogRecords(nodeID string, direct []NodeAccessLog, buffered []BufferedObservabilityRecord, reportedAt time.Time) ([]*model.OpenFlareAccessLog, error) {
+func buildNodeAccessLogRecords(ctx context.Context, nodeID string, direct []NodeAccessLog, buffered []BufferedObservabilityRecord, reportedAt time.Time) ([]*model.OpenFlareAccessLog, error) {
 	total := len(direct)
 	for _, record := range buffered {
 		total += len(record.AccessLogs)
 	}
 	if total == 0 {
 		return nil, nil
-	}
-
-	resolver, err := newAccessLogRegionResolver()
-	if err != nil {
-		slog.Warn("initialize access log geo resolver failed", "node_id", nodeID, "error", err)
-	}
-	if resolver != nil {
-		defer resolver.Close()
 	}
 
 	records := make([]*model.OpenFlareAccessLog, 0, total)
@@ -186,7 +177,7 @@ func buildNodeAccessLogRecords(nodeID string, direct []NodeAccessLog, buffered [
 				NodeID:        nodeID,
 				LoggedAt:      timeFromUnix(item.LoggedAtUnix, reportedAt),
 				RemoteAddr:    strings.TrimSpace(item.RemoteAddr),
-				Region:        "",
+				Region:        resolveAccessLogRegion(ctx, item.RemoteAddr),
 				Host:          strings.TrimSpace(item.Host),
 				Path:          truncateForDatabase(strings.TrimSpace(item.Path), accessLogPathMaxLength),
 				UserAgent:     truncateForDatabase(strings.TrimSpace(item.UserAgent), accessLogUserAgentMaxLength),
@@ -195,9 +186,6 @@ func buildNodeAccessLogRecords(nodeID string, direct []NodeAccessLog, buffered [
 				BytesSent:     bytesSent,
 				RequestLength: requestLength,
 				RequestTimeMs: requestTimeMs,
-			}
-			if resolver != nil {
-				record.Region = resolver.Resolve(record.RemoteAddr)
 			}
 			records = append(records, record)
 		}

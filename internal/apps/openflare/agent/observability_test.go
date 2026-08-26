@@ -4,6 +4,7 @@
 package agent
 
 import (
+	"context"
 	"testing"
 	"time"
 )
@@ -11,7 +12,7 @@ import (
 func TestBuildNodeAccessLogRecordsPreservesBytesSent(t *testing.T) {
 	reportedAt := time.Date(2026, 7, 12, 10, 0, 0, 0, time.UTC)
 
-	records, err := buildNodeAccessLogRecords("node-a", []NodeAccessLog{
+	records, err := buildNodeAccessLogRecords(context.Background(), "node-a", []NodeAccessLog{
 		{
 			LoggedAtUnix: reportedAt.Unix(),
 			RemoteAddr:   "203.0.113.10",

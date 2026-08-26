@@ -6,65 +6,58 @@
 package agent
 
 import (
+	"context"
 	"log/slog"
 	"net"
 	"strings"
+	"sync"
 
 	pkggeoip "github.com/Rain-kl/Wavelet/pkg/geoip"
 )
 
-var accessLogGeoProviderFactory = func() (pkggeoip.Service, error) {
-	return pkggeoip.NewMaxMindGeoIPService()
+// 共享一个 GeoIP 服务实例：mmdb 打开（mmap + 解析元数据）成本不低，缺文件时还会
+// 同步下载，绝不能每个上报批次重建。maxminddb.Reader 并发安全，无需额外加锁。
+// 初始化失败不锁存：下一批上报会重试（与旧行为一致）。
+var (
+	sharedAccessLogGeoMu       sync.Mutex
+	sharedAccessLogGeoInstance pkggeoip.Service
+)
+
+func sharedAccessLogGeoService(ctx context.Context) pkggeoip.Service {
+	sharedAccessLogGeoMu.Lock()
+	defer sharedAccessLogGeoMu.Unlock()
+	if sharedAccessLogGeoInstance == nil {
+		service, err := pkggeoip.NewMaxMindGeoIPServiceWithContext(ctx, "", "")
+		if err != nil {
+			slog.WarnContext(ctx, "initialize access log geo service failed", "error", err)
+			return nil
+		}
+		sharedAccessLogGeoInstance = service
+	}
+	return sharedAccessLogGeoInstance
 }
 
-type accessLogRegionResolver struct {
-	provider pkggeoip.Service
-	cache    map[string]string
-}
-
-func newAccessLogRegionResolver() (*accessLogRegionResolver, error) {
-	provider, err := accessLogGeoProviderFactory()
-	if err != nil {
-		return nil, err
-	}
-	return &accessLogRegionResolver{
-		provider: provider,
-		cache:    make(map[string]string),
-	}, nil
-}
-
-func (r *accessLogRegionResolver) Close() {
-	if r == nil || r.provider == nil {
-		return
-	}
-	if err := r.provider.Close(); err != nil {
-		slog.Warn("close access log geo provider failed", "error", err)
-	}
-}
-
-func (r *accessLogRegionResolver) Resolve(rawIP string) string {
-	if r == nil || r.provider == nil {
-		return ""
-	}
+// resolveAccessLogRegion resolves the region name for an access-log remote address.
+// mmdb Lookup 本身是内存映射 trie 查找（微秒级），无需再建应用层 IP 缓存。
+// resolveAccessLogRegion resolves the region name for an access-log remote address.
+// mmdb Lookup 本身是内存映射 trie 查找（微秒级），无需再建应用层 IP 缓存。
+func resolveAccessLogRegion(ctx context.Context, rawIP string) string {
 	normalizedIP := normalizeAccessLogIP(rawIP)
 	if normalizedIP == "" {
 		return ""
 	}
-	if cached, ok := r.cache[normalizedIP]; ok {
-		return cached
-	}
-
-	info, err := r.provider.GetGeoInfo(net.ParseIP(normalizedIP))
-	if err != nil || info == nil {
-		r.cache[normalizedIP] = ""
+	service := sharedAccessLogGeoService(ctx)
+	if service == nil {
 		return ""
 	}
-
+	info, err := service.GetGeoInfo(net.ParseIP(normalizedIP))
+	if err != nil || info == nil {
+		return ""
+	}
 	region := strings.TrimSpace(info.Name)
 	if region == "" {
 		region = strings.TrimSpace(info.ISOCode)
 	}
-	r.cache[normalizedIP] = region
 	return region
 }
 

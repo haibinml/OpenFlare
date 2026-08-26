@@ -155,3 +155,15 @@ value='' 时 placeholder 不显示，combobox 无名需 aria-label 兜底。
      BreadcrumbList 子元素（axe list 规则报 list 语义破坏），须放 <Breadcrumb> 外；
      BreadcrumbPage 无 asChild 支持。
 - a11y 维度至此穷尽：累计 14 页 axe 全部 0 违规。
+
+## Run #59（-shuffle=on 测试顺序随机化扫描，keep，b56f2763）
+
+- 新维度：`go test -shuffle=on` 抓到 config_version 包测试顺序依赖——
+  TestBuildOpenRestyConfigSnapshotOriginErrorPageDefaults 在 shuffle 下命中
+  Custom 用例留在进程级 RAM 配置缓存的值（GetSystemConfigByGroup 未命中时
+  ram.Set 回填，TTL 跨测试存活；:memory: DB + SetDB 换库不使缓存失效）。
+- 修复：setupOriginErrorPageSnapshotDB / setupConfigVersionTestDB 换 DB 前后
+  接入既有 ram.ResetForTest()。包内 shuffle×8 + 全仓 shuffle 复扫全过。
+- 教训：默认源码顺序掩盖顺序依赖；-shuffle=on 是低成本周期扫描手段。
+  全仓 -race（#58 后）同样干净。其余用 SetDB 的测试包如后续 shuffle 复发，
+  同法接入 ResetForTest 即可。

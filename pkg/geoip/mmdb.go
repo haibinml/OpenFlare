@@ -45,11 +45,12 @@ func (s *MaxMindGeoIPService) Name() string {
 
 // NewMaxMindGeoIPService creates a MaxMind service using the default database path and URL.
 func NewMaxMindGeoIPService() (*MaxMindGeoIPService, error) {
-	return NewMaxMindGeoIPServiceWithConfig(GeoIPFilePath, GeoIPURL)
+	return NewMaxMindGeoIPServiceWithContext(context.Background(), GeoIPFilePath, GeoIPURL)
 }
 
-// NewMaxMindGeoIPServiceWithConfig creates a MaxMind service with custom database path and download URL.
-func NewMaxMindGeoIPServiceWithConfig(dbFilePath string, downloadURL string) (*MaxMindGeoIPService, error) {
+// NewMaxMindGeoIPServiceWithContext creates a MaxMind service with a caller-supplied
+// context so the initial database download honors request cancellation.
+func NewMaxMindGeoIPServiceWithContext(ctx context.Context, dbFilePath string, downloadURL string) (*MaxMindGeoIPService, error) {
 	if dbFilePath == "" {
 		dbFilePath = GeoIPFilePath
 	}
@@ -65,7 +66,7 @@ func NewMaxMindGeoIPServiceWithConfig(dbFilePath string, downloadURL string) (*M
 	}
 
 	if _, err := os.Stat(service.dbFilePath); os.IsNotExist(err) {
-		if err := DownloadMaxMindDatabase(context.Background(), service.dbFilePath, downloadURL); err != nil {
+		if err := DownloadMaxMindDatabase(ctx, service.dbFilePath, downloadURL); err != nil {
 			return nil, fmt.Errorf("failed to download initial MaxMind database: %w", err)
 		}
 	}
