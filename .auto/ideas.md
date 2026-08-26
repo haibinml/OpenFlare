@@ -77,3 +77,13 @@
   （含 OAuth uniqueUsername base 转义——外部输入含 _ 曾误报用户名冲突）、
   task_execution.go task_type 前缀。均加显式 ESCAPE '\'。
 - 刻意保留：upload.go:199 `image/%`（系统常量）、config_version.go:65（系统生成）。
+
+## Run #48（后台 goroutine panic 防护，55db1c01）
+
+- 全仓 20 处裸 go func() 零 recover → 新增 pkg/util/goroutine.go `Go(fn)`（recover +
+  slog + debug.Stack，runtime.Caller 自动记录调用点无需手写名字），22 个站点全部收口
+  （oauth/upload/system_config/auth_source 的嵌套 ctx-done watcher 也含）。
+- 教训：脚本括号深度匹配首轮会跳过嵌套内层 goroutine，需跑两轮；新 Go 文件必须先跑
+  scripts/update_go_license.sh（license-check 会拦）。
+- 已过期记录：go test ./internal/... ./pkg/... 现全过（94 ok）——"main 上测试失败"
+  不再成立。scripts/、docs/ 下 Go 文件用扩展 linter 扫过：0 issues。

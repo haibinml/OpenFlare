@@ -210,14 +210,15 @@ func (m *Manager) restartProcess(ctx context.Context, relayID string, configPath
 				return syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
 			}
 
-			m.mu.Lock()
-			proc.Cmd = cmd
-			proc.Status = "running"
-			m.mu.Unlock()
-
 			startedAt := time.Now()
 			err := cmd.Start()
 			if err == nil {
+				// Start 成功后才发布句柄：Start 之前 cmd.Process 尚未赋值，
+				// 提前挂到 proc.Cmd 会让读者（测试/状态接口）与 Start 竞争。
+				m.mu.Lock()
+				proc.Cmd = cmd
+				proc.Status = "running"
+				m.mu.Unlock()
 				_ = os.WriteFile(pidPath, fmt.Appendf(nil, "%d", cmd.Process.Pid), frpcConfigFilePerm)
 				err = cmd.Wait()
 			}
