@@ -132,32 +132,19 @@ func SendAgentWAFIPGroups(nodeID string, payload any) bool {
 
 // BroadcastWAFIPGroups pushes changed WAF IP groups to all connected agents.
 func BroadcastWAFIPGroups(payload any) int {
-	if payload == nil {
-		return 0
-	}
-	message := Message{Type: agentMessageTypeWAFIPGroups, Payload: payload}
-	defaultAgentHub.mu.RLock()
-	clients := make([]*agentClient, 0, len(defaultAgentHub.clients))
-	for _, client := range defaultAgentHub.clients {
-		clients = append(clients, client)
-	}
-	defaultAgentHub.mu.RUnlock()
-
-	success := 0
-	for _, client := range clients {
-		if client.enqueue(message) {
-			success++
-		}
-	}
-	return success
+	return broadcastAgent(agentMessageTypeWAFIPGroups, payload)
 }
 
 // BroadcastActiveConfig pushes active config metadata to all connected agents.
 func BroadcastActiveConfig(payload any) int {
+	return broadcastAgent(agentMessageTypeActiveConfig, payload)
+}
+
+func broadcastAgent(messageType string, payload any) int {
 	if payload == nil {
 		return 0
 	}
-	message := Message{Type: agentMessageTypeActiveConfig, Payload: payload}
+	message := Message{Type: messageType, Payload: payload}
 	defaultAgentHub.mu.RLock()
 	clients := make([]*agentClient, 0, len(defaultAgentHub.clients))
 	for _, client := range defaultAgentHub.clients {
@@ -233,31 +220,8 @@ func agentWSReadTimeout() time.Duration {
 }
 
 func (c *agentClient) writePump() {
-	ticker := time.NewTicker(wsPingInterval)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-c.done:
-			return
-		case message := <-c.send:
-			_ = c.conn.SetWriteDeadline(time.Now().Add(wsWriteDeadline))
-			if err := c.conn.WriteJSON(message); err != nil {
-				slog.Debug("agent ws write failed", "node_id", c.nodeID, "error", err)
-				c.close()
-				return
-			}
-		case <-ticker.C:
-			select {
-			case <-c.done:
-				return
-			case c.send <- Message{Type: messageTypePing}:
-			default:
-			}
-		}
-	}
+	runWritePump(c.nodeID, c.conn, c.done, c.send, c.close, "agent ws")
 }
-
 func (c *agentClient) enqueue(message Message) bool {
 	select {
 	case <-c.done:

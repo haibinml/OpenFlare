@@ -6,7 +6,6 @@ package websocket
 import (
 	"log/slog"
 	"sync"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -120,27 +119,5 @@ func (c *relayClient) readPump() {
 }
 
 func (c *relayClient) writePump() {
-	ticker := time.NewTicker(wsPingInterval)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-c.done:
-			return
-		case message := <-c.send:
-			_ = c.conn.SetWriteDeadline(time.Now().Add(wsWriteDeadline))
-			if err := c.conn.WriteJSON(message); err != nil {
-				slog.Debug("relay ws write failed", "node_id", c.nodeID, "error", err)
-				c.close()
-				return
-			}
-		case <-ticker.C:
-			select {
-			case <-c.done:
-				return
-			case c.send <- Message{Type: messageTypePing}:
-			default:
-			}
-		}
-	}
+	runWritePump(c.nodeID, c.conn, c.done, c.send, c.close, "relay ws")
 }
