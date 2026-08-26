@@ -58,3 +58,22 @@
 - pkg/render/openresty 管理端旋钮（ClientMaxBodySize 等）原样插值：管理员权限范围内。
 - frontend/settings/profile.tsx（858 行）超 AGENTS.md ~600 行指引：存量组件，拆分属
   纯重构无质量增益，暂缓；若后续要改该页面功能时顺手拆 components/。
+
+## Run #44（全仓 -race 扫描）
+
+- 发现并修复 upload/cache 监听器 DATA RACE：goroutine 读可变全局 db.Redis vs
+  testhelper 清理置 nil。根因修复=启动时捕获 redisClient（oauth×2/repository×2
+  同型监听器一并加固），StopUploadMetaCacheListener 补 done 等待。
+- 教训：testhelper 不能 import upload/cache（循环依赖）；"捕获替代全局读"是
+  无环的根因修法。
+- 全仓 -race 现为 0 竞争（internal/... + pkg/...）；建议周期性重跑。
+
+## LIKE 转义（本轮已修日志搜索 4 站点；同类遗留）
+
+- 已修：analytics/node_access_log_filter.go、analytics/access_log_filter.go、
+  logstore/postgres_store.go×2（PG/SQLite 加 ESCAPE '\'，CH 用默认反斜杠转义）。
+  新助手 pkg/util/like.go EscapeLike + 单测。
+- 遗留同类（低风险，用户名/关键词搜索）：repository/upload.go:53 keyword contains、
+  repository/user.go:73/76/188 username/email 前缀+contains、task_execution.go:155
+  task_type 前缀。user.go:228 `base+"-%"` 与 config_version.go:65 为系统生成模式，
+  刻意通配勿动。GORM 站点加 ESCAPE 子句即可复用 EscapeLike。

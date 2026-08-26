@@ -16,6 +16,7 @@ import (
 	"github.com/Rain-kl/Wavelet/internal/infra/persistence/idgen"
 	"github.com/Rain-kl/Wavelet/internal/model"
 	analyticsmodel "github.com/Rain-kl/Wavelet/internal/model/analytics"
+	"github.com/Rain-kl/Wavelet/pkg/util"
 	"gorm.io/gorm"
 )
 
@@ -823,20 +824,20 @@ func buildNodeAccessLogFilterParts(f analyticsmodel.NodeAccessLogFilter) (string
 		args = append(args, nodeID)
 	}
 	if remoteAddr := strings.TrimSpace(f.RemoteAddr); remoteAddr != "" {
-		parts = append(parts, "remote_addr LIKE ?")
-		args = append(args, remoteAddr+"%")
+		parts = append(parts, `remote_addr LIKE ? ESCAPE '\'`)
+		args = append(args, util.EscapeLike(remoteAddr)+"%")
 	}
 	hosts := normalizeNodeAccessLogHosts(f.Hosts)
 	if len(hosts) > 0 {
 		parts = append(parts, "lower(trim(host)) IN ?")
 		args = append(args, hosts)
 	} else if host := strings.TrimSpace(f.Host); host != "" {
-		parts = append(parts, "host LIKE ?")
-		args = append(args, host+"%")
+		parts = append(parts, `host LIKE ? ESCAPE '\'`)
+		args = append(args, util.EscapeLike(host)+"%")
 	}
 	if path := strings.TrimSpace(f.Path); path != "" {
-		parts = append(parts, "path LIKE ?")
-		args = append(args, path+"%")
+		parts = append(parts, `path LIKE ? ESCAPE '\'`)
+		args = append(args, util.EscapeLike(path)+"%")
 	}
 	if f.StatusCode > 0 {
 		parts = append(parts, "status_code = ?")
@@ -1495,8 +1496,8 @@ func buildUserAccessLogWhere(filter analyticsmodel.AccessLogFilter) (string, []a
 		args = append(args, filter.UserIDs)
 	}
 	if trimmed := strings.TrimSpace(filter.Path); trimmed != "" {
-		parts = append(parts, "path LIKE ?")
-		args = append(args, "%"+trimmed+"%")
+		parts = append(parts, `path LIKE ? ESCAPE '\'`)
+		args = append(args, "%"+util.EscapeLike(trimmed)+"%")
 	}
 	if filter.StartTime != nil {
 		parts = append(parts, "created_at >= ?")

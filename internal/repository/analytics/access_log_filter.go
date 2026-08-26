@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	analyticsmodel "github.com/Rain-kl/Wavelet/internal/model/analytics"
+	"github.com/Rain-kl/Wavelet/pkg/util"
 )
 
 const userAccessLogFilterClauseCapacity = 4
@@ -32,7 +33,7 @@ func buildUserAccessLogFilterClause(filter AccessLogFilter) (string, []any, bool
 	}
 	if trimmed := strings.TrimSpace(filter.Path); trimmed != "" {
 		parts = append(parts, "path LIKE ?")
-		args = append(args, "%"+trimmed+"%")
+		args = append(args, "%"+util.EscapeLike(trimmed)+"%")
 	}
 	if filter.StartTime != nil {
 		parts = append(parts, "created_at >= ?")

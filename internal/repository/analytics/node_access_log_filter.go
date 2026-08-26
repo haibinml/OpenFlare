@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	analyticsmodel "github.com/Rain-kl/Wavelet/internal/model/analytics"
+	"github.com/Rain-kl/Wavelet/pkg/util"
 )
 
 const (
@@ -37,7 +38,7 @@ func buildNodeAccessLogFilterClause(filter NodeAccessLogFilter) (string, []any) 
 	}
 	if trimmed := normalizeNodeAccessLogRemoteAddr(filter.RemoteAddr); trimmed != "" {
 		parts = append(parts, "remote_addr LIKE ?")
-		args = append(args, trimmed+"%")
+		args = append(args, util.EscapeLike(trimmed)+"%")
 	}
 	hosts := normalizeNodeAccessLogHosts(filter.Hosts)
 	if len(hosts) > 0 {
@@ -49,11 +50,11 @@ func buildNodeAccessLogFilterClause(filter NodeAccessLogFilter) (string, []any) 
 		parts = append(parts, "lowerUTF8(trim(host)) IN ("+strings.Join(placeholders, ", ")+")")
 	} else if trimmed := strings.TrimSpace(filter.Host); trimmed != "" {
 		parts = append(parts, "host LIKE ?")
-		args = append(args, trimmed+"%")
+		args = append(args, util.EscapeLike(trimmed)+"%")
 	}
 	if trimmed := strings.TrimSpace(filter.Path); trimmed != "" {
 		parts = append(parts, "path LIKE ?")
-		args = append(args, trimmed+"%")
+		args = append(args, util.EscapeLike(trimmed)+"%")
 	}
 	if filter.StatusCode > 0 {
 		parts = append(parts, "status_code = ?")
