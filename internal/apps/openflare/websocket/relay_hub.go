@@ -8,29 +8,15 @@ import (
 	"sync"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
 )
 
 // RelayWSConnectedLastSeenValue is the sentinel last_seen_at value when relay WS is connected.
 const RelayWSConnectedLastSeenValue = "__OPENFLARE_WS_CONNECTED__"
 
 type relayClient struct {
-	nodeID string
-	conn   *websocket.Conn
-	send   chan Message
-	done   chan struct{}
-	once   sync.Once
+	wsClientCore
 }
 
-func (c *relayClient) close() {
-	if c == nil {
-		return
-	}
-	c.once.Do(func() {
-		close(c.done)
-		_ = c.conn.Close()
-	})
-}
 
 type relayHub struct {
 	mu      sync.RWMutex
@@ -48,10 +34,12 @@ func ServeRelay(c *gin.Context, nodeID string) {
 	}
 
 	client := &relayClient{
-		nodeID: nodeID,
-		conn:   conn,
-		send:   make(chan Message, wsChannelBuf),
-		done:   make(chan struct{}),
+		wsClientCore: wsClientCore{
+			nodeID: nodeID,
+			conn:   conn,
+			send:   make(chan Message, wsChannelBuf),
+			done:   make(chan struct{}),
+		},
 	}
 	defaultRelayHub.register(client)
 	defer defaultRelayHub.unregister(client)

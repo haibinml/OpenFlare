@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
+
 )
 
 const (
@@ -30,24 +30,12 @@ const (
 type AgentStatusHandler func(ctx context.Context, nodeID, remoteAddr string, payload json.RawMessage)
 
 type agentClient struct {
-	nodeID     string
+	wsClientCore
 	remoteAddr string
-	conn       *websocket.Conn
-	send       chan Message
-	done       chan struct{}
 	onStatus   AgentStatusHandler
-	once       sync.Once
 }
 
-func (c *agentClient) close() {
-	if c == nil {
-		return
-	}
-	c.once.Do(func() {
-		close(c.done)
-		_ = c.conn.Close()
-	})
-}
+
 
 type agentHub struct {
 	mu      sync.RWMutex
@@ -65,11 +53,13 @@ func ServeAgent(c *gin.Context, nodeID string, onStatus AgentStatusHandler) {
 	}
 
 	client := &agentClient{
-		nodeID:     nodeID,
+		wsClientCore: wsClientCore{
+			nodeID: nodeID,
+			conn:   conn,
+			send:   make(chan Message, wsChannelBuf),
+			done:   make(chan struct{}),
+		},
 		remoteAddr: c.Request.RemoteAddr,
-		conn:       conn,
-		send:       make(chan Message, wsChannelBuf),
-		done:       make(chan struct{}),
 		onStatus:   onStatus,
 	}
 	defaultAgentHub.register(client)
@@ -221,14 +211,4 @@ func agentWSReadTimeout() time.Duration {
 
 func (c *agentClient) writePump() {
 	runWritePump(c.nodeID, c.conn, c.done, c.send, c.close, "agent ws")
-}
-func (c *agentClient) enqueue(message Message) bool {
-	select {
-	case <-c.done:
-		return false
-	case c.send <- message:
-		return true
-	default:
-		return false
-	}
 }

@@ -8,7 +8,6 @@ import (
 	"sync"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
 )
 
 const (
@@ -21,22 +20,9 @@ const (
 )
 
 type flaredClient struct {
-	nodeID string
-	conn   *websocket.Conn
-	send   chan Message
-	done   chan struct{}
-	once   sync.Once
+	wsClientCore
 }
 
-func (c *flaredClient) close() {
-	if c == nil {
-		return
-	}
-	c.once.Do(func() {
-		close(c.done)
-		_ = c.conn.Close()
-	})
-}
 
 type flaredHub struct {
 	mu      sync.RWMutex
@@ -54,10 +40,12 @@ func ServeFlared(c *gin.Context, nodeID string) {
 	}
 
 	client := &flaredClient{
-		nodeID: nodeID,
-		conn:   conn,
-		send:   make(chan Message, wsChannelBuf),
-		done:   make(chan struct{}),
+		wsClientCore: wsClientCore{
+			nodeID: nodeID,
+			conn:   conn,
+			send:   make(chan Message, wsChannelBuf),
+			done:   make(chan struct{}),
+		},
 	}
 	defaultFlaredHub.register(client)
 	defer defaultFlaredHub.unregister(client)
