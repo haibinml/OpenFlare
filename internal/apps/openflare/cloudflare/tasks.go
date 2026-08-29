@@ -15,6 +15,7 @@ import (
 	"github.com/Rain-kl/Wavelet/internal/infra/task"
 	"github.com/Rain-kl/Wavelet/internal/model"
 	"github.com/Rain-kl/Wavelet/internal/repository"
+	"gorm.io/gorm"
 )
 
 const (
@@ -317,10 +318,19 @@ func executeBatchSync(
 		return &task.TaskResult{Message: message}, nil
 	}
 
+	syncedCount := 0
 	for index, member := range members {
 		domainName := fmt.Sprintf("zone_domain_id=%d", member.ZoneDomainID)
 		if domain, domainErr := repository.GetZoneDomainByID(ctx, member.ZoneDomainID); domainErr == nil {
 			domainName = domain.Domain
+		} else if errors.Is(domainErr, gorm.ErrRecordNotFound) {
+			task.AppendLog(ctx, "[%d/%d] 域名记录已不存在，清理孤立成员: member_id=%d zone_domain_id=%d",
+				index+1, len(members), member.ID, member.ZoneDomainID)
+			if delErr := repository.DeleteCFPointingMember(ctx, &member); delErr != nil {
+				task.AppendLog(ctx, "[%d/%d] 清理孤立成员失败: member_id=%d error=%v",
+					index+1, len(members), member.ID, delErr)
+			}
+			continue
 		}
 		task.AppendLog(ctx, "[%d/%d] 同步域名 %s (member_id=%d proxied=%v)",
 			index+1, len(members), domainName, member.ID, member.Proxied)
@@ -329,13 +339,14 @@ func executeBatchSync(
 				index+1, len(members), domainName, member.ID, err)
 			return nil, err
 		}
+		syncedCount++
 		task.AppendLog(ctx, "[%d/%d] 成功: domain=%s", index+1, len(members), domainName)
 	}
 
-	message := fmt.Sprintf("Cloudflare %s同步完成: %s 共 %d 个域名", scope, scopeName, len(members))
+	message := fmt.Sprintf("Cloudflare %s同步完成: %s 共 %d 个域名", scope, scopeName, syncedCount)
 	if activeNode != "" {
 		message = fmt.Sprintf("Cloudflare %s同步完成: %s → %s，共 %d 个域名",
-			scope, scopeName, activeNode, len(members))
+			scope, scopeName, activeNode, syncedCount)
 	}
 	task.AppendLog(ctx, "%s", message)
 	return &task.TaskResult{Message: message}, nil

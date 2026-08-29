@@ -97,7 +97,16 @@ func SaveZoneDomain(ctx context.Context, domain *model.ZoneDomain) error {
 
 // DeleteZoneDomain deletes a zone domain record.
 func DeleteZoneDomain(ctx context.Context, domain *model.ZoneDomain) error {
-	return db.DB(ctx).Delete(domain).Error
+	conn := db.DB(ctx)
+	if conn == nil {
+		return errors.New(errDatabaseNotInitialized)
+	}
+	return conn.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("zone_domain_id = ?", domain.ID).Delete(&model.CFPointingMember{}).Error; err != nil {
+			return err
+		}
+		return tx.Delete(domain).Error
+	})
 }
 
 // ListZoneDomainsByRouteID returns the domains bound to a proxy route.

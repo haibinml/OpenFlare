@@ -9,6 +9,8 @@ import (
 	"strings"
 	"testing"
 
+	db "github.com/Rain-kl/Wavelet/internal/infra/persistence"
+	"github.com/Rain-kl/Wavelet/internal/repository"
 	"github.com/Rain-kl/Wavelet/internal/shared/response"
 	"github.com/gin-gonic/gin"
 )
@@ -39,5 +41,37 @@ func TestConnectionHandlersNeverReturnAPIToken(t *testing.T) {
 	}
 	if strings.Contains(get.Body.String(), "top-secret-token") || strings.Contains(get.Body.String(), "api_token") {
 		t.Fatalf("GET /connection leaked token: %s", get.Body.String())
+	}
+}
+
+func TestGetGroupWithOrphanedMemberHealsAndSucceeds(t *testing.T) {
+	ctx, memberID := setupCloudflareLogicDB(t)
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
+	router.Use(response.ErrorHandlerMiddleware())
+	router.GET("/groups/:id", GetGroupHandler)
+
+	member, err := repository.GetCFPointingMemberByID(ctx, memberID)
+	if err != nil {
+		t.Fatalf("GetCFPointingMemberByID() error = %v", err)
+	}
+
+	// Simulate orphaned member by deleting the ZoneDomain directly
+	if err := db.DB(ctx).Exec("DELETE FROM of_zone_domains WHERE id = ?", member.ZoneDomainID).Error; err != nil {
+		t.Fatalf("DELETE FROM of_zone_domains error = %v", err)
+	}
+
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/groups/1", nil)
+	router.ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("GET /groups/1 status = %d, body = %s", recorder.Code, recorder.Body.String())
+	}
+
+	// Verify the orphaned member has been removed
+	_, err = repository.GetCFPointingMemberByID(ctx, memberID)
+	if err == nil {
+		t.Errorf("GetCFPointingMemberByID() should return not found after healing")
 	}
 }

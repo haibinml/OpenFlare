@@ -10,8 +10,10 @@ import (
 	"strings"
 	"time"
 
+	cf "github.com/Rain-kl/Wavelet/internal/apps/openflare/cloudflare"
 	"github.com/Rain-kl/Wavelet/internal/model"
 	"github.com/Rain-kl/Wavelet/internal/repository"
+	"github.com/Rain-kl/Wavelet/pkg/logger"
 	"golang.org/x/net/publicsuffix"
 	"gorm.io/gorm"
 )
@@ -219,6 +221,19 @@ func DeleteDomain(ctx context.Context, zoneID, id uint) error {
 	}
 	if item.ProxyRouteID != nil {
 		return errors.New(errDomainBoundToRoute)
+	}
+	member, cfErr := repository.GetCFPointingMemberByZoneDomainID(ctx, item.ID)
+	if cfErr != nil && !errors.Is(cfErr, gorm.ErrRecordNotFound) {
+		return cfErr
+	}
+	if member != nil {
+		if delErr := cf.DeleteManagedRecord(ctx, member.ID); delErr != nil {
+			logger.WarnF(ctx, "[Zone] delete managed Cloudflare record failed for domain %s (member_id=%d): %v", item.Domain, member.ID, delErr)
+		}
+		if delMemberErr := repository.DeleteCFPointingMember(ctx, member); delMemberErr != nil {
+			logger.ErrorF(ctx, "[Zone] delete Cloudflare pointing member failed: member_id=%d error=%v", member.ID, delMemberErr)
+			return delMemberErr
+		}
 	}
 	return repository.DeleteZoneDomain(ctx, item)
 }

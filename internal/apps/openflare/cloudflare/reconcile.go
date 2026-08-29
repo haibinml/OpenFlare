@@ -14,6 +14,7 @@ import (
 	"github.com/Rain-kl/Wavelet/internal/model"
 	"github.com/Rain-kl/Wavelet/internal/repository"
 	"github.com/Rain-kl/Wavelet/pkg/logger"
+	"gorm.io/gorm"
 )
 
 const (
@@ -116,6 +117,9 @@ func markMemberSynced(ctx context.Context, memberID uint, zoneID, recordID, ip s
 func DeleteManagedRecord(ctx context.Context, memberID uint) error {
 	state, err := repository.GetCFPointingMemberContext(ctx, memberID)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil
+		}
 		return err
 	}
 	connection, err := repository.GetCFConnection(ctx)

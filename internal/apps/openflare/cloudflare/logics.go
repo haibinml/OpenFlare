@@ -423,6 +423,13 @@ func listMemberItems(ctx context.Context, groupID uint) ([]MemberItem, error) {
 	for i := range members {
 		domain, domainErr := repository.GetZoneDomainByID(ctx, members[i].ZoneDomainID)
 		if domainErr != nil {
+			if errors.Is(domainErr, gorm.ErrRecordNotFound) {
+				logger.WarnF(ctx, "[Cloudflare] cleaning up orphaned pointing member: member_id=%d zone_domain_id=%d", members[i].ID, members[i].ZoneDomainID)
+				if delErr := repository.DeleteCFPointingMember(ctx, &members[i]); delErr != nil {
+					logger.ErrorF(ctx, "[Cloudflare] delete orphaned member failed: member_id=%d error=%v", members[i].ID, delErr)
+				}
+				continue
+			}
 			return nil, domainErr
 		}
 		items = append(items, *memberItem(&members[i], domain))

@@ -22,7 +22,7 @@ func setupZoneDB(t *testing.T) context.Context {
 	t.Helper()
 	conn, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{DisableForeignKeyConstraintWhenMigrating: true})
 	require.NoError(t, err)
-	require.NoError(t, conn.AutoMigrate(&model.Zone{}, &model.ZoneDomain{}, &model.TLSCertificate{}))
+	require.NoError(t, conn.AutoMigrate(&model.Zone{}, &model.ZoneDomain{}, &model.TLSCertificate{}, &model.CFPointingGroup{}, &model.CFPointingMember{}))
 	db.SetDB(conn)
 	t.Cleanup(func() { db.SetDB(nil) })
 	return context.Background()
@@ -52,6 +52,22 @@ func TestDeleteDomainRejectsBoundRoute(t *testing.T) {
 	item.ProxyRouteID = nil
 	require.NoError(t, repository.SaveZoneDomain(ctx, item))
 	require.NoError(t, DeleteDomain(ctx, zone.ID, item.ID))
+}
+
+func TestDeleteDomainCleansUpCloudflareMember(t *testing.T) {
+	ctx := setupZoneDB(t)
+	zone, err := Create(ctx, Input{Domain: "example.com"})
+	require.NoError(t, err)
+	domain, err := CreateDomain(ctx, zone.ID, DomainInput{Domain: "api.example.com"})
+	require.NoError(t, err)
+
+	member := model.CFPointingMember{GroupID: 1, ZoneDomainID: domain.ID}
+	require.NoError(t, repository.CreateCFPointingMember(ctx, &member))
+
+	require.NoError(t, DeleteDomain(ctx, zone.ID, domain.ID))
+
+	_, err = repository.GetCFPointingMemberByZoneDomainID(ctx, domain.ID)
+	require.Error(t, err)
 }
 
 func TestLegacyImportUsesEffectiveTLDPlusOne(t *testing.T) {

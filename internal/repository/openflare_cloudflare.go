@@ -91,7 +91,9 @@ func DeleteCFPointingGroup(ctx context.Context, id uint) error {
 // CountCFPointingMembersByGroupID counts members in a group.
 func CountCFPointingMembersByGroupID(ctx context.Context, groupID uint) (int64, error) {
 	var count int64
-	err := db.DB(ctx).Model(&model.CFPointingMember{}).Where("group_id = ?", groupID).Count(&count).Error
+	err := db.DB(ctx).Table("of_cf_pointing_members AS members").
+		Joins("JOIN of_zone_domains AS domains ON domains.id = members.zone_domain_id").
+		Where("members.group_id = ?", groupID).Count(&count).Error
 	return count, err
 }
 

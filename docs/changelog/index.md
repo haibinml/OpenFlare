@@ -14,6 +14,7 @@ sidebar: false
 - 控制台接入中英双语（next-intl，无 URL 语言前缀）：默认中文，可在顶栏或「外观设置」切换；选择写入 cookie 后刷新生效。
 
 ### 🛠 修复
+- 修复在网站列表中删除已加入 Cloudflare 指向分组的域名后，访问 Cloudflare 指向分组详情报错「Cloudflare 资源不存在」的问题。
 - 修复自定义 Webhook 推送在企业微信/钉钉返回 HTTP 200 但 `errcode` 非零时仍记为成功的问题；任务日志会记录上游响应体。
 - 修复 OpenTelemetry Resource 绑定 semconv schema 版本导致 SDK 升级后可能无法启动的问题。
 - 修复静态导出（build:embed）部署下切换语言无效的问题：此前页面在构建时固定为默认中文，运行时不再读取 `NEXT_LOCALE`；现在客户端会按 cookie/浏览器语言重新解析并切换界面语言与 `html lang`。
