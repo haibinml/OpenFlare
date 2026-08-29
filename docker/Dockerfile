@@ -36,16 +36,16 @@ RUN apk add --no-cache ca-certificates git
 
 WORKDIR /workspace
 
-COPY go.mod go.sum ./
+COPY backend/go.mod backend/go.sum ./
 RUN go mod download
 
-COPY . .
+COPY backend/ ./
 COPY --from=frontend-builder /workspace/frontend/out ./internal/router/root/dist
 
 RUN CGO_ENABLED=0 GOOS=linux go build \
     -tags embed_frontend \
     -trimpath \
-    -ldflags="-s -w -X github.com/Rain-kl/Wavelet/internal/buildinfo.Version=${VERSION} -X github.com/Rain-kl/Wavelet/internal/buildinfo.BuildTime=${BUILD_DATE}" \
+    -ldflags="-s -w -X Wavelet/pkg/buildinfo.Version=${VERSION} -X Wavelet/pkg/buildinfo.BuildTime=${BUILD_DATE}" \
     -o /out/openflare-server \
     ./main.go
 

@@ -6,8 +6,8 @@ package references
 import (
 	"net/http"
 
-	"github.com/Rain-kl/Wavelet/internal/service"
-	"github.com/Rain-kl/Wavelet/internal/util"
+	"OpenFlare/internal/service"
+	"OpenFlare/internal/util"
 	"github.com/gin-gonic/gin"
 )
 

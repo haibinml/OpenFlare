@@ -72,7 +72,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 | `new-async-task` | Asynq 任务、定时任务、TaskHandler、任务元数据 |
 | `new-setting` | 系统/业务/公开设置、`/admin/system`、`/admin/settings` |
 | `database-migration` | 表结构、goose 迁移（PG/SQLite/ClickHouse）、seed |
-| `logstore` | 日志/分析用途表、`internal/repository/logstore`、切换日志主库、PG/SQLite 回落 |
+| `logstore` | 日志/分析用途表、`backend/internal/repository/logstore`、切换日志主库、PG/SQLite 回落 |
 | `clickhouse-batchwriter` | CH 批量写入、batchwriter、分析表 flush/背压 |
 | `file-upload` | 上传/摄取、`upload.Ingest`、文件访问、`w_uploads` |
 | `cache-framework` | 业务缓存（RAM/Redis/DB）、失效、多节点同步 |
@@ -82,19 +82,31 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ## 硬性约束
 
+### 上游/下游改动归属（Cordis）
+
+- 触碰框架目录 `backend/{core,pkg,plugins}` 前，先判断能力归属：
+  - **通用能力**（与 OpenFlare 业务无关、任何下游都用得上）→ 必须同步在 **Wavelet 上游**完成修改，
+    本仓库只能通过 `scripts/sync-upstream.sh` 取得，不得长期持有本地补丁。
+  - **非通用能力**（OpenFlare 业务特有）→ 在自己的插件内（`backend/OpenFlare/plugins/<name>/`）实现，
+    或新建一个下游插件，禁止塞进上游目录。
+- 开发下游功能优先**复用上游已有能力**（`core/contracts`、`backend/plugins/*`、`backend/pkg/*`）；
+  发现上游已提供而下游仍保留本地副本的，删除本地副本改为复用，或把差量回流上游。
+- 上游暂缺而确属通用能力时，可先在本仓库实现并登记到 `backend/OpenFlare/upstream-patches.md`
+  （`sync-upstream.sh` 同步后会提示核对），回流 Wavelet 后删除登记并重新同步。
+
 - 禁止删除 `frontend/node_modules`。
-- `pkg/util/` 保持纯净：禁止导入 Gin、GORM、sessions 等 HTTP/Web/DB 框架（会话选项在 `internal/apps/oauth/session.go`）。
+- `backend/pkg/util/` 保持纯净：禁止导入 Gin、GORM、sessions 等 HTTP/Web/DB 框架（会话选项在 `backend/OpenFlare/plugins/server/oauth/session.go`）。
 - 测试临时目录只用 `t.TempDir()`，禁止硬编码相对路径写源码树。
-- HTTP 路由仅在 `internal/router/router.go` 注册；`Serve()` 只挂路由与中间件，禁止进程级初始化（如 `SyncEvents`、`InitLogWriter`）。
+- HTTP 路由只由插件在 `Apply` 中经 `ctx.Router()` 声明；`router.BuildEngine()` 只挂引擎级中间件与前端 SPA 兜底，禁止进程级初始化（如 `SyncEvents`、`InitLogWriter`）。
 - API 变更后：`make swagger`；开发完成：`make code-check`；提交前：`make format`。
 - 缓存/文件管理复用平台实现，业务包禁止自建缓存目录或旁路存储后端。
 - 文件摄取走 `upload.Ingest`（`PolicyCreate` / `PolicyDedupNewRecord` / `PolicyResolveExisting`）；删除走 `upload.Remove` / `upload.RemoveOwned`。禁止业务直接 `repository.CreateUpload` / `SoftDeleteUpload` 或 `db.Create(&model.Upload{})`。
 - **分层**：`apps → repository → model`，`repository → infra/persistence`；禁止 `model → repository`。
   - `model`：实体、表名、配置 key、查询 DTO、无 IO 规则。禁止 `db.DB` / Redis / CH；禁止 `import repository`。GORM hook 仅可 mutate 自身字段，禁止在 hook 内再查 DB/缓存。
   - `repository`：唯一持久化入口。apps/logics 禁止为业务 CRUD 直调 `db.DB`（管理端 SQL 控制台、infra 内部等例外保留）。禁止新增 `model.Get/List/Create/...` 类数据访问 API。
-- 日志/分析表（节点访问日志、用户访问日志、可观测时序）走 `internal/repository/logstore`，禁止 apps 直连 `repository/analytics` 或 `db.ChConn`/`db.ChDB`。判定与接入步骤见 `logstore` skill。
-- 跨模块集成（任务 Handler、推送事件、域监听、完成钩子）禁止 `init()` 注册；经 `internal/platform/bootstrap` 在 `internal/cmd` 入口显式装配。
-- 核心业务（如 `oauth`、`user`）禁止直接 import push/custom_events；经 `internal/listener` 发域事件，push 在 bootstrap 订阅。
+- 日志/分析表（节点访问日志、用户访问日志、可观测时序）走 `backend/OpenFlare/plugins/server/repository/logstore`，禁止 apps 直连 `repository/analytics` 或 `db.ChConn`/`db.ChDB`。判定与接入步骤见 `logstore` skill。
+- 跨模块集成（任务 Handler、推送事件、域监听、完成钩子）禁止 `init()` 注册；经 `backend/OpenFlare/plugins/server/platform/bootstrap` 在 `backend/cmd` 入口显式装配。
+- 核心业务（如 `oauth`、`user`）禁止直接 import push/custom_events；经 `backend/OpenFlare/plugins/server/listener` 发域事件，push 在 bootstrap 订阅。
 - 依赖任务/推送注册的测试须显式 `bootstrap.RegisterTasks()` / `RegisterPushDomainEvents()` 等，不依赖 `init()`。
 - API 错误必须 `response.Abort*` + `ErrorHandlerMiddleware`；禁止 Handler 直接 `c.JSON(..., response.Err(...))` 或用 HTTP 200 表示失败。
 
@@ -132,7 +144,7 @@ Conventional Commits：`<type>(<scope>): <subject>`（例：`feat(auth): support
 - 命名：动词 + 名词（`ListUsers`）；绑定用 `ShouldBindQuery` / `ShouldBindJSON`。
 - 每个 HTTP API 需完整 Swagger 注释；API 变更后 `make swagger`。
 - Handler：绑定 → 调 logic → 映射为 `Abort*` 或 `response.OK`。
-- `logics.go`：接受 `context.Context`，返回结果/error；**禁止**依赖 `*gin.Context`、调用 `Abort*` / `c.JSON`。参考 `internal/apps/user/logics.go`。
+- `logics.go`：接受 `context.Context`，返回结果/error；**禁止**依赖 `*gin.Context`、调用 `Abort*` / `c.JSON`。参考 `backend/internal/apps/user/logics.go`。
 
 ### API 响应
 
@@ -158,7 +170,7 @@ Swagger：`@Success 200` 用具体类型或 `response.Any`；每个可能 Abort 
 
 ### 日志
 
-- 运行时错误（DB/Redis/第三方/IO）在 Handler 或 logic 边界用 `pkg/logger`（带 `ctx`）记录，再返回安全 Abort/业务错误。
+- 运行时错误（DB/Redis/第三方/IO）在 Handler 或 logic 边界用 `backend/pkg/logger`（带 `ctx`）记录，再返回安全 Abort/业务错误。
 - 吞错、转通用响应、worker 忽略前必须先记日志。
 - 禁止 `_ = err` 静默丢弃重要错误；best-effort 可忽略时加简短注释。
 - 只在处理/抑制边界记一次，避免重复刷日志。
@@ -166,7 +178,7 @@ Swagger：`@Success 200` 用具体类型或 `response.Any`；每个可能 Abort 
 ### 路由与装配
 
 - `router.go` 只做高层分发，禁止直接挂业务 Handler。归属与开发步骤见 `new-api` skill。
-- 跨模块副作用：在 `bootstrap` 增 `Register*`，于对应 `internal/cmd/*.go` 调用（`RegisterAPI` / `RegisterWorker` / `RegisterAll`）。
+- 跨模块副作用：在 `bootstrap` 增 `Register*`，于对应 `backend/internal/cmd/*.go` 调用（`RegisterAPI` / `RegisterWorker` / `RegisterAll`）。
 - API/`all` 模式：`bootstrap.Init` 须在 `RegisterPushDomainEvents()` **之后**调用，保证 `SyncEvents` 同步内置推送元数据。
 
 ### 中间件
@@ -177,13 +189,13 @@ Swagger：`@Success 200` 用具体类型或 `response.Any`；每个可能 Abort 
 ### 配置
 
 - 运行时只读 `config.Config`，禁止 `os.Getenv()`。
-- 新增配置同步 `config.example.yaml` 与 `internal/infra/config/model.go`。
+- 新增配置同步 `config.example.yaml` 与 `backend/internal/infra/config/model.go`。
 
 ### 数据库
 
 - 持久化只经 `repository`（或 analytics）；复杂查询不进 Handler；编排在 logics。
 - repository 内用 `db.DB(ctx)`（链路追踪）。
-- 迁移：`internal/infra/persistence/migrator/goose/` SQL；禁止 GORM AutoMigrate。
+- 迁移：`backend/internal/infra/persistence/migrator/goose/` SQL；禁止 GORM AutoMigrate。
 - 不建物理外键，关系字段加显式索引。
 - 列默认值与 Go 零值（`nil`/`0`/`false`/`""`）一致。
 

@@ -13,14 +13,14 @@ ENV CGO_ENABLED=0 \
     GOARCH=${TARGETARCH}
 
 WORKDIR /build
-COPY go.mod go.sum ./
+COPY backend/go.mod backend/go.sum ./
 RUN --mount=type=cache,target=/go/pkg/mod \
     go mod download
 
-COPY . .
+COPY backend/ ./
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
-    go build -trimpath -ldflags "-s -w -X 'github.com/Rain-kl/Wavelet/internal/apps/agent/config.Version=$VERSION'" -o /build/bin/openflare-agent ./cmd/agent/main.go
+    go build -trimpath -ldflags "-s -w -X 'Wavelet/OpenFlare/plugins/agent/config.Version=$VERSION'" -o /build/bin/openflare-agent ./cmd/agent/main.go
 
 # Fetch MMDB into dist/geoip for COPY into the runtime image (not go:embed).
 RUN apk add --no-cache bash curl \

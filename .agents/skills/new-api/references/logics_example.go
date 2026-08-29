@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Rain-kl/Wavelet/pkg/logger"
+	"OpenFlare/pkg/logger"
 	"go.uber.org/zap"
 )
 

@@ -83,8 +83,8 @@ invoice.FilePath = "uploads/2026/01/02/123.pdf"
 import (
     "bytes"
 
-    "github.com/Rain-kl/Wavelet/internal/apps/upload"
-    "github.com/Rain-kl/Wavelet/internal/model"
+    "OpenFlare/internal/apps/upload"
+    "OpenFlare/internal/model"
 )
 
 func ingestMirrorFile(ctx context.Context, userID uint64, data []byte, hash, filename, mime, ext string) (model.Upload, error) {

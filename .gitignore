@@ -87,3 +87,10 @@ profile.cov
 # i18n 生成物（由 scripts/merge-i18n-fragments.mjs 从 fragments 生成）
 frontend/messages/zh-CN.json
 frontend/messages/en.json
+
+# 上游 vendoring 目录内禁止出现运行期产物
+backend/plugins/**/uploads/
+backend/plugins/**/dist/
+backend/core/**/dist/
+backend/pkg/**/uploads/
+/backend/OpenFlare/plugins/server/upload/filesrv/uploads/

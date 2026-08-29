@@ -78,7 +78,7 @@ OpenResty (Agent, TLS/WAF)
 ## 组件架构与分工
 
 ### 1. Server (控制面)
-仓库根目录的 Go 后端（模块 `github.com/Rain-kl/Wavelet`）是 OpenFlare 控制面，基于 Wavelet 全栈脚手架构建：
+仓库根目录的 Go 后端（模块 `OpenFlare`）是 OpenFlare 控制面，基于 Wavelet 全栈脚手架构建：
 * 提供管理端 REST API（`/api/v1/d/*`），通过 **Session Cookie** 鉴权，可选 `X-Access-Token` 访问令牌。
 * 边缘节点协议走 `/api/v1/agent|relay|tunnel/*`，分别使用 `X-Agent-Token` / `X-Tunnel-Token` 鉴权。
 * 包含配置编译器（Compiler），将数据库中的规则、证书与全局参数统一编译为不可变的配置快照及 OpenResty 物理配置文件文本。

@@ -70,7 +70,7 @@ When developing and contributing code, **you must strictly follow** these busine
 
 ## Repository Structure
 
-OpenFlare has converged to a **single monorepo** (Go module `github.com/Rain-kl/Wavelet`). The control-plane Server and edge components (Agent, Relay, OpenFlared) share the repo, organized by Wavelet `internal/apps/` domain modules.
+OpenFlare has converged to a **single monorepo** (Go module `OpenFlare`). The control-plane Server and edge components (Agent, Relay, OpenFlared) share the repo, organized by Wavelet `internal/apps/` domain modules.
 
 When contributing code, strictly follow this physical layering and directory division:
 

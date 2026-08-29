@@ -54,7 +54,7 @@ Wavelet 后端路由采用了**严格的框架层与业务层隔离机制**。�
   package root
 
   import (
-  	"github.com/Rain-kl/Wavelet/internal/apps/custom"
+  	"OpenFlare/internal/apps/custom"
   	"github.com/gin-gonic/gin"
   )
 
@@ -75,7 +75,7 @@ Wavelet 后端路由采用了**严格的框架层与业务层隔离机制**。�
   package v1
 
   import (
-  	"github.com/Rain-kl/Wavelet/internal/apps/custom"
+  	"OpenFlare/internal/apps/custom"
   	"github.com/gin-gonic/gin"
   )
 
@@ -127,7 +127,7 @@ internal/
 在 `internal/apps/custom/routers.go` 中编写 Handler：
 - 负责请求参数绑定与校验（使用 `ShouldBindJSON`/`ShouldBindQuery`）。
 - 负责提取 Session / 用户身份。
-- 调用业务逻辑层，并使用 `github.com/Rain-kl/Wavelet/internal/shared/response` 统一返回响应：
+- 调用业务逻辑层，并使用 `OpenFlare/internal/shared/response` 统一返回响应：
   - 成功时返回：`response.OK(data)` 或 `response.OKNil()`
   - 失败时返回：`response.Err(msg)`
 - 编写规范的 Swagger 注释。

@@ -70,7 +70,7 @@ OpenFlare 适合需要统一管理多台 OpenResty 代理节点的团队，具�
 
 ## 仓库结构
 
-OpenFlare 已收敛为**单 monorepo**（Go 模块 `github.com/Rain-kl/Wavelet`）。控制面 Server 与边缘组件（Agent、Relay、OpenFlared）共享同一仓库，业务代码按 Wavelet `internal/apps/` 领域模块组织。
+OpenFlare 已收敛为**单 monorepo**（Go 模块 `OpenFlare`）。控制面 Server 与边缘组件（Agent、Relay、OpenFlared）共享同一仓库，业务代码按 Wavelet `internal/apps/` 领域模块组织。
 
 在贡献代码时，请严格遵守以下物理分层与目录分工：
 

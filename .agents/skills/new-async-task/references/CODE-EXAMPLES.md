@@ -10,7 +10,7 @@
 package upload
 
 import (
-    "github.com/Rain-kl/Wavelet/internal/infra/task"
+    "OpenFlare/internal/infra/task"
 )
 
 // 异步任务类型标识。格式建议为 "{module}:{action}"。
@@ -83,7 +83,7 @@ package upload
 import (
     "context"
 
-    "github.com/Rain-kl/Wavelet/internal/infra/task"
+    "OpenFlare/internal/infra/task"
 )
 
 type CleanupUnusedUploadsHandler struct{}
@@ -114,7 +114,7 @@ import (
     "fmt"
     "strings"
 
-    "github.com/Rain-kl/Wavelet/internal/infra/task"
+    "OpenFlare/internal/infra/task"
 )
 
 type SendEmailPayload struct {
@@ -169,9 +169,9 @@ func (h *SendEmailHandler) Execute(ctx context.Context, payload []byte) (*task.T
 package handlers
 
 import (
-    "github.com/Rain-kl/Wavelet/internal/apps/upload"
-    "github.com/Rain-kl/Wavelet/internal/apps/user"
-    "github.com/Rain-kl/Wavelet/internal/infra/task"
+    "OpenFlare/internal/apps/upload"
+    "OpenFlare/internal/apps/user"
+    "OpenFlare/internal/infra/task"
 )
 
 func Register() {

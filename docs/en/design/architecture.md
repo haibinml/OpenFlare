@@ -78,7 +78,7 @@ OpenResty (Agent, TLS/WAF)
 ## Component Architecture and Division
 
 ### 1. Server (control plane)
-The Go backend at the repo root (module `github.com/Rain-kl/Wavelet`) is the OpenFlare control plane, built on the Wavelet full-stack scaffold:
+The Go backend at the repo root (module `OpenFlare`) is the OpenFlare control plane, built on the Wavelet full-stack scaffold:
 * Provides admin REST APIs (`/api/v1/d/*`) authenticated via **Session Cookie**, with optional `X-Access-Token`.
 * Edge node protocols go through `/api/v1/agent|relay|tunnel/*`, authenticated with `X-Agent-Token` / `X-Tunnel-Token` respectively.
 * Contains the config Compiler, uniformly compiling DB rules, certs, and global params into immutable config snapshots and OpenResty physical config file text.

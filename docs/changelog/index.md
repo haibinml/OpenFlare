@@ -10,6 +10,14 @@ sidebar: false
 
 ## [Unreleased]
 
+### 💄 其他/体验
+
+- 后端代码整体迁入 `backend/`，与上游 Wavelet 的仓库布局对齐（Cordis 插件化改造第一阶段），模块名保持 `Wavelet` 以保证上游包路径逐字一致。构建、测试、镜像与发布链路已同步调整，`make build-all` / `make dev` / `make swagger` 等本地命令用法不变；HTTP 接口与控制台行为均无变化。
+- 引入上游 Cordis 微内核与平台插件到 `backend/{core,pkg,plugins}`（与上游逐字一致，可用 `scripts/sync-upstream.sh` 重复同步），并新增 `backend/OpenFlare/share/` 承载多插件共享资源（控制消息协议、GeoIP、边缘日志）。此阶段仅落位结构与共享层，尚未改变运行时行为。
+- 下游代码按功能职责拆为 `server`/`agent`/`relay`/`flared` 四个插件与 `backend/OpenFlare/share` 共享层；三个边缘守护进程改由 Cordis 内核装配启动（profile `agent`/`relay`/`flared`），`-config` 旗标、默认配置路径、退出码与启动日志保持原样。
+- 控制台 API 改由 Cordis 内核提供服务：`server` 插件以声明式路由注册，HTTP 监听与优雅退出交给内核的 http 驱动。全部 256 条路由（含 20 条带尾部斜杠的历史列表接口）与改造前逐条一致，232 条对外 API 操作无变化。
+
+- 清理与上游 Wavelet 重复的平台实现：响应封装、日志、邮件、链路追踪、HTTP 连接池、内存/磁盘缓存、批量写入等 8 个本地副本删除并改为使用上游能力（约 600 行重复代码消失，接口形状与文档定义完全一致）；顺带把磁盘缓存的类型断言健壮性修复回流上游。
 ## [v3.5.4] - 2026-08-29
 
 ### ✨ 新功能
