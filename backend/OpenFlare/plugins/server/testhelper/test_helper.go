@@ -64,11 +64,14 @@ func SetupTestEnvironment(t *testing.T) (*gorm.DB, any, func()) {
 		t.Fatalf("idgen.Init: %v", err)
 	}
 	seedDefaultConfigs(t, sqliteDB)
+	repository.ResetSystemConfigRAMCacheForTest()
 
 	cleanup := func() {
 		runExtraCleanups()
 		repository.StopSystemConfigCacheListener()
 		repository.ResetSystemConfigRAMCacheForTest()
+		repository.SetAuthService(nil)
+		repository.SetUserService(nil)
 		db.SetDB(nil)
 	}
 

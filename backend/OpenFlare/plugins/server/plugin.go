@@ -10,6 +10,7 @@ import (
 	"Wavelet/OpenFlare/plugins/server/ofevents"
 	"Wavelet/OpenFlare/plugins/server/openflare/chwriter"
 	ofgeoip "Wavelet/OpenFlare/plugins/server/openflare/geoip"
+	"Wavelet/OpenFlare/plugins/server/openflare/ofupload"
 	"Wavelet/OpenFlare/plugins/server/publicconfig"
 	"Wavelet/OpenFlare/plugins/server/repository"
 	"Wavelet/OpenFlare/plugins/server/repository/logstore"
@@ -70,6 +71,16 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	} else {
 		core.When[contracts.TaskService](ctx, oftask.SetService)
 	}
+	if user, err := core.Inject[contracts.UserService](ctx); err == nil && user != nil {
+		repository.SetUserService(user)
+	} else {
+		core.When[contracts.UserService](ctx, repository.SetUserService)
+	}
+	if storage, err := core.Inject[contracts.StorageService](ctx); err == nil && storage != nil {
+		ofupload.SetStorage(storage)
+	} else {
+		core.When[contracts.StorageService](ctx, ofupload.SetStorage)
+	}
 
 	core.Provide[contracts.PublicConfigProvider](ctx, publicconfig.New(ctx))
 	if pr, err := core.Inject[contracts.PushRegistry](ctx); err == nil {
@@ -91,6 +102,7 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	if err := core.Using[contracts.AuthService](ctx, func(s contracts.AuthService) { auth = s }); err != nil {
 		return err
 	}
+	repository.SetAuthService(auth)
 	ofrouter.RegisterV1Routes(ctx.Router().Group("/api/v1"), auth)
 	ofrouter.RegisterRoutes(ctx.Router().Group("/api/v1"), auth)
 

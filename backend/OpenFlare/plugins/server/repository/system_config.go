@@ -6,134 +6,112 @@ package repository
 import (
 	"context"
 	"errors"
-	"fmt"
-	"strconv"
 
 	"Wavelet/OpenFlare/plugins/server/model"
+	adminrepo "Wavelet/plugins/domain/admin/repository"
 	db "Wavelet/plugins/infra/database"
-
-	"gorm.io/gorm"
 )
 
 const configTypeSystem = "system"
 
-// GetSystemConfigByKey loads a config row by key.
-func GetSystemConfigByKey(ctx context.Context, key string) (model.SystemConfig, error) {
-	conn := db.DB(ctx)
-	if conn == nil {
-		return model.SystemConfig{}, errors.New(errDatabaseNotInitialized)
+// ensureAdminStore points OF config access at Wavelet's admin repository so
+// reads hit the same cache that SaveOrUpdateSystemConfig invalidates.
+func ensureAdminStore(ctx context.Context) error {
+	if conn := db.DB(ctx); conn != nil {
+		adminrepo.SetDBService(db.NewService(conn))
 	}
-	var sc model.SystemConfig
-	if err := conn.Where("key = ?", key).First(&sc).Error; err != nil {
-		return model.SystemConfig{}, err
+	if adminrepo.GetDB(ctx) == nil {
+		return errors.New(errDatabaseNotInitialized)
 	}
-	return sc, nil
+	return nil
 }
 
-// ListSystemConfigsByKeys loads multiple config keys.
+// GetSystemConfigByKey loads a config row by key through the admin store cache.
+func GetSystemConfigByKey(ctx context.Context, key string) (model.SystemConfig, error) {
+	if err := ensureAdminStore(ctx); err != nil {
+		return model.SystemConfig{}, err
+	}
+	return adminrepo.GetSystemConfigByKey(ctx, key)
+}
+
+// ListSystemConfigsByKeys loads multiple config keys through the admin store cache.
 func ListSystemConfigsByKeys(ctx context.Context, keys []string) (map[string]model.SystemConfig, error) {
-	result := make(map[string]model.SystemConfig, len(keys))
-	if len(keys) == 0 {
-		return result, nil
-	}
-	conn := db.DB(ctx)
-	if conn == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
-	}
-	var configs []model.SystemConfig
-	if err := conn.Where("key IN ?", keys).Find(&configs).Error; err != nil {
+	if err := ensureAdminStore(ctx); err != nil {
 		return nil, err
 	}
-	for i := range configs {
-		result[configs[i].Key] = configs[i]
+	return adminrepo.ListSystemConfigsByKeys(ctx, keys)
+}
+
+// ListVisibleSystemConfigs returns visibility=1 configs from the admin store cache.
+func ListVisibleSystemConfigs(ctx context.Context) ([]model.SystemConfig, error) {
+	if err := ensureAdminStore(ctx); err != nil {
+		return nil, err
 	}
-	return result, nil
+	return adminrepo.ListVisibleSystemConfigs(ctx)
 }
 
 // GetIntByKey queries config and converts to int.
 func GetIntByKey(ctx context.Context, key string) (int, error) {
-	sc, err := GetSystemConfigByKey(ctx, key)
-	if err != nil {
+	if err := ensureAdminStore(ctx); err != nil {
 		return 0, err
 	}
-	value, err := strconv.Atoi(sc.Value)
-	if err != nil {
-		return 0, fmt.Errorf(errConfigIntParseFailed, key, sc.Value, err)
-	}
-	return value, nil
+	return adminrepo.GetIntByKey(ctx, key)
 }
 
 // GetBoolByKey queries config and converts to bool.
 func GetBoolByKey(ctx context.Context, key string) (bool, error) {
-	sc, err := GetSystemConfigByKey(ctx, key)
-	if err != nil {
+	if err := ensureAdminStore(ctx); err != nil {
 		return false, err
 	}
-	value, err := strconv.ParseBool(sc.Value)
-	if err != nil {
-		return false, fmt.Errorf(errConfigBoolParseFailed, key, sc.Value, err)
-	}
-	return value, nil
+	return adminrepo.GetBoolByKey(ctx, key)
 }
 
 // CreateSystemConfig persists a new system config row.
 func CreateSystemConfig(ctx context.Context, config *model.SystemConfig) error {
-	conn := db.DB(ctx)
-	if conn == nil {
-		return errors.New(errDatabaseNotInitialized)
-	}
-	return conn.Create(config).Error
-}
-
-// SaveOrUpdateSystemConfig creates or updates a config row.
-func SaveOrUpdateSystemConfig(ctx context.Context, key, value string) error {
-	conn := db.DB(ctx)
-	if conn == nil {
-		return errors.New(errDatabaseNotInitialized)
-	}
-	var sc model.SystemConfig
-	err := conn.Where("key = ?", key).First(&sc).Error
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	if err := ensureAdminStore(ctx); err != nil {
 		return err
 	}
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		sc = model.SystemConfig{
-			Key:        key,
-			Value:      value,
-			Type:       configTypeSystem,
-			Visibility: model.ConfigVisibilityHidden,
-		}
-		return conn.Create(&sc).Error
-	}
-	sc.Value = value
-	return conn.Save(&sc).Error
+	return adminrepo.CreateSystemConfigRecord(ctx, config)
 }
 
-// InvalidateSystemConfigCache is a no-op: OF no longer owns the config cache.
-func InvalidateSystemConfigCache(context.Context, string) error { return nil }
+// SaveOrUpdateSystemConfig creates or updates a config row and invalidates the admin cache.
+func SaveOrUpdateSystemConfig(ctx context.Context, key, value string) error {
+	if err := ensureAdminStore(ctx); err != nil {
+		return err
+	}
+	return adminrepo.SaveOrUpdateSystemConfig(ctx, key, value)
+}
 
-// InvalidateAllSystemConfigCaches is a no-op retained for migrator.
-func InvalidateAllSystemConfigCaches(context.Context) error { return nil }
+// InvalidateSystemConfigCache evicts one key from Wavelet's system-config cache.
+func InvalidateSystemConfigCache(ctx context.Context, key string) error {
+	if err := ensureAdminStore(ctx); err != nil {
+		return err
+	}
+	return adminrepo.InvalidateSystemConfigCache(ctx, key)
+}
 
-// StopSystemConfigCacheListener is a no-op retained for existing tests.
-func StopSystemConfigCacheListener() {}
+// InvalidateAllSystemConfigCaches evicts the whole Wavelet system-config cache.
+func InvalidateAllSystemConfigCaches(ctx context.Context) error {
+	if err := ensureAdminStore(ctx); err != nil {
+		return err
+	}
+	return adminrepo.InvalidateAllSystemConfigCaches(ctx)
+}
 
-// ResetSystemConfigRAMCacheForTest is a no-op retained for existing tests.
-func ResetSystemConfigRAMCacheForTest() {}
+// StopSystemConfigCacheListener is retained for existing tests.
+func StopSystemConfigCacheListener() {
+	adminrepo.StopSystemConfigCacheListener()
+}
+
+// ResetSystemConfigRAMCacheForTest clears the process-local admin config cache.
+func ResetSystemConfigRAMCacheForTest() {
+	adminrepo.ResetSystemConfigRAMCacheForTest()
+}
 
 // ListAdminSystemConfigs returns configs, optionally filtered by type.
 func ListAdminSystemConfigs(ctx context.Context, configType string) ([]model.SystemConfig, error) {
-	conn := db.DB(ctx)
-	if conn == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
-	}
-	query := conn.Order("created_at DESC")
-	if configType != "" {
-		query = query.Where("type = ?", configType)
-	}
-	var configs []model.SystemConfig
-	if err := query.Find(&configs).Error; err != nil {
+	if err := ensureAdminStore(ctx); err != nil {
 		return nil, err
 	}
-	return configs, nil
+	return adminrepo.ListAdminSystemConfigs(ctx, configType)
 }

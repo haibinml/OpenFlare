@@ -13,7 +13,8 @@ import (
 
 // StubAuth is a contracts.AuthService that admits every request.
 type StubAuth struct {
-	User *contracts.UserDTO
+	User    *contracts.UserDTO
+	Sources []contracts.AuthSourceViewDTO
 }
 
 var _ contracts.AuthService = StubAuth{}
@@ -48,7 +49,7 @@ func (s StubAuth) RevokeUserSessions(context.Context, uint64) error          { r
 func (s StubAuth) InvalidateCachedUser(context.Context, uint64)              {}
 func (s StubAuth) InvalidateCachedToken(context.Context, string)             {}
 func (s StubAuth) ListAuthSources(context.Context) ([]contracts.AuthSourceViewDTO, error) {
-	return nil, nil
+	return s.Sources, nil
 }
 func (s StubAuth) CreateAuthSource(context.Context, contracts.AuthSourceDTO) (*contracts.AuthSourceDTO, error) {
 	return nil, nil

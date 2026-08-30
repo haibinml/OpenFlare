@@ -77,11 +77,14 @@ func setupPagesTestDB(t *testing.T) func() {
 	db.SetDB(sqliteDB)
 	require.NoError(t, idgen.Init(1))
 	oftask.SetService(&testhelper.NoopTaskService{})
+	mockStorage := uploadshared.NewMockStorageService()
 	uploadshared.SetDBService(db.NewService(sqliteDB))
-	uploadshared.SetStorageService(uploadshared.NewMockStorageService())
+	uploadshared.SetStorageService(mockStorage)
+	ofupload.SetStorage(mockStorage)
 	_ = repository.InvalidateSystemConfigCache(context.Background(), model.ConfigKeyPagesMaxPackageSizeMB)
 	_ = repository.InvalidateSystemConfigCache(context.Background(), model.ConfigKeyPagesMaxHistoryCount)
 	return func() {
+		ofupload.SetStorage(nil)
 		uploadshared.ResetServices()
 		db.SetDB(nil)
 	}
@@ -91,7 +94,11 @@ func setupPagesStorageMock(t *testing.T) (restore func(), disable func()) {
 	t.Helper()
 	mock := uploadshared.NewMockStorageService()
 	uploadshared.SetStorageService(mock)
-	restore = func() { uploadshared.ResetServices() }
+	ofupload.SetStorage(mock)
+	restore = func() {
+		ofupload.SetStorage(nil)
+		uploadshared.ResetServices()
+	}
 	disable = restore
 	return restore, disable
 }

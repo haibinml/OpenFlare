@@ -8,46 +8,60 @@ import (
 	"errors"
 
 	"Wavelet/OpenFlare/plugins/server/model"
-	db "Wavelet/plugins/infra/database"
+	adminrepo "Wavelet/plugins/domain/admin/repository"
 )
 
-// GetActiveAuthSources lists enabled Wavelet auth sources.
+const fallbackSystemUserID uint64 = 999
+
+// GetActiveAuthSources lists enabled Wavelet auth sources via AuthService.
 func GetActiveAuthSources(ctx context.Context) ([]model.AuthSource, error) {
-	conn := db.DB(ctx)
-	if conn == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
+	svc := currentAuthService()
+	if svc == nil {
+		return nil, errors.New("auth service not initialized")
 	}
-	var sources []model.AuthSource
-	if err := conn.Where("is_active = ?", true).Find(&sources).Error; err != nil {
+	views, err := svc.ListAuthSources(ctx)
+	if err != nil {
 		return nil, err
+	}
+	sources := make([]model.AuthSource, 0, len(views))
+	for _, view := range views {
+		if !view.IsActive {
+			continue
+		}
+		sources = append(sources, model.AuthSource{
+			ID:          view.ID,
+			Name:        view.Name,
+			Type:        view.Type,
+			DisplayName: view.DisplayName,
+			IconURL:     view.IconURL,
+			IsActive:    true,
+		})
 	}
 	return sources, nil
 }
 
 // GetTaskExecutionByTaskID loads a task execution by public task ID.
 func GetTaskExecutionByTaskID(ctx context.Context, taskID string) (*model.TaskExecution, error) {
-	conn := db.DB(ctx)
-	if conn == nil {
-		return nil, errors.New(errDatabaseNotInitialized)
-	}
-	var execution model.TaskExecution
-	if err := conn.Where("task_id = ?", taskID).First(&execution).Error; err != nil {
+	if err := ensureAdminStore(ctx); err != nil {
 		return nil, err
 	}
-	return &execution, nil
+	return adminrepo.GetTaskExecutionByTaskID(ctx, taskID)
 }
 
-// GetSystemUser loads the built-in system user, or returns a synthetic fallback.
+// GetSystemUser loads the built-in system user via UserService, or a synthetic fallback.
 func GetSystemUser(ctx context.Context) model.User {
-	var user model.User
-	conn := db.DB(ctx)
-	if conn != nil {
-		if err := conn.Where("username = ?", configTypeSystem).First(&user).Error; err == nil {
-			return user
+	if svc := currentUserService(); svc != nil {
+		if user, err := svc.GetUserByUsername(ctx, configTypeSystem); err == nil && user != nil {
+			return model.User{
+				ID:       user.ID,
+				Username: user.Username,
+				Nickname: user.Nickname,
+				IsActive: user.IsActive,
+			}
 		}
 	}
 	return model.User{
-		ID:       999,
+		ID:       fallbackSystemUserID,
 		Username: configTypeSystem,
 		Nickname: "系统",
 	}
