@@ -12,6 +12,7 @@ on:
 
 env:
   APP_NAME: openflare-server
+  GO_DIR: backend
   GO_MAIN: ./main.go
   GO_BUILD_TAGS: embed_frontend
   GO_LDFLAGS: -s -w
@@ -20,7 +21,7 @@ env:
   FRONTEND_DIR: frontend
   FRONTEND_BUILD_COMMAND: pnpm build:embed
   FRONTEND_OUT_DIR: frontend/out
-  EMBED_DIST_DIR: backend/OpenFlare/plugins/server/router/root/dist
+  EMBED_DIST_DIR: backend/plugins/drivers/driver_http/dist
   EXTRA_FILES: |
     LICENSE
     README.md
@@ -145,6 +146,7 @@ jobs:
           rm -rf "$EMBED_DIST_DIR"
           mkdir -p "$(dirname "$EMBED_DIST_DIR")"
           cp -R "$FRONTEND_OUT_DIR" "$EMBED_DIST_DIR"
+          test -f "$EMBED_DIST_DIR/index.html"
 
       - name: Upload embedded frontend
         uses: actions/upload-artifact@v4
@@ -192,7 +194,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: go.mod
+          go-version-file: ${{ env.GO_DIR }}/go.mod
           cache: true
 
       - name: Build binary
@@ -212,6 +214,9 @@ jobs:
             binary_name="${binary_name}.exe"
           fi
 
+          # Assert the embedded UI is present so a release cannot ship an API-only binary.
+          test -f "$EMBED_DIST_DIR/index.html"
+
           ldflags="$GO_LDFLAGS -X Wavelet/pkg/buildinfo.Version=$VERSION -X Wavelet/pkg/buildinfo.BuildTime=$BUILD_DATE"
           build_args=(
             -trimpath
@@ -223,7 +228,7 @@ jobs:
             build_args=(-tags "$GO_BUILD_TAGS" "${build_args[@]}")
           fi
 
-          ( cd backend && go build "${build_args[@]}" "$GO_MAIN" )
+          (cd "$GO_DIR" && go build "${build_args[@]}" "$GO_MAIN")
 
       - name: Package artifact
         id: package
@@ -296,7 +301,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: go.mod
+          go-version-file: ${{ env.GO_DIR }}/go.mod
 
       # GeoIP MMDB is not embedded; Docker images COPY mmdb files, bare binaries seed via download on first start.
       - name: Build Agent
@@ -345,7 +350,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: go.mod
+          go-version-file: ${{ env.GO_DIR }}/go.mod
 
       - name: Build Relay
         env:
@@ -393,7 +398,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: go.mod
+          go-version-file: ${{ env.GO_DIR }}/go.mod
 
       - name: Build Flared
         env:
