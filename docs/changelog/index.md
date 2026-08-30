@@ -10,6 +10,10 @@ sidebar: false
 
 ## [Unreleased]
 
+### 🛠 修复
+
+- 人机验证与健康检查去掉双路径：浏览器只请求 `/api/v1/cap/challenge` 与 `/api/v1/cap/redeem`，探针只保留 `GET /api/healthz`（`{"status":"ok"}`）。旧的 `/api/cap/*`、`/api/health` 与 `/healthz` 不再注册。
+
 ### 💄 其他/体验
 
 - 内嵌前端拷贝目标改为 `backend/plugins/drivers/driver_http/dist`，与上游 `//go:embed all:dist` 对齐；发布工作流改为读取 `backend/go.mod`。仓库内 `.gitconfig` 提供 `merge.ours` 驱动，合并上游时保留 OpenFlare 自有路径；Wavelet 的 `build-image.yml` 与 `docker-compose.yml` 已隔离，避免 canary 发布成 wavelet 镜像。

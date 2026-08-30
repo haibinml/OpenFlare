@@ -25,8 +25,8 @@ OpenFlare 的登录端点 `/api/v1/user/login` 缺少用户维度的防护机制
    * 在登录页面引入 `cap-widget`（React 19 自定义元素）。
    * 提交表单时，伴随提交由 Widget 求解出并得到的 `cap-token`。
 2. **Server (控制面后端)**：
-   * 暴露 `POST /api/cap/challenge` 接口，为客户端分发 PoW 难题和签名的 JWT Token。
-   * 暴露 `POST /api/cap/redeem` 接口，校验客户端提交的 PoW 解答并核发带有失效时间的登录凭证（Redeem Token）。
+   * 暴露 `POST /api/v1/cap/challenge` 接口，为客户端分发 PoW 难题和签名的 JWT Token。
+   * 暴露 `POST /api/v1/cap/redeem` 接口，校验客户端提交的 PoW 解答并核发带有失效时间的登录凭证（Redeem Token）。
    * 将 Redeem Token 与对应过期时间保存在内存缓存/Redis 缓存中。
    * 在 `POST /api/v1/user/login` 接口中，若启用了验证码保护，先校验并消耗（单次失效）对应的 `cap-token`。
 
@@ -40,10 +40,10 @@ sequenceDiagram
     participant Cache as 内存/Redis 缓存
 
     User->>Browser: 打开登录页面
-    Browser->>Server: POST /api/cap/challenge (获取难题)
+    Browser->>Server: POST /api/v1/cap/challenge (获取难题)
     Server->>Browser: 返回 {challenge, token, expires} (JWT 格式)
     Note over Browser: Widget 在后台(WASM/Worker)执行 PoW 难题计算
-    Browser->>Server: POST /api/cap/redeem (提交 solutions + token)
+    Browser->>Server: POST /api/v1/cap/redeem (提交 solutions + token)
     alt 校验 PoW 解答通过
         Server->>Cache: 存储 Redeem Token (tokenKey:expires)
         Server->>Browser: 返回 {success: true, token} (即 cap-token)
@@ -71,7 +71,7 @@ sequenceDiagram
 
 ### 3.1 接口定义
 
-#### 1. 获取难题 (GET/POST /api/cap/challenge)
+#### 1. 获取难题 (GET/POST /api/v1/cap/challenge)
 * **请求方式**：`POST`
 * **接口权限**：公开
 * **响应负载**（统一 API 信封，`data` 为业务载荷）：
@@ -90,7 +90,7 @@ sequenceDiagram
   }
   ```
 
-#### 2. 核销难题 (POST /api/cap/redeem)
+#### 2. 核销难题 (POST /api/v1/cap/redeem)
 * **请求方式**：`POST`
 * **请求负载**：
   ```json
