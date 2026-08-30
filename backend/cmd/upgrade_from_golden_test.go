@@ -31,6 +31,7 @@ import (
 
 const (
 	goldenRoot        = "/Users/ryan/Code/Go/OpenFlare"
+	goldCommit        = "9f79fb99"
 	goldGooseVersion  = int64(202608090003)
 	sampleZoneDomain  = "l3-upgrade-golden.example"
 	goldMigrateWait   = 75 * time.Second
@@ -41,6 +42,7 @@ const (
 var (
 	goldBinOnce sync.Once
 	goldBinPath string
+	goldSrcDir  string
 	goldBinErr  error
 )
 
@@ -244,10 +246,46 @@ func killGolden(cmd *exec.Cmd) {
 func buildGoldenBinary(t *testing.T) string {
 	t.Helper()
 	goldBinOnce.Do(func() {
-		if _, err := os.Stat(filepath.Join(goldenRoot, "main.go")); err != nil {
-			goldBinErr = fmt.Errorf("golden tree %s: %w", goldenRoot, err)
+		src, err := os.MkdirTemp("", "of-gold-src-")
+		if err != nil {
+			goldBinErr = err
 			return
 		}
+		archive := exec.Command("git", "-C", goldenRoot, "archive", goldCommit)
+		extract := exec.Command("tar", "-x", "-C", src)
+		pipe, err := archive.StdoutPipe()
+		if err != nil {
+			goldBinErr = fmt.Errorf("gold archive pipe: %w", err)
+			return
+		}
+		extract.Stdin = pipe
+		var archiveErr, extractErr bytes.Buffer
+		archive.Stderr = &archiveErr
+		extract.Stderr = &extractErr
+		if err := archive.Start(); err != nil {
+			goldBinErr = fmt.Errorf("git archive %s: %w", goldCommit, err)
+			return
+		}
+		if err := extract.Start(); err != nil {
+			_ = archive.Process.Kill()
+			goldBinErr = fmt.Errorf("extract gold %s: %w", goldCommit, err)
+			return
+		}
+		if err := extract.Wait(); err != nil {
+			_ = archive.Wait()
+			goldBinErr = fmt.Errorf("extract gold %s: %w\n%s", goldCommit, err, extractErr.String())
+			return
+		}
+		if err := archive.Wait(); err != nil {
+			goldBinErr = fmt.Errorf("git archive %s: %w\n%s", goldCommit, err, archiveErr.String())
+			return
+		}
+		if _, err := os.Stat(filepath.Join(src, "main.go")); err != nil {
+			goldBinErr = fmt.Errorf("gold %s at %s: %w", goldCommit, src, err)
+			return
+		}
+		goldSrcDir = src
+
 		dir, err := os.MkdirTemp("", "of-gold-bin-")
 		if err != nil {
 			goldBinErr = err
@@ -255,12 +293,12 @@ func buildGoldenBinary(t *testing.T) string {
 		}
 		out := filepath.Join(dir, "gold")
 		cmd := exec.Command("go", "build", "-o", out, ".")
-		cmd.Dir = goldenRoot
+		cmd.Dir = src
 		var buf bytes.Buffer
 		cmd.Stdout = &buf
 		cmd.Stderr = &buf
 		if err := cmd.Run(); err != nil {
-			goldBinErr = fmt.Errorf("go build golden: %w\n%s", err, buf.String())
+			goldBinErr = fmt.Errorf("go build golden %s: %w\n%s", goldCommit, err, buf.String())
 			return
 		}
 		goldBinPath = out
@@ -273,8 +311,9 @@ func buildGoldenBinary(t *testing.T) string {
 
 func copyGoldConfig(t *testing.T, dir string) string {
 	t.Helper()
+	buildGoldenBinary(t)
 	dst := filepath.Join(dir, "config.yaml")
-	src, err := os.Open(filepath.Join(goldenRoot, "config.example.yaml")) //nolint:gosec // fixed golden path
+	src, err := os.Open(filepath.Join(goldSrcDir, "config.example.yaml")) //nolint:gosec // extracted gold snapshot
 	if err != nil {
 		t.Fatalf("open golden config.example.yaml: %v", err)
 	}
