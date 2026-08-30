@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"Wavelet/OpenFlare/plugins/server/runtimeconfig"
+	"Wavelet/OpenFlare/plugins/server/kernel/runtimeconfig"
 
 	"github.com/pressly/goose/v3"
 )

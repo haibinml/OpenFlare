@@ -4,8 +4,8 @@
 package httpapi
 
 import (
-	"Wavelet/OpenFlare/plugins/server/fleet/flared"
-	"Wavelet/OpenFlare/plugins/server/fleet/relay"
+	"Wavelet/OpenFlare/plugins/server/domain/fleet/flared"
+	"Wavelet/OpenFlare/plugins/server/domain/fleet/relay"
 	"Wavelet/core"
 )
 

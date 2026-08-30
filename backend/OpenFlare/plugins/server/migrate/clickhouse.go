@@ -12,7 +12,7 @@ import (
 	"log"
 	"time"
 
-	"Wavelet/OpenFlare/plugins/server/runtimeconfig"
+	"Wavelet/OpenFlare/plugins/server/kernel/runtimeconfig"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/pressly/goose/v3"

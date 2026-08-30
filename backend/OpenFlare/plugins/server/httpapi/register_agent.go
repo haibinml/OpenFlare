@@ -4,7 +4,7 @@
 package httpapi
 
 import (
-	"Wavelet/OpenFlare/plugins/server/fleet/agent"
+	"Wavelet/OpenFlare/plugins/server/domain/fleet/agent"
 	"Wavelet/core"
 )
 

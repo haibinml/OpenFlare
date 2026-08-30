@@ -7,17 +7,17 @@
 package server
 
 import (
-	ofgeoip "Wavelet/OpenFlare/plugins/server/geoip"
+	"Wavelet/OpenFlare/plugins/server/domain/observability/chwriter"
 	ofrouter "Wavelet/OpenFlare/plugins/server/httpapi"
+	ofgeoip "Wavelet/OpenFlare/plugins/server/kernel/geoip"
+	"Wavelet/OpenFlare/plugins/server/kernel/ofevents"
+	"Wavelet/OpenFlare/plugins/server/kernel/ofupload"
+	"Wavelet/OpenFlare/plugins/server/kernel/publicconfig"
+	"Wavelet/OpenFlare/plugins/server/kernel/repository"
+	"Wavelet/OpenFlare/plugins/server/kernel/repository/logstore"
+	"Wavelet/OpenFlare/plugins/server/kernel/runtimeconfig"
+	oftask "Wavelet/OpenFlare/plugins/server/kernel/task"
 	"Wavelet/OpenFlare/plugins/server/migrate"
-	"Wavelet/OpenFlare/plugins/server/observability/chwriter"
-	"Wavelet/OpenFlare/plugins/server/ofevents"
-	"Wavelet/OpenFlare/plugins/server/ofupload"
-	"Wavelet/OpenFlare/plugins/server/publicconfig"
-	"Wavelet/OpenFlare/plugins/server/repository"
-	"Wavelet/OpenFlare/plugins/server/repository/logstore"
-	"Wavelet/OpenFlare/plugins/server/runtimeconfig"
-	oftask "Wavelet/OpenFlare/plugins/server/task"
 	"Wavelet/core"
 	"Wavelet/core/contracts"
 	"Wavelet/pkg/logger"
@@ -26,7 +26,7 @@ import (
 	"embed"
 	"reflect"
 
-	"Wavelet/OpenFlare/plugins/server/credential"
+	"Wavelet/OpenFlare/plugins/server/kernel/credential"
 	_ "Wavelet/docs"
 	adminservice "Wavelet/plugins/domain/admin/service"
 

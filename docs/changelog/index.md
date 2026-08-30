@@ -13,7 +13,7 @@ sidebar: false
 ### 🛠 修复
 
 - 人机验证与健康检查去掉双路径：浏览器只请求 `/api/v1/cap/challenge` 与 `/api/v1/cap/redeem`，探针只保留 `GET /api/healthz`（`{"status":"ok"}`）。旧的 `/api/cap/*`、`/api/health` 与 `/healthz` 不再注册。
-- 控制面 `server` 插件按限界上下文重排目录：去掉 `openflare/` 与 `router/v1` 嵌套，业务落在 `site`/`fleet`/`pages`/`waf`/`tls`/`cloudflare`/`observability`/`dashboard`/`option`，HTTP 装配在 `httpapi`。接口路径与表结构不变。
+- 控制面 `server` 插件按限界上下文重排目录：去掉 `openflare/` 与 `router/v1` 嵌套；业务在 `domain/`（site/fleet/pages 等），共享内核在 `kernel/`（model/repository 与适配器），HTTP 装配在 `httpapi`。接口路径与表结构不变。
 - `server` 插件把 stamp、of_* SQL 与 ClickHouse 迁入单一 `migrate/` 包，updater 提到 `server/updater/`；删除已停用的 76 条历史迁移。全新安装会写入 OpenFlare 定时任务与产品配置默认值，已 stamp 的升级库不重插。
 
 ### 💄 其他/体验

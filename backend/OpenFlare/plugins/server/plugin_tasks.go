@@ -6,12 +6,12 @@ package server
 import (
 	"context"
 
-	cf "Wavelet/OpenFlare/plugins/server/cloudflare"
-	"Wavelet/OpenFlare/plugins/server/fleet"
-	"Wavelet/OpenFlare/plugins/server/observability"
-	"Wavelet/OpenFlare/plugins/server/pages"
-	oftask "Wavelet/OpenFlare/plugins/server/task"
-	"Wavelet/OpenFlare/plugins/server/tls"
+	cf "Wavelet/OpenFlare/plugins/server/domain/cloudflare"
+	"Wavelet/OpenFlare/plugins/server/domain/fleet"
+	"Wavelet/OpenFlare/plugins/server/domain/observability"
+	"Wavelet/OpenFlare/plugins/server/domain/pages"
+	"Wavelet/OpenFlare/plugins/server/domain/tls"
+	oftask "Wavelet/OpenFlare/plugins/server/kernel/task"
 	"Wavelet/core"
 	"Wavelet/core/extpoints"
 )

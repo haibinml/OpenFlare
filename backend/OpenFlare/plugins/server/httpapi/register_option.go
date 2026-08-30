@@ -4,8 +4,8 @@
 package httpapi
 
 import (
-	"Wavelet/OpenFlare/plugins/server/apiutil"
-	"Wavelet/OpenFlare/plugins/server/option"
+	"Wavelet/OpenFlare/plugins/server/domain/option"
+	"Wavelet/OpenFlare/plugins/server/kernel/apiutil"
 	"Wavelet/core"
 	"Wavelet/core/contracts"
 )

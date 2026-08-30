@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"unicode"
 
-	"Wavelet/OpenFlare/plugins/server/site/zone"
+	"Wavelet/OpenFlare/plugins/server/domain/site/zone"
 	"Wavelet/core"
 	"Wavelet/core/contracts"
 )

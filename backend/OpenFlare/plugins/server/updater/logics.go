@@ -22,8 +22,8 @@ import (
 	"sync"
 	"time"
 
-	"Wavelet/OpenFlare/plugins/server/model"
-	"Wavelet/OpenFlare/plugins/server/repository"
+	"Wavelet/OpenFlare/plugins/server/kernel/model"
+	"Wavelet/OpenFlare/plugins/server/kernel/repository"
 	"Wavelet/pkg/buildinfo"
 	"Wavelet/pkg/logger"
 

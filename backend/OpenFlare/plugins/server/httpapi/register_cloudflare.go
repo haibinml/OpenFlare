@@ -4,8 +4,8 @@
 package httpapi
 
 import (
-	"Wavelet/OpenFlare/plugins/server/apiutil"
-	cf "Wavelet/OpenFlare/plugins/server/cloudflare"
+	cf "Wavelet/OpenFlare/plugins/server/domain/cloudflare"
+	"Wavelet/OpenFlare/plugins/server/kernel/apiutil"
 	"Wavelet/core"
 	"Wavelet/core/contracts"
 )
