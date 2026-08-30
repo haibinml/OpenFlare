@@ -6,7 +6,6 @@ package dashboard
 import (
 	"net/http"
 
-	"Wavelet/OpenFlare/plugins/server/kernel/apiutil"
 	"Wavelet/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -26,7 +25,7 @@ import (
 // @Router /api/v1/d/dashboard/overview [get]
 func GetOverviewHandler(c *gin.Context) {
 	overview, err := GetOverview(c.Request.Context())
-	if apiutil.AbortBadRequestOnError(c, err) {
+	if response.AbortBadRequestOnError(c, err) {
 		return
 	}
 	c.JSON(http.StatusOK, response.OK(overview))

@@ -16,7 +16,7 @@ func handleLogicError(c *gin.Context, err error) bool {
 	if err == nil {
 		return false
 	}
-	return apiutil.AbortNotFoundIfMissing(c, err, errProxyRouteNotFound)
+	return response.AbortNotFoundIfMissing(c, err, errProxyRouteNotFound)
 }
 
 // GetProxyRoutes 列出全部代理规则。

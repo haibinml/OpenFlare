@@ -44,7 +44,7 @@ func RegisterHandler(c *gin.Context) {
 	} else {
 		result, err = RegisterWithDiscovery(c.Request.Context(), payload)
 	}
-	if apiutil.AbortBadRequestOnError(c, err) {
+	if response.AbortBadRequestOnError(c, err) {
 		return
 	}
 	c.JSON(http.StatusOK, response.OK(result))
@@ -76,7 +76,7 @@ func HeartbeatHandler(c *gin.Context) {
 	}
 
 	heartbeat, err := HeartbeatNode(c.Request.Context(), authNode, payload)
-	if apiutil.AbortBadRequestOnError(c, err) {
+	if response.AbortBadRequestOnError(c, err) {
 		return
 	}
 	c.JSON(http.StatusOK, response.OK(heartbeat))
@@ -98,7 +98,7 @@ func GetActiveConfigHandler(c *gin.Context) {
 		return
 	}
 	config, err := GetActiveConfig(c.Request.Context())
-	if apiutil.AbortBadRequestOnError(c, err) {
+	if response.AbortBadRequestOnError(c, err) {
 		return
 	}
 	c.JSON(http.StatusOK, response.OK(config))
@@ -122,7 +122,7 @@ func SyncWAFIPGroupsHandler(c *gin.Context) {
 		return
 	}
 	result, err := SyncWAFIPGroups(c.Request.Context(), input)
-	if apiutil.AbortBadRequestOnError(c, err) {
+	if response.AbortBadRequestOnError(c, err) {
 		return
 	}
 	c.JSON(http.StatusOK, response.OK(result))
@@ -149,7 +149,7 @@ func ReportApplyLogHandler(c *gin.Context) {
 		payload.NodeID = authNode.NodeID
 	}
 	log, err := ReportApplyLog(c.Request.Context(), payload)
-	if apiutil.AbortBadRequestOnError(c, err) {
+	if response.AbortBadRequestOnError(c, err) {
 		return
 	}
 	c.JSON(http.StatusOK, response.OK(log))
@@ -172,7 +172,7 @@ func GetPagesDeploymentHashHandler(c *gin.Context) {
 		return
 	}
 	hash, err := pages.GetDeploymentPackageHash(c.Request.Context(), deploymentID)
-	if apiutil.AbortBadRequestOnError(c, err) {
+	if response.AbortBadRequestOnError(c, err) {
 		return
 	}
 	c.JSON(http.StatusOK, response.OK(protocol.PagesDeploymentHashResponse{
@@ -198,7 +198,7 @@ func DownloadPagesPackageHandler(c *gin.Context) {
 		return
 	}
 	packageObj, err := pages.OpenDeploymentPackage(c.Request.Context(), deploymentID)
-	if apiutil.AbortBadRequestOnError(c, err) {
+	if response.AbortBadRequestOnError(c, err) {
 		return
 	}
 	defer func() { _ = packageObj.Body.Close() }()
@@ -226,7 +226,7 @@ func GetPagesProjectLatestHashHandler(c *gin.Context) {
 		return
 	}
 	metadata, err := pages.GetProjectLatestPackageMetadata(c.Request.Context(), projectID)
-	if apiutil.AbortBadRequestOnError(c, err) {
+	if response.AbortBadRequestOnError(c, err) {
 		return
 	}
 	c.JSON(http.StatusOK, response.OK(protocol.PagesProjectLatestHashResponse{
@@ -256,7 +256,7 @@ func DownloadPagesProjectLatestPackageHandler(c *gin.Context) {
 		return
 	}
 	packageObj, err := pages.OpenProjectLatestPackage(c.Request.Context(), projectID)
-	if apiutil.AbortBadRequestOnError(c, err) {
+	if response.AbortBadRequestOnError(c, err) {
 		return
 	}
 	defer func() { _ = packageObj.Body.Close() }()

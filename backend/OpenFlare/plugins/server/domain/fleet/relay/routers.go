@@ -46,7 +46,7 @@ func PostHeartbeat(c *gin.Context) {
 	}
 
 	result, err := Heartbeat(c.Request.Context(), node, payload)
-	if apiutil.AbortBadRequestOnError(c, err) {
+	if response.AbortBadRequestOnError(c, err) {
 		return
 	}
 	c.JSON(http.StatusOK, response.OK(result))

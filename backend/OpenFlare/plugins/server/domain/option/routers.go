@@ -41,7 +41,7 @@ func GetStatusHandler(c *gin.Context) {
 // @Router /api/v1/d/option [get]
 func ListOptionsHandler(c *gin.Context) {
 	options, err := listOptions(c.Request.Context())
-	if apiutil.AbortBadRequestOnError(c, err) {
+	if response.AbortBadRequestOnError(c, err) {
 		return
 	}
 	c.JSON(http.StatusOK, response.OK(options))
@@ -66,7 +66,7 @@ func UpdateOptionHandler(c *gin.Context) {
 	if !apiutil.BindJSON(c, &option) {
 		return
 	}
-	if apiutil.AbortBadRequestOnError(c, updateOption(c.Request.Context(), option)) {
+	if response.AbortBadRequestOnError(c, updateOption(c.Request.Context(), option)) {
 		return
 	}
 	c.JSON(http.StatusOK, response.OKNil())
@@ -91,7 +91,7 @@ func UpdateOptionsBatchHandler(c *gin.Context) {
 	if !apiutil.BindJSON(c, &payload) {
 		return
 	}
-	if apiutil.AbortBadRequestOnError(c, updateOptionsBatch(c.Request.Context(), payload)) {
+	if response.AbortBadRequestOnError(c, updateOptionsBatch(c.Request.Context(), payload)) {
 		return
 	}
 	c.JSON(http.StatusOK, response.OKNil())
@@ -117,7 +117,7 @@ func LookupGeoIPHandler(c *gin.Context) {
 		return
 	}
 	view, err := lookupGeoIP(c.Request.Context(), request.Provider, request.IP)
-	if apiutil.AbortBadRequestOnError(c, err) {
+	if response.AbortBadRequestOnError(c, err) {
 		return
 	}
 	c.JSON(http.StatusOK, response.OK(view))
@@ -137,7 +137,7 @@ func LookupGeoIPHandler(c *gin.Context) {
 // @Failure 500 {object} response.Any "内部错误"
 // @Router /api/v1/d/uptimekuma/sync [post]
 func SyncUptimeKumaHandler(c *gin.Context) {
-	if apiutil.AbortBadRequestOnError(c, syncUptimeKuma(c.Request.Context())) {
+	if response.AbortBadRequestOnError(c, syncUptimeKuma(c.Request.Context())) {
 		return
 	}
 	c.JSON(http.StatusOK, response.OK("同步成功"))

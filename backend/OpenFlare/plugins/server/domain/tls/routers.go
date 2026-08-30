@@ -16,7 +16,7 @@ func handleLogicError(c *gin.Context, err error) bool {
 	if err == nil {
 		return false
 	}
-	return apiutil.AbortNotFoundIfMissing(c, err, "记录不存在")
+	return response.AbortNotFoundIfMissing(c, err, "记录不存在")
 }
 
 // GetCertificates 列出 TLS 证书。
