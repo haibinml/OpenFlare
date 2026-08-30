@@ -143,10 +143,7 @@ func (c *Cache) Set(key string, value []byte, ttl time.Duration) error {
 
 	// Update memory tracker
 	if elem, ok := c.items[key]; ok {
-		item, ok := elem.Value.(*cacheItem)
-		if !ok {
-			return fmt.Errorf("cache: evict list entry for %q has invalid type %T", key, elem.Value)
-		}
+		item := elem.Value.(*cacheItem)
 		c.currentSize += size - item.size
 		item.size = size
 		item.expiredAt = expiredAt
@@ -177,11 +174,7 @@ func (c *Cache) Get(key string) ([]byte, error) {
 		return nil, ErrCacheMiss
 	}
 
-	item, ok := elem.Value.(*cacheItem)
-	if !ok {
-		c.mu.RUnlock()
-		return nil, ErrCacheMiss
-	}
+	item := elem.Value.(*cacheItem)
 	if !item.expiredAt.IsZero() && time.Now().After(item.expiredAt) {
 		c.mu.RUnlock()
 		return c.getAndDeleteIfExpired(key)
@@ -231,11 +224,7 @@ func (c *Cache) getAndDeleteIfExpired(key string) ([]byte, error) {
 		return nil, ErrCacheMiss
 	}
 
-	item, ok := elem.Value.(*cacheItem)
-	if !ok {
-		_ = c.deleteUnlocked(key)
-		return nil, ErrCacheMiss
-	}
+	item := elem.Value.(*cacheItem)
 	if !item.expiredAt.IsZero() && time.Now().After(item.expiredAt) {
 		_ = c.deleteUnlocked(key)
 		return nil, ErrCacheMiss
@@ -265,9 +254,8 @@ func (c *Cache) Delete(key string) error {
 
 func (c *Cache) deleteUnlocked(key string) error {
 	if elem, ok := c.items[key]; ok {
-		if item, ok := elem.Value.(*cacheItem); ok {
-			c.currentSize -= item.size
-		}
+		item := elem.Value.(*cacheItem)
+		c.currentSize -= item.size
 		c.evictList.Remove(elem)
 		delete(c.items, key)
 	}
@@ -320,11 +308,7 @@ func (c *Cache) evict() {
 
 	for c.currentSize > c.maxSize && c.evictList.Len() > 0 {
 		elem := c.evictList.Back()
-		item, ok := elem.Value.(*cacheItem)
-		if !ok {
-			c.evictList.Remove(elem)
-			continue
-		}
+		item := elem.Value.(*cacheItem)
 		c.currentSize -= item.size
 		c.evictList.Remove(elem)
 		delete(c.items, item.key)
@@ -416,12 +400,7 @@ func (c *Cache) cleanExpired() {
 
 	now := time.Now()
 	for key, elem := range c.items {
-		item, ok := elem.Value.(*cacheItem)
-		if !ok {
-			c.evictList.Remove(elem)
-			delete(c.items, key)
-			continue
-		}
+		item := elem.Value.(*cacheItem)
 		if !item.expiredAt.IsZero() && now.After(item.expiredAt) {
 			c.currentSize -= item.size
 			c.evictList.Remove(elem)
