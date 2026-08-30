@@ -22,6 +22,7 @@ sidebar: false
 - 删除 OpenFlare 内与 Wavelet 重复的 oauth/cap/user/upload/config/health/admin 平台副本，业务改走契约（登录中间件、公共配置、推送注册、异步任务）；用户/文件/系统配置由上游插件提供，控制台接口形状保持金标准子集。
 - 控制面读写系统配置改为走上游管理仓储并同步失效缓存，避免选项/节点/日志库切换写入后 `/api/v1/config/public` 仍返回旧值。
 - 已部署库启动时把历史 `goose_db_version` 一次性写入 `w_schema_versions`（`openflare/legacy` 与 `server`），不再重跑 76 条混合迁移；全新安装只创建当前的 `of_*` 业务表。ClickHouse 继续只升级节点访问/可观测相关表，用户访问日志表改由上游负责。
+- `make swagger` 重新扫描上游平台插件，对外文档覆盖金标准全部 232 条 path+method（允许超集）；`GET /api/v1/config/public` 仍返回扁平键值。
 ## [v3.5.4] - 2026-08-29
 
 ### ✨ 新功能

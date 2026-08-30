@@ -57,7 +57,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/Wavelet_OpenFlare_plugins_server_cap.ChallengeResponse"
+                                            "$ref": "#/definitions/cap.ChallengeResponse"
                                         }
                                     }
                                 }
@@ -109,7 +109,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/Wavelet_OpenFlare_plugins_server_cap.RedeemResponse"
+                                            "$ref": "#/definitions/cap.RedeemResponse"
                                         }
                                     }
                                 }
@@ -182,22 +182,7 @@ const docTemplate = `{
                     "200": {
                         "description": "认证源列表",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/model.AuthSource"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/response.Any"
                         }
                     },
                     "401": {
@@ -244,7 +229,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/auth_source.AuthSourceRequest"
+                            "$ref": "#/definitions/contracts.AuthSourceDTO"
                         }
                     }
                 ],
@@ -252,19 +237,7 @@ const docTemplate = `{
                     "200": {
                         "description": "创建成功，返回认证源信息",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/model.AuthSource"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/response.Any"
                         }
                     },
                     "400": {
@@ -321,7 +294,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/auth_source.AuthSourceRequest"
+                            "$ref": "#/definitions/contracts.AuthSourceDTO"
                         }
                     }
                 ],
@@ -329,19 +302,7 @@ const docTemplate = `{
                     "200": {
                         "description": "更新成功，返回更新后的认证源信息",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/model.AuthSource"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/response.Any"
                         }
                     },
                     "400": {
@@ -460,15 +421,6 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "description": "启用状态",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/auth_source.ToggleAuthSourceRequest"
-                        }
                     }
                 ],
                 "responses": {
@@ -579,7 +531,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/cache.updateCacheConfigRequest"
+                            "$ref": "#/definitions/model.UpdateCacheConfigRequest"
                         }
                     }
                 ],
@@ -644,7 +596,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/diskcache.Status"
+                                            "$ref": "#/definitions/disk.Status"
                                         }
                                     }
                                 }
@@ -742,7 +694,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/status.DatabaseInfoResponse"
+                                            "$ref": "#/definitions/model.DatabaseInfoResponse"
                                         }
                                     }
                                 }
@@ -791,7 +743,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/db_manage.DBOverviewResponse"
+                                            "$ref": "#/definitions/model.DBOverviewResponse"
                                         }
                                     }
                                 }
@@ -844,7 +796,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/db_manage.ExecuteSQLRequest"
+                            "$ref": "#/definitions/model.ExecuteSQLRequest"
                         }
                     }
                 ],
@@ -860,7 +812,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/db_manage.ExecuteSQLResponse"
+                                            "$ref": "#/definitions/model.ExecuteSQLResponse"
                                         }
                                     }
                                 }
@@ -995,7 +947,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/logs.logsResponse"
+                                            "$ref": "#/definitions/model.LogsResponse"
                                         }
                                     }
                                 }
@@ -1024,7 +976,7 @@ const docTemplate = `{
                         "SessionCookie": []
                     }
                 ],
-                "description": "分页并按照用户、接口路径、时间范围等维度检索用户访问日志列表（需要管理员权限，日志存储未启用时报错）",
+                "description": "分页并按照用户、接口路径、时间范围等维度检索用户访问日志列表（需要管理员权限）",
                 "produces": [
                     "application/json"
                 ],
@@ -1084,7 +1036,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/logs.accessLogsResponse"
+                                            "$ref": "#/definitions/model.AccessLogsResponse"
                                         }
                                     }
                                 }
@@ -1092,7 +1044,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "日志存储未启用或参数错误",
+                        "description": "参数错误",
                         "schema": {
                             "$ref": "#/definitions/response.Any"
                         }
@@ -1108,6 +1060,12 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/response.Any"
                         }
+                    },
+                    "500": {
+                        "description": "内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
                     }
                 }
             }
@@ -1119,7 +1077,7 @@ const docTemplate = `{
                         "SessionCookie": []
                     }
                 ],
-                "description": "聚合统计最近 7 天的每日访问趋势、浏览器分布以及前 10 名最活跃用户排行（需要管理员权限，日志存储未启用时报错）",
+                "description": "聚合统计最近 7 天的每日访问趋势、浏览器分布以及前 10 名最活跃用户排行（需要管理员权限）",
                 "produces": [
                     "application/json"
                 ],
@@ -1139,17 +1097,11 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/logs.logsAnalyticsResponse"
+                                            "$ref": "#/definitions/model.LogsAnalyticsResponse"
                                         }
                                     }
                                 }
                             ]
-                        }
-                    },
-                    "400": {
-                        "description": "日志存储未启用",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
                         }
                     },
                     "401": {
@@ -1160,6 +1112,12 @@ const docTemplate = `{
                     },
                     "403": {
                         "description": "无管理员权限",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "500": {
+                        "description": "内部错误",
                         "schema": {
                             "$ref": "#/definitions/response.Any"
                         }
@@ -1175,6 +1133,295 @@ const docTemplate = `{
                 ],
                 "summary": "系统日志实时推送",
                 "responses": {}
+            }
+        },
+        "/api/v1/admin/message-gateway/channels": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "Returns all messaging channels; secrets are masked",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-message-gateway"
+                ],
+                "summary": "List message gateway channels",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.ChannelDTO"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "Creates a Telegram or QQ channel with encrypted credentials",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-message-gateway"
+                ],
+                "summary": "Create message gateway channel",
+                "parameters": [
+                    {
+                        "description": "create body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.CreateChannelRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.ChannelDTO"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/message-gateway/channels/definitions": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "Returns form field definitions for Telegram and QQ channels",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-message-gateway"
+                ],
+                "summary": "List message gateway channel definitions",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.Definition"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/message-gateway/channels/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "Deletes a channel and cascaded bindings and pairing codes",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-message-gateway"
+                ],
+                "summary": "Delete message gateway channel",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "channel id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "Updates a channel; empty secrets keep the current ciphertext",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-message-gateway"
+                ],
+                "summary": "Update message gateway channel",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "channel id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "update body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.UpdateChannelRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.ChannelDTO"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/message-gateway/channels/{id}/test": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "Probes stored credentials without returning secrets",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-message-gateway"
+                ],
+                "summary": "Test message gateway channel",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "channel id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
             }
         },
         "/api/v1/admin/push/channels": {
@@ -1240,7 +1487,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/push.CreateChannelRequest"
+                            "$ref": "#/definitions/model.CreatePushChannelRequest"
                         }
                     }
                 ],
@@ -1273,7 +1520,7 @@ const docTemplate = `{
                         "SessionCookie": []
                     }
                 ],
-                "description": "返回系统支持的所有消息通道类型（如飞书、邮件、自定义、Telegram）的动态表单定义，需要管理员权限",
+                "description": "返回系统支持的所有消息通道类型的动态表单定义，需要管理员权限",
                 "produces": [
                     "application/json"
                 ],
@@ -1285,22 +1532,7 @@ const docTemplate = `{
                     "200": {
                         "description": "通道配置定义列表",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/push.Definition"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/response.Any"
                         }
                     }
                 }
@@ -1331,7 +1563,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/push.TestChannelRequest"
+                            "$ref": "#/definitions/model.TestPushChannelRequest"
                         }
                     }
                 ],
@@ -1378,7 +1610,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/push.UpdateChannelRequest"
+                            "$ref": "#/definitions/model.UpdatePushChannelRequest"
                         }
                     }
                 ],
@@ -1500,7 +1732,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/push.CreateEventRequest"
+                            "$ref": "#/definitions/model.CreatePushEventRequest"
                         }
                     }
                 ],
@@ -1545,22 +1777,7 @@ const docTemplate = `{
                     "200": {
                         "description": "内置通知事件列表",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/push.EventMetadata"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/response.Any"
                         }
                     }
                 }
@@ -1598,7 +1815,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/push.UpdateEventRequest"
+                            "$ref": "#/definitions/model.UpdatePushEventRequest"
                         }
                     }
                 ],
@@ -1759,19 +1976,7 @@ const docTemplate = `{
                     "200": {
                         "description": "推送历史列表",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/push.pushHistoriesResponse"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/response.Any"
                         }
                     }
                 }
@@ -1802,7 +2007,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/push.TestPushRequest"
+                            "$ref": "#/definitions/model.TestPushRequest"
                         }
                     }
                 ],
@@ -1855,7 +2060,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/status.SystemStatusResponse"
+                                            "$ref": "#/definitions/model.SystemStatusResponse"
                                         }
                                     }
                                 }
@@ -1904,7 +2109,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/status.LogDatabaseStatus"
+                                            "$ref": "#/definitions/model.LogDatabaseStatus"
                                         }
                                     }
                                 }
@@ -1969,7 +2174,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/model.SystemConfig"
+                                                "$ref": "#/definitions/Wavelet_plugins_domain_admin_model.SystemConfig"
                                             }
                                         }
                                     }
@@ -2021,7 +2226,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/system_config.CreateSystemConfigRequest"
+                            "$ref": "#/definitions/model.CreateSystemConfigRequest"
                         }
                     }
                 ],
@@ -2096,7 +2301,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/system_config.TestSMTPRequest"
+                            "$ref": "#/definitions/model.TestSMTPRequest"
                         }
                     }
                 ],
@@ -2112,7 +2317,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/system_config.TestSMTPResponse"
+                                            "$ref": "#/definitions/model.TestSMTPResponse"
                                         }
                                     }
                                 }
@@ -2164,7 +2369,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/model.SystemConfig"
+                                            "$ref": "#/definitions/Wavelet_plugins_domain_admin_model.SystemConfig"
                                         }
                                     }
                                 }
@@ -2228,7 +2433,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/system_config.UpdateSystemConfigRequest"
+                            "$ref": "#/definitions/model.UpdateSystemConfigRequest"
                         }
                     }
                 ],
@@ -2309,7 +2514,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/task.DispatchTaskRequest"
+                            "$ref": "#/definitions/model.DispatchTaskRequest"
                         }
                     }
                 ],
@@ -2385,18 +2590,6 @@ const docTemplate = `{
                         "type": "string",
                         "description": "任务类型筛选",
                         "name": "task_type",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "任务类型前缀筛选（与 task_type / task_types 互斥，精确类型优先）",
-                        "name": "task_type_prefix",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "逗号分隔的精确任务类型列表（IN 筛选，优先于前缀）",
-                        "name": "task_types",
                         "in": "query"
                     },
                     {
@@ -2484,7 +2677,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/model.TaskExecution"
+                                            "$ref": "#/definitions/Wavelet_plugins_domain_admin_model.TaskExecution"
                                         }
                                     }
                                 }
@@ -2601,7 +2794,7 @@ const docTemplate = `{
                         "SessionCookie": []
                     }
                 ],
-                "description": "返回管理员可管理的定时任务配置列表，包括名称、关联的异步任务类型、Cron 表达式和启用状态；系统内部排程不会暴露，需要管理员权限",
+                "description": "返回系统所有的定时任务配置列表，包括名称、关联的异步任务类型、Cron 表达式和启用状态，需要管理员权限",
                 "produces": [
                     "application/json"
                 ],
@@ -2623,7 +2816,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/model.Schedule"
+                                                "$ref": "#/definitions/Wavelet_plugins_domain_admin_model.Schedule"
                                             }
                                         }
                                     }
@@ -2669,7 +2862,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/task.CreateScheduleRequest"
+                            "$ref": "#/definitions/model.CreateScheduleRequest"
                         }
                     }
                 ],
@@ -2685,7 +2878,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/model.Schedule"
+                                            "$ref": "#/definitions/Wavelet_plugins_domain_admin_model.Schedule"
                                         }
                                     }
                                 }
@@ -2751,7 +2944,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/task.UpdateScheduleRequest"
+                            "$ref": "#/definitions/model.UpdateScheduleRequest"
                         }
                     }
                 ],
@@ -2767,7 +2960,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/model.Schedule"
+                                            "$ref": "#/definitions/Wavelet_plugins_domain_admin_model.Schedule"
                                         }
                                     }
                                 }
@@ -2866,12 +3059,6 @@ const docTemplate = `{
                             "$ref": "#/definitions/response.Any"
                         }
                     },
-                    "404": {
-                        "description": "定时任务不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
                     "500": {
                         "description": "删除定时任务失败",
                         "schema": {
@@ -2910,7 +3097,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/task.TaskMeta"
+                                                "$ref": "#/definitions/contracts.TaskMetaDTO"
                                             }
                                         }
                                     }
@@ -2962,7 +3149,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/model.Template"
+                                                "$ref": "#/definitions/Wavelet_plugins_domain_admin_model.Template"
                                             }
                                         }
                                     }
@@ -3014,7 +3201,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/template.CreateTemplateRequest"
+                            "$ref": "#/definitions/model.CreateTemplateRequest"
                         }
                     }
                 ],
@@ -3100,7 +3287,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/model.Template"
+                                            "$ref": "#/definitions/Wavelet_plugins_domain_admin_model.Template"
                                         }
                                     }
                                 }
@@ -3164,7 +3351,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/template.UpdateTemplateRequest"
+                            "$ref": "#/definitions/model.UpdateTemplateRequest"
                         }
                     }
                 ],
@@ -3180,7 +3367,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/model.Template"
+                                            "$ref": "#/definitions/Wavelet_plugins_domain_admin_model.Template"
                                         }
                                     }
                                 }
@@ -3321,7 +3508,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/updater.Status"
+                                            "$ref": "#/definitions/model.UpdaterStatus"
                                         }
                                     }
                                 }
@@ -3446,8 +3633,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "format": "int64",
-                        "description": "上传用户 ID",
+                        "description": "上传用户 ID 过滤",
                         "name": "user_id",
                         "in": "query"
                     }
@@ -3471,14 +3657,8 @@ const docTemplate = `{
                             ]
                         }
                     },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
+                    "400": {
+                        "description": "参数错误",
                         "schema": {
                             "$ref": "#/definitions/response.Any"
                         }
@@ -3595,6 +3775,127 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/admin/uploads/files": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "分页获取系统上传的文件列表，支持文件名关键词、业务类型、扩展名、上传用户ID过滤",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "获取文件列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "页码（默认 1）",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页数量（默认 20，最大 100）",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "文件名关键词（模糊匹配）",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "业务分类过滤",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "扩展名过滤",
+                        "name": "extension",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "上传用户 ID 过滤",
+                        "name": "user_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/handler.listFilesResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/uploads/files/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "将指定 ID 的文件状态置为 deleted（软删除）",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "删除文件",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "文件 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "文件不存在",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/uploads/stats": {
             "get": {
                 "security": [
@@ -3657,17 +3958,17 @@ const docTemplate = `{
                         "SessionCookie": []
                     }
                 ],
-                "description": "返回数据库中所有已上传文件实际拥有的业务类型列表",
+                "description": "查询系统内所有不重复的上传业务分类标识（如 avatar, doc 等）",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "admin"
                 ],
-                "summary": "获取文件业务类型列表",
+                "summary": "获取业务分类列表",
                 "responses": {
                     "200": {
-                        "description": "业务类型列表",
+                        "description": "查询成功",
                         "schema": {
                             "allOf": [
                                 {
@@ -3686,24 +3987,6 @@ const docTemplate = `{
                                 }
                             ]
                         }
-                    },
-                    "401": {
-                        "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "403": {
-                        "description": "无管理员权限",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "500": {
-                        "description": "内部错误",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
                     }
                 }
             }
@@ -3715,7 +3998,7 @@ const docTemplate = `{
                         "SessionCookie": []
                     }
                 ],
-                "description": "将文件状态置为 deleted（软删除），不会立即清理底层存储对象",
+                "description": "将指定 ID 的文件状态置为 deleted（软删除）",
                 "produces": [
                     "application/json"
                 ],
@@ -3739,20 +4022,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/response.Any"
                         }
                     },
-                    "403": {
-                        "description": "无权操作",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
                     "404": {
                         "description": "文件不存在",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "409": {
-                        "description": "系统保留类型或存储只读",
                         "schema": {
                             "$ref": "#/definitions/response.Any"
                         }
@@ -3817,7 +4088,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/user.listUsersResponse"
+                                            "$ref": "#/definitions/model.ListUsersResponse"
                                         }
                                     }
                                 }
@@ -3874,7 +4145,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/user.createUserRequest"
+                            "$ref": "#/definitions/model.CreateUserRequest"
                         }
                     }
                 ],
@@ -3890,7 +4161,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/user.user"
+                                            "$ref": "#/definitions/model.UserResponse"
                                         }
                                     }
                                 }
@@ -3960,7 +4231,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/user.user"
+                                            "$ref": "#/definitions/model.UserResponse"
                                         }
                                     }
                                 }
@@ -4030,7 +4301,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/user.updateUserRequest"
+                            "$ref": "#/definitions/model.UpdateUserRequest"
                         }
                     }
                 ],
@@ -4192,7 +4463,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/user.updateUserStatusRequest"
+                            "$ref": "#/definitions/model.UpdateUserStatusRequest"
                         }
                     }
                 ],
@@ -12905,6 +13176,205 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/message-gateway/bindings": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "Returns the current user's bound messaging channels",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "message-gateway"
+                ],
+                "summary": "List message gateway bindings",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.BindingDTO"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "Binds the current user to a platform identity using a one-time pairing code",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "message-gateway"
+                ],
+                "summary": "Bind a messaging channel",
+                "parameters": [
+                    {
+                        "description": "bind body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.BindRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.BindingDTO"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/message-gateway/bindings/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "Removes a binding owned by the current user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "message-gateway"
+                ],
+                "summary": "Unbind a messaging channel",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "binding id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/message-gateway/channels": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "Returns enabled system bots the current user can pair with",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "message-gateway"
+                ],
+                "summary": "List enabled messaging channels",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.PublicChannelDTO"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/oauth/callback": {
             "post": {
                 "description": "接收前端传回的 state 和 code，完成 OAuth/OIDC 认证并建立会话。支持登录（login）和账号绑定（bind）两种场景。",
@@ -12925,7 +13395,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/oauth.CallbackRequest"
+                            "$ref": "#/definitions/auth.CallbackRequest"
                         }
                     }
                 ],
@@ -12941,7 +13411,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/oauth.OAuthCallbackResult"
+                                            "$ref": "#/definitions/auth.OAuthCallbackResult"
                                         }
                                     }
                                 }
@@ -12988,22 +13458,7 @@ const docTemplate = `{
                     "200": {
                         "description": "外部帐号列表",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/model.ExternalAccountView"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/response.Any"
                         }
                     },
                     "401": {
@@ -13110,7 +13565,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/oauth.OAuthAuthorizeResponse"
+                                            "$ref": "#/definitions/auth.OAuthAuthorizeResponse"
                                         }
                                     }
                                 }
@@ -13124,7 +13579,7 @@ const docTemplate = `{
                         }
                     },
                     "500": {
-                        "description": "Redis 异常 or 构造 URL 失败",
+                        "description": "构造 URL 失败",
                         "schema": {
                             "$ref": "#/definitions/response.Any"
                         }
@@ -13199,7 +13654,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/oauth.AuthSourceView"
+                                                "$ref": "#/definitions/auth.AuthSourceView"
                                             }
                                         }
                                     }
@@ -13217,7 +13672,7 @@ const docTemplate = `{
                         "SessionCookie": []
                     }
                 ],
-                "description": "返回当前登录用户的基本信息及余额数据，需要登录。包括用户 ID、用户名、信任等级、各类余额信息等。",
+                "description": "返回当前登录用户的基本信息，需要登录。",
                 "produces": [
                     "application/json"
                 ],
@@ -13237,7 +13692,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/oauth.BasicUserInfo"
+                                            "$ref": "#/definitions/auth.BasicUserInfo"
                                         }
                                     }
                                 }
@@ -13290,7 +13745,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/oauth.OAuthAuthorizeResponse"
+                                            "$ref": "#/definitions/auth.OAuthAuthorizeResponse"
                                         }
                                     }
                                 }
@@ -13304,7 +13759,7 @@ const docTemplate = `{
                         }
                     },
                     "500": {
-                        "description": "Redis 异常或构造 URL 失败",
+                        "description": "构造 URL 失败",
                         "schema": {
                             "$ref": "#/definitions/response.Any"
                         }
@@ -13681,7 +14136,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/model.Upload"
+                                            "$ref": "#/definitions/models.Upload"
                                         }
                                     }
                                 }
@@ -13696,12 +14151,6 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "未登录",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
-                    },
-                    "409": {
-                        "description": "系统保留类型或存储只读",
                         "schema": {
                             "$ref": "#/definitions/response.Any"
                         }
@@ -13838,7 +14287,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/model.Upload"
+                                            "$ref": "#/definitions/models.Upload"
                                         }
                                     }
                                 }
@@ -13900,12 +14349,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/response.Any"
                         }
-                    },
-                    "409": {
-                        "description": "系统保留类型或存储只读",
-                        "schema": {
-                            "$ref": "#/definitions/response.Any"
-                        }
                     }
                 }
             }
@@ -13917,7 +14360,7 @@ const docTemplate = `{
                         "SessionCookie": []
                     }
                 ],
-                "description": "返回当前登录用户的基本信息及余额数据，需要登录。包括用户 ID、用户名、信任等级、各类余额信息等。",
+                "description": "返回当前登录用户的基本信息，需要登录。",
                 "produces": [
                     "application/json"
                 ],
@@ -13937,7 +14380,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/oauth.BasicUserInfo"
+                                            "$ref": "#/definitions/auth.BasicUserInfo"
                                         }
                                     }
                                 }
@@ -13982,7 +14425,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/model.AccessToken"
+                                                "$ref": "#/definitions/user.AccessToken"
                                             }
                                         }
                                     }
@@ -14004,7 +14447,7 @@ const docTemplate = `{
                         "SessionCookie": []
                     }
                 ],
-                "description": "为当前用户新建一个 API 访问令牌，仅在此接口返回一次明文令牌值，请妥善保存。可通过 is_admin 字段赋予令牌管理员权限（仅管理员用户可设置）。",
+                "description": "为当前用户新建一个 API 访问令牌，仅在此接口返回一次明文令牌值，请妥善保存。",
                 "consumes": [
                     "application/json"
                 ],
@@ -14022,7 +14465,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/user.createTokenRequest"
+                            "$ref": "#/definitions/user.createAccessTokenRequest"
                         }
                     }
                 ],
@@ -14030,19 +14473,7 @@ const docTemplate = `{
                     "200": {
                         "description": "新建令牌成功",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/user.tokenResponse"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/response.Any"
                         }
                     },
                     "400": {
@@ -14134,19 +14565,7 @@ const docTemplate = `{
                     "200": {
                         "description": "令牌轮换成功",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/user.tokenResponse"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/response.Any"
                         }
                     },
                     "400": {
@@ -14160,7 +14579,7 @@ const docTemplate = `{
         },
         "/api/v1/user/change-password": {
             "post": {
-                "description": "修改当前登录用户的密码。修改成功后，如果是首次明文登录的升级提示，则清除修改密码的提示状态。",
+                "description": "修改当前登录用户的密码。",
                 "consumes": [
                     "application/json"
                 ],
@@ -14244,19 +14663,7 @@ const docTemplate = `{
                     "200": {
                         "description": "登录成功，返回用户信息",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/oauth.BasicUserInfo"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/response.Any"
                         }
                     },
                     "400": {
@@ -14319,7 +14726,7 @@ const docTemplate = `{
         },
         "/api/v1/user/profile": {
             "put": {
-                "description": "修改当前登录用户的昵称、邮箱、头像、简介、电话、性别、个人网站和所在地。",
+                "description": "修改当前登录用户的昵称、头像、简介、电话、性别、个人网站和所在地。",
                 "consumes": [
                     "application/json"
                 ],
@@ -14345,23 +14752,11 @@ const docTemplate = `{
                     "200": {
                         "description": "修改成功，返回更新后的用户信息",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/oauth.BasicUserInfo"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/response.Any"
                         }
                     },
                     "400": {
-                        "description": "邮箱已被占用或参数错误",
+                        "description": "参数错误",
                         "schema": {
                             "$ref": "#/definitions/response.Any"
                         }
@@ -14377,7 +14772,7 @@ const docTemplate = `{
         },
         "/api/v1/user/register": {
             "post": {
-                "description": "使用用户名和密码注册新账号，注册成功后自动登录并建立 Session。密码长度不能少于 8 位。",
+                "description": "使用用户名和密码注册新账号，注册成功后自动登录并建立 Session。",
                 "consumes": [
                     "application/json"
                 ],
@@ -14403,19 +14798,7 @@ const docTemplate = `{
                     "200": {
                         "description": "注册并登录成功，返回用户信息",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/oauth.BasicUserInfo"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/response.Any"
                         }
                     },
                     "400": {
@@ -14440,31 +14823,19 @@ const docTemplate = `{
                         "SessionCookie": []
                     }
                 ],
-                "description": "返回当前登录用户的基本信息及余额数据，需要登录。包括用户 ID、用户名、信任等级、各类余额信息等。",
+                "description": "返回当前登录用户的基本信息，需要登录。",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "oauth"
+                    "user"
                 ],
                 "summary": "获取当前登录用户信息",
                 "responses": {
                     "200": {
                         "description": "用户信息",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Any"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/oauth.BasicUserInfo"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/response.Any"
                         }
                     },
                     "401": {
@@ -14489,17 +14860,6 @@ const docTemplate = `{
                     "user"
                 ],
                 "summary": "发送邮箱验证码",
-                "parameters": [
-                    {
-                        "description": "发送验证码请求参数",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/user.sendEmailCodeRequest"
-                        }
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "发送成功",
@@ -14597,79 +14957,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "Wavelet_OpenFlare_plugins_server_cap.ChallengeResponse": {
-            "type": "object",
-            "properties": {
-                "challenge": {
-                    "type": "object",
-                    "properties": {
-                        "c": {
-                            "type": "integer"
-                        },
-                        "d": {
-                            "type": "integer"
-                        },
-                        "s": {
-                            "type": "integer"
-                        }
-                    }
-                },
-                "expires": {
-                    "description": "ms timestamp",
-                    "type": "integer"
-                },
-                "token": {
-                    "type": "string"
-                }
-            }
-        },
-        "Wavelet_OpenFlare_plugins_server_cap.RedeemResponse": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                },
-                "expires": {
-                    "type": "integer"
-                },
-                "success": {
-                    "type": "boolean"
-                },
-                "token": {
-                    "type": "string"
-                }
-            }
-        },
-        "Wavelet_OpenFlare_plugins_server_model_analytics.ClickHouseOperationalStats": {
-            "type": "object",
-            "properties": {
-                "active_parts": {
-                    "type": "integer"
-                },
-                "async_insert_bytes": {
-                    "type": "integer"
-                },
-                "async_insert_queue": {
-                    "type": "integer"
-                },
-                "batch_writers": {
-                    "description": "BatchWriters reports in-process queue depth/drops/flush errors for CH writers.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/analytics.BatchWriterStats"
-                    }
-                },
-                "database": {
-                    "type": "string"
-                },
-                "pending_mutations": {
-                    "type": "integer"
-                },
-                "total_rows": {
-                    "type": "integer"
-                }
-            }
-        },
         "Wavelet_OpenFlare_share_protocol.ActiveConfigMeta": {
             "type": "object",
             "properties": {
@@ -14903,6 +15190,157 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "Wavelet_plugins_domain_admin_model.Schedule": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "cron": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "0"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "payload": {
+                    "type": "string"
+                },
+                "task_type": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "Wavelet_plugins_domain_admin_model.SystemConfig": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                },
+                "visibility": {
+                    "type": "integer"
+                }
+            }
+        },
+        "Wavelet_plugins_domain_admin_model.TaskExecution": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "duration": {
+                    "type": "integer"
+                },
+                "error_message": {
+                    "type": "string"
+                },
+                "finished_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "0"
+                },
+                "log": {
+                    "type": "string"
+                },
+                "max_retry": {
+                    "type": "integer"
+                },
+                "payload": {
+                    "type": "string"
+                },
+                "result": {
+                    "type": "string"
+                },
+                "retry_count": {
+                    "type": "integer"
+                },
+                "retryable": {
+                    "type": "boolean"
+                },
+                "started_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/model.TaskExecutionStatus"
+                },
+                "task_id": {
+                    "type": "string"
+                },
+                "task_name": {
+                    "type": "string"
+                },
+                "task_type": {
+                    "type": "string"
+                },
+                "triggered_by": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "Wavelet_plugins_domain_admin_model.Template": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_system": {
+                    "type": "boolean"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "subject": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -15166,29 +15604,6 @@ const docTemplate = `{
                 }
             }
         },
-        "analytics.BatchWriterStats": {
-            "type": "object",
-            "properties": {
-                "cap": {
-                    "type": "integer"
-                },
-                "depth": {
-                    "type": "integer"
-                },
-                "drops": {
-                    "type": "integer"
-                },
-                "flush_errors": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "running": {
-                    "type": "boolean"
-                }
-            }
-        },
         "apply_log.CleanupInput": {
             "type": "object",
             "properties": {
@@ -15237,14 +15652,11 @@ const docTemplate = `{
                 }
             }
         },
-        "auth_source.AuthSourceRequest": {
+        "auth.AuthSourceView": {
             "type": "object",
             "properties": {
-                "client_id": {
-                    "type": "string"
-                },
-                "client_secret": {
-                    "type": "string"
+                "client_secret_configured": {
+                    "type": "boolean"
                 },
                 "display_name": {
                     "type": "string"
@@ -15252,16 +15664,13 @@ const docTemplate = `{
                 "icon_url": {
                     "type": "string"
                 },
+                "id": {
+                    "type": "integer"
+                },
                 "is_active": {
                     "type": "boolean"
                 },
                 "name": {
-                    "type": "string"
-                },
-                "openid_discovery_url": {
-                    "type": "string"
-                },
-                "scopes": {
                     "type": "string"
                 },
                 "type": {
@@ -15269,31 +15678,121 @@ const docTemplate = `{
                 }
             }
         },
-        "auth_source.ToggleAuthSourceRequest": {
+        "auth.BasicUserInfo": {
             "type": "object",
             "properties": {
-                "is_active": {
+                "avatar_url": {
+                    "type": "string"
+                },
+                "bio": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_admin": {
                     "type": "boolean"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "need_change_password": {
+                    "type": "boolean"
+                },
+                "nickname": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                },
+                "website": {
+                    "type": "string"
                 }
             }
         },
-        "cache.updateCacheConfigRequest": {
+        "auth.CallbackRequest": {
             "type": "object",
             "required": [
-                "max_size_mb",
-                "ttl_minutes"
+                "code",
+                "state"
             ],
             "properties": {
-                "lru_enabled": {
+                "code": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                }
+            }
+        },
+        "auth.OAuthAuthorizeResponse": {
+            "type": "object",
+            "properties": {
+                "authorize_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "auth.OAuthCallbackResult": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/auth.BasicUserInfo"
+                }
+            }
+        },
+        "cap.ChallengeResponse": {
+            "type": "object",
+            "properties": {
+                "challenge": {
+                    "type": "object",
+                    "properties": {
+                        "c": {
+                            "type": "integer"
+                        },
+                        "d": {
+                            "type": "integer"
+                        },
+                        "s": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "expires": {
+                    "description": "ms timestamp",
+                    "type": "integer"
+                },
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "cap.RedeemResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "expires": {
+                    "type": "integer"
+                },
+                "success": {
                     "type": "boolean"
                 },
-                "max_size_mb": {
-                    "type": "integer",
-                    "minimum": 1
-                },
-                "ttl_minutes": {
-                    "type": "integer",
-                    "minimum": 0
+                "token": {
+                    "type": "string"
                 }
             }
         },
@@ -15692,6 +16191,119 @@ const docTemplate = `{
                 }
             }
         },
+        "contracts.AuthSourceDTO": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "string"
+                },
+                "client_secret": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "icon_url": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "0"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "openid_discovery_url": {
+                    "type": "string"
+                },
+                "scopes": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "contracts.TaskMetaDTO": {
+            "type": "object",
+            "properties": {
+                "asynq_task": {
+                    "type": "string"
+                },
+                "category": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "max_retry": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "params": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/contracts.TaskParamDTO"
+                    }
+                },
+                "queue": {
+                    "type": "string"
+                },
+                "retryable": {
+                    "type": "boolean"
+                },
+                "schedule": {
+                    "type": "string"
+                },
+                "supports_time": {
+                    "type": "boolean"
+                },
+                "timeout": {
+                    "$ref": "#/definitions/time.Duration"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "contracts.TaskParamDTO": {
+            "type": "object",
+            "properties": {
+                "default": {},
+                "description": {
+                    "type": "string"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "placeholder": {
+                    "type": "string"
+                },
+                "required": {
+                    "type": "boolean"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "dashboard.Capacity": {
             "type": "object",
             "properties": {
@@ -15839,69 +16451,7 @@ const docTemplate = `{
                 }
             }
         },
-        "db_manage.DBOverviewResponse": {
-            "type": "object",
-            "properties": {
-                "connections": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "size": {
-                    "type": "string"
-                },
-                "table_count": {
-                    "type": "integer"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "version": {
-                    "type": "string"
-                }
-            }
-        },
-        "db_manage.ExecuteSQLRequest": {
-            "type": "object",
-            "required": [
-                "sql"
-            ],
-            "properties": {
-                "sql": {
-                    "type": "string"
-                }
-            }
-        },
-        "db_manage.ExecuteSQLResponse": {
-            "type": "object",
-            "properties": {
-                "affected_rows": {
-                    "type": "integer"
-                },
-                "columns": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "execution_time_ms": {
-                    "type": "integer"
-                },
-                "results": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "additionalProperties": {}
-                    }
-                },
-                "type": {
-                    "description": "\"select\" 或 \"exec\"",
-                    "type": "string"
-                }
-            }
-        },
-        "diskcache.Status": {
+        "disk.Status": {
             "type": "object",
             "properties": {
                 "base_path": {
@@ -16080,7 +16630,7 @@ const docTemplate = `{
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.Upload"
+                        "$ref": "#/definitions/models.Upload"
                     }
                 },
                 "page": {
@@ -16100,7 +16650,7 @@ const docTemplate = `{
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.Upload"
+                        "$ref": "#/definitions/models.Upload"
                     }
                 },
                 "page": {
@@ -16157,7 +16707,7 @@ const docTemplate = `{
                 }
             }
         },
-        "logs.accessLogItem": {
+        "model.AccessLogItem": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -16188,6 +16738,9 @@ const docTemplate = `{
                 "status": {
                     "type": "integer"
                 },
+                "trace_id": {
+                    "type": "string"
+                },
                 "user_agent": {
                     "type": "string"
                 },
@@ -16200,123 +16753,16 @@ const docTemplate = `{
                 }
             }
         },
-        "logs.accessLogsResponse": {
+        "model.AccessLogsResponse": {
             "type": "object",
             "properties": {
                 "list": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/logs.accessLogItem"
+                        "$ref": "#/definitions/model.AccessLogItem"
                     }
                 },
                 "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "logs.browserItem": {
-            "type": "object",
-            "properties": {
-                "browser": {
-                    "type": "string"
-                },
-                "count": {
-                    "type": "integer"
-                }
-            }
-        },
-        "logs.logsAnalyticsResponse": {
-            "type": "object",
-            "properties": {
-                "browsers": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/logs.browserItem"
-                    }
-                },
-                "top_users": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/logs.topUserItem"
-                    }
-                },
-                "trend": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/logs.trendItem"
-                    }
-                }
-            }
-        },
-        "logs.logsResponse": {
-            "type": "object",
-            "properties": {
-                "has_more": {
-                    "type": "boolean"
-                },
-                "lines": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/logger.LogEntry"
-                    }
-                },
-                "next_cursor": {
-                    "description": "用于加载更早日志的 cursor",
-                    "type": "integer"
-                }
-            }
-        },
-        "logs.topUserItem": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "nickname": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string",
-                    "example": "0"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "logs.trendItem": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "date": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.AccessToken": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_admin": {
-                    "type": "boolean"
-                },
-                "masked_token": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "user_id": {
                     "type": "integer"
                 }
             }
@@ -16341,43 +16787,90 @@ const docTemplate = `{
                 }
             }
         },
-        "model.AuthSource": {
+        "model.BindRequest": {
             "type": "object",
             "properties": {
-                "client_id": {
+                "channel_id": {
                     "type": "string"
                 },
-                "client_secret_configured": {
-                    "type": "boolean"
+                "code": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.BindingDTO": {
+            "type": "object",
+            "properties": {
+                "channel_id": {
+                    "type": "string",
+                    "example": "0"
+                },
+                "channel_name": {
+                    "type": "string"
+                },
+                "channel_type": {
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
                 },
-                "display_name": {
+                "id": {
+                    "type": "string",
+                    "example": "0"
+                },
+                "platform_user_id": {
                     "type": "string"
                 },
-                "icon_url": {
+                "user_id": {
+                    "type": "string",
+                    "example": "0"
+                }
+            }
+        },
+        "model.BrowserItem": {
+            "type": "object",
+            "properties": {
+                "browser": {
                     "type": "string"
+                },
+                "count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.ChannelDTO": {
+            "type": "object",
+            "properties": {
+                "credentials": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "extra": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 },
                 "id": {
-                    "type": "integer"
-                },
-                "is_active": {
-                    "type": "boolean"
+                    "type": "string",
+                    "example": "0"
                 },
                 "name": {
                     "type": "string"
                 },
-                "openid_discovery_url": {
-                    "type": "string"
+                "owner_id": {
+                    "type": "string",
+                    "example": "0"
                 },
-                "scopes": {
+                "owner_scope": {
                     "type": "string"
                 },
                 "type": {
-                    "type": "string"
-                },
-                "updated_at": {
                     "type": "string"
                 }
             }
@@ -16440,6 +16933,243 @@ const docTemplate = `{
                 }
             }
         },
+        "model.CreateChannelRequest": {
+            "type": "object",
+            "properties": {
+                "credentials": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "extra": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.CreatePushChannelRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "type"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "other": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.CreatePushEventRequest": {
+            "type": "object",
+            "properties": {
+                "channels": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "event_key": {
+                    "type": "string"
+                },
+                "targets": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "task_type": {
+                    "type": "string"
+                },
+                "template": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.CreateScheduleRequest": {
+            "type": "object",
+            "required": [
+                "cron",
+                "is_active",
+                "name",
+                "task_type"
+            ],
+            "properties": {
+                "cron": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "payload": {
+                    "type": "string"
+                },
+                "task_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.CreateSystemConfigRequest": {
+            "type": "object",
+            "required": [
+                "key",
+                "type",
+                "value"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "key": {
+                    "type": "string",
+                    "maxLength": 64
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "system",
+                        "business"
+                    ]
+                },
+                "value": {
+                    "type": "string"
+                },
+                "visibility": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ]
+                }
+            }
+        },
+        "model.CreateTemplateRequest": {
+            "type": "object",
+            "required": [
+                "content",
+                "key",
+                "name",
+                "type"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "key": {
+                    "type": "string",
+                    "maxLength": 80
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "subject": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "type": {
+                    "type": "string",
+                    "maxLength": 20
+                }
+            }
+        },
+        "model.CreateUserRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password",
+                "username"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "is_admin": {
+                    "type": "boolean"
+                },
+                "nickname": {
+                    "type": "string",
+                    "maxLength": 64
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 64,
+                    "minLength": 8
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 64,
+                    "minLength": 3
+                }
+            }
+        },
+        "model.DBOverviewResponse": {
+            "type": "object",
+            "properties": {
+                "connections": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "size": {
+                    "type": "string"
+                },
+                "table_count": {
+                    "type": "integer"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            }
+        },
         "model.DNSAccount": {
             "type": "object",
             "properties": {
@@ -16460,31 +17190,184 @@ const docTemplate = `{
                 }
             }
         },
-        "model.ExternalAccountView": {
+        "model.DatabaseInfoResponse": {
             "type": "object",
             "properties": {
-                "auth_source_id": {
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Definition": {
+            "type": "object",
+            "properties": {
+                "fields": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Field"
+                    }
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.DispatchTaskRequest": {
+            "type": "object",
+            "required": [
+                "task_type"
+            ],
+            "properties": {
+                "end_time": {
+                    "type": "string"
+                },
+                "payload": {
+                    "type": "string"
+                },
+                "start_time": {
+                    "type": "string"
+                },
+                "task_type": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.ExecuteSQLRequest": {
+            "type": "object",
+            "required": [
+                "sql"
+            ],
+            "properties": {
+                "sql": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.ExecuteSQLResponse": {
+            "type": "object",
+            "properties": {
+                "affected_rows": {
                     "type": "integer"
                 },
-                "auth_source_label": {
+                "columns": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "execution_time_ms": {
+                    "type": "integer"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": true
+                    }
+                },
+                "type": {
+                    "description": "\"select\" 或 \"exec\"",
+                    "type": "string"
+                }
+            }
+        },
+        "model.Field": {
+            "type": "object",
+            "properties": {
+                "key": {
                     "type": "string"
                 },
-                "auth_source_name": {
+                "required": {
+                    "type": "boolean"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.ListUsersResponse": {
+            "type": "object",
+            "properties": {
+                "total": {
+                    "type": "integer"
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.UserResponse"
+                    }
+                }
+            }
+        },
+        "model.LogDatabaseStatus": {
+            "type": "object",
+            "properties": {
+                "active_database": {
                     "type": "string"
                 },
-                "auth_source_type": {
+                "available_targets": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "migration": {
                     "type": "string"
                 },
-                "created_at": {
-                    "type": "string"
+                "retention_days": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "model.LogsAnalyticsResponse": {
+            "type": "object",
+            "properties": {
+                "browsers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.BrowserItem"
+                    }
                 },
-                "email": {
-                    "type": "string"
+                "top_users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.TopUserItem"
+                    }
                 },
-                "external_username": {
-                    "type": "string"
+                "trend": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.TrendItem"
+                    }
+                }
+            }
+        },
+        "model.LogsResponse": {
+            "type": "object",
+            "properties": {
+                "has_more": {
+                    "type": "boolean"
                 },
-                "id": {
+                "lines": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/logger.LogEntry"
+                    }
+                },
+                "next_cursor": {
+                    "description": "用于加载更早日志的 cursor",
                     "type": "integer"
                 }
             }
@@ -16733,6 +17616,21 @@ const docTemplate = `{
                 }
             }
         },
+        "model.PublicChannelDTO": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "example": "0"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "model.PushChannel": {
             "type": "object",
             "properties": {
@@ -16740,37 +17638,30 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "description": {
-                    "description": "备注",
                     "type": "string"
                 },
                 "enabled": {
-                    "description": "通道是否启用",
                     "type": "boolean"
                 },
                 "id": {
                     "type": "integer"
                 },
                 "name": {
-                    "description": "通道名称，仅英文字母和下划线，唯一",
                     "type": "string"
                 },
                 "other": {
-                    "description": "请求体/SMTP 密码等",
                     "type": "string"
                 },
                 "token": {
-                    "description": "鉴权令牌或发信用户名等",
                     "type": "string"
                 },
                 "type": {
-                    "description": "通道类型：custom, lark, email",
                     "type": "string"
                 },
                 "updated_at": {
                     "type": "string"
                 },
                 "url": {
-                    "description": "请求地址，HTTPS 协议或 SMTP 地址",
                     "type": "string"
                 }
             }
@@ -16779,7 +17670,6 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "channels": {
-                    "description": "推送渠道列表，如 [\"lark\"]",
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -16789,33 +17679,27 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "enabled": {
-                    "description": "是否启用",
                     "type": "boolean"
                 },
                 "event_key": {
-                    "description": "如 admin_login",
                     "type": "string"
                 },
                 "id": {
                     "type": "integer"
                 },
                 "name": {
-                    "description": "如 管理员登录",
                     "type": "string"
                 },
                 "targets": {
-                    "description": "推送目标用户/邮箱列表",
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
                 "task_type": {
-                    "description": "关联的异步任务类型",
                     "type": "string"
                 },
                 "template": {
-                    "description": "消息模板 JSON",
                     "type": "string"
                 },
                 "updated_at": {
@@ -16823,95 +17707,92 @@ const docTemplate = `{
                 }
             }
         },
-        "model.PushHistory": {
+        "model.SystemStatusResponse": {
             "type": "object",
             "properties": {
-                "channel": {
+                "alloc": {
                     "type": "string"
                 },
-                "content": {
+                "buck_hash_sys": {
                     "type": "string"
                 },
-                "created_at": {
-                    "type": "string"
-                },
-                "error_msg": {
-                    "type": "string"
-                },
-                "event_key": {
-                    "type": "string"
-                },
-                "id": {
+                "frees": {
                     "type": "integer"
                 },
-                "level": {
+                "gc_sys": {
                     "type": "string"
                 },
-                "status": {
-                    "description": "success / failed",
+                "heap_alloc": {
                     "type": "string"
                 },
-                "target": {
+                "heap_idle": {
                     "type": "string"
                 },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.Schedule": {
-            "type": "object",
-            "properties": {
-                "created_at": {
+                "heap_inuse": {
                     "type": "string"
                 },
-                "cron": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string",
-                    "example": "0"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "payload": {
-                    "type": "string"
-                },
-                "task_type": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.SystemConfig": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "key": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "value": {
-                    "type": "string"
-                },
-                "visibility": {
+                "heap_objects": {
                     "type": "integer"
+                },
+                "heap_released": {
+                    "type": "string"
+                },
+                "heap_sys": {
+                    "type": "string"
+                },
+                "last_gc_time": {
+                    "type": "string"
+                },
+                "last_pause": {
+                    "type": "string"
+                },
+                "lookups": {
+                    "type": "integer"
+                },
+                "mallocs": {
+                    "type": "integer"
+                },
+                "mcache_inuse": {
+                    "type": "string"
+                },
+                "mcache_sys": {
+                    "type": "string"
+                },
+                "mspan_inuse": {
+                    "type": "string"
+                },
+                "mspan_sys": {
+                    "type": "string"
+                },
+                "next_gc": {
+                    "type": "string"
+                },
+                "num_gc": {
+                    "type": "integer"
+                },
+                "num_goroutine": {
+                    "type": "integer"
+                },
+                "other_sys": {
+                    "type": "string"
+                },
+                "pause_total_ns": {
+                    "type": "string"
+                },
+                "stack_inuse": {
+                    "type": "string"
+                },
+                "stack_sys": {
+                    "type": "string"
+                },
+                "sys": {
+                    "type": "string"
+                },
+                "total_alloc": {
+                    "type": "string"
+                },
+                "uptime": {
+                    "type": "string"
                 }
             }
         },
@@ -16980,66 +17861,6 @@ const docTemplate = `{
                 }
             }
         },
-        "model.TaskExecution": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "duration": {
-                    "type": "integer"
-                },
-                "error_message": {
-                    "type": "string"
-                },
-                "finished_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string",
-                    "example": "0"
-                },
-                "log": {
-                    "type": "string"
-                },
-                "max_retry": {
-                    "type": "integer"
-                },
-                "payload": {
-                    "type": "string"
-                },
-                "result": {
-                    "type": "string"
-                },
-                "retry_count": {
-                    "type": "integer"
-                },
-                "retryable": {
-                    "type": "boolean"
-                },
-                "started_at": {
-                    "type": "string"
-                },
-                "status": {
-                    "$ref": "#/definitions/model.TaskExecutionStatus"
-                },
-                "task_id": {
-                    "type": "string"
-                },
-                "task_name": {
-                    "type": "string"
-                },
-                "task_type": {
-                    "type": "string"
-                },
-                "triggered_by": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
         "model.TaskExecutionStatus": {
             "type": "string",
             "enum": [
@@ -17055,167 +17876,414 @@ const docTemplate = `{
                 "TaskExecutionStatusFailed"
             ]
         },
-        "model.Template": {
+        "model.TestPushChannelRequest": {
             "type": "object",
             "properties": {
-                "content": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_system": {
-                    "type": "boolean"
-                },
-                "key": {
-                    "type": "string"
-                },
                 "name": {
                     "type": "string"
                 },
-                "subject": {
+                "other": {
+                    "type": "string"
+                },
+                "target": {
+                    "type": "string"
+                },
+                "token": {
                     "type": "string"
                 },
                 "type": {
                     "type": "string"
                 },
-                "updated_at": {
+                "url": {
                     "type": "string"
                 }
             }
         },
-        "model.Upload": {
+        "model.TestPushRequest": {
+            "type": "object",
+            "required": [
+                "config"
+            ],
+            "properties": {
+                "config": {
+                    "$ref": "#/definitions/push.Config"
+                },
+                "target": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.TestSMTPRequest": {
+            "type": "object",
+            "required": [
+                "smtp_host",
+                "smtp_password",
+                "smtp_port",
+                "smtp_username",
+                "to"
+            ],
+            "properties": {
+                "smtp_host": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "smtp_password": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "smtp_port": {
+                    "type": "integer"
+                },
+                "smtp_username": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "to": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.TestSMTPResponse": {
             "type": "object",
             "properties": {
-                "access_mode": {
+                "error": {
+                    "type": "string"
+                },
+                "log": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "model.TopUserItem": {
+            "type": "object",
+            "properties": {
+                "count": {
                     "type": "integer"
                 },
-                "created_at": {
-                    "type": "string"
-                },
-                "extension": {
-                    "description": "文件后缀名 (不含点，如 png, pdf)",
-                    "type": "string"
-                },
-                "file_name": {
-                    "description": "原始文件名 (例如: image.png)",
-                    "type": "string"
-                },
-                "file_path": {
-                    "description": "文件相对路径 / S3 Key",
-                    "type": "string"
-                },
-                "file_size": {
-                    "description": "文件大小（字节）",
-                    "type": "integer"
-                },
-                "hash": {
-                    "description": "文件哈希 (SHA-256/MD5，可用于排重)",
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string",
-                    "example": "0"
-                },
-                "metadata": {
-                    "description": "业务扩展元数据",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/model.UploadMetadata"
-                        }
-                    ]
-                },
-                "mime_type": {
-                    "description": "媒体类型 (MIME, 如 image/png)",
-                    "type": "string"
-                },
-                "status": {
-                    "description": "状态",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/model.UploadStatus"
-                        }
-                    ]
-                },
-                "type": {
-                    "description": "业务标识类型 (如 avatar, doc, attachment)",
-                    "type": "string"
-                },
-                "updated_at": {
+                "nickname": {
                     "type": "string"
                 },
                 "user_id": {
                     "type": "string",
                     "example": "0"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         },
-        "model.UploadMetadata": {
+        "model.TrendItem": {
             "type": "object",
             "properties": {
-                "bucket": {
-                    "description": "存储桶名称 (适用于 S3 等)",
-                    "type": "string"
-                },
-                "client_ip": {
-                    "description": "上传者 IP",
-                    "type": "string"
-                },
-                "duration": {
-                    "description": "音视频时长 (s)",
-                    "type": "number"
-                },
-                "extra": {
-                    "description": "其它任意业务自定义元数据",
-                    "type": "object",
-                    "additionalProperties": {}
-                },
-                "height": {
-                    "description": "图像/视频高度 (px)",
+                "count": {
                     "type": "integer"
                 },
-                "original_mime": {
-                    "description": "原始 MIME 类型",
+                "date": {
                     "type": "string"
-                },
-                "user_agent": {
-                    "description": "上传者的 UA",
-                    "type": "string"
-                },
-                "width": {
-                    "description": "图像/视频宽度 (px)",
-                    "type": "integer"
                 }
             }
         },
-        "model.UploadStatus": {
-            "type": "string",
-            "enum": [
-                "pending",
-                "used",
-                "deleted"
+        "model.UpdateCacheConfigRequest": {
+            "type": "object",
+            "required": [
+                "max_size_mb",
+                "ttl_minutes"
             ],
-            "x-enum-comments": {
-                "UploadStatusDeleted": "已删除",
-                "UploadStatusPending": "待使用",
-                "UploadStatusUsed": "已使用"
-            },
-            "x-enum-descriptions": [
-                "待使用",
-                "已使用",
-                "已删除"
+            "properties": {
+                "lru_enabled": {
+                    "type": "boolean"
+                },
+                "max_size_mb": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "ttl_minutes": {
+                    "type": "integer",
+                    "minimum": 0
+                }
+            }
+        },
+        "model.UpdateChannelRequest": {
+            "type": "object",
+            "properties": {
+                "credentials": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "extra": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.UpdatePushChannelRequest": {
+            "type": "object",
+            "required": [
+                "type"
             ],
-            "x-enum-varnames": [
-                "UploadStatusPending",
-                "UploadStatusUsed",
-                "UploadStatusDeleted"
-            ]
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "other": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.UpdatePushEventRequest": {
+            "type": "object",
+            "required": [
+                "template"
+            ],
+            "properties": {
+                "channels": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "targets": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "template": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.UpdateScheduleRequest": {
+            "type": "object",
+            "required": [
+                "cron",
+                "is_active",
+                "name",
+                "task_type"
+            ],
+            "properties": {
+                "cron": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "payload": {
+                    "type": "string"
+                },
+                "task_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.UpdateSystemConfigRequest": {
+            "type": "object",
+            "required": [
+                "value"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "value": {
+                    "type": "string"
+                },
+                "visibility": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ]
+                }
+            }
+        },
+        "model.UpdateTemplateRequest": {
+            "type": "object",
+            "required": [
+                "content",
+                "name",
+                "type"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "subject": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "type": {
+                    "type": "string",
+                    "maxLength": 20
+                }
+            }
+        },
+        "model.UpdateUserRequest": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "is_admin": {
+                    "type": "boolean"
+                },
+                "nickname": {
+                    "type": "string",
+                    "maxLength": 64
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 64,
+                    "minLength": 8
+                }
+            }
+        },
+        "model.UpdateUserStatusRequest": {
+            "type": "object",
+            "properties": {
+                "is_active": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "model.UpdaterStatus": {
+            "type": "object",
+            "properties": {
+                "asset_name": {
+                    "type": "string"
+                },
+                "build_time": {
+                    "type": "string"
+                },
+                "can_upgrade": {
+                    "type": "boolean"
+                },
+                "current_version": {
+                    "type": "string"
+                },
+                "latest_version": {
+                    "type": "string"
+                },
+                "platform": {
+                    "type": "string"
+                },
+                "prerelease": {
+                    "type": "boolean"
+                },
+                "published_at": {
+                    "type": "string"
+                },
+                "release_name": {
+                    "type": "string"
+                },
+                "release_notes": {
+                    "type": "string"
+                },
+                "release_url": {
+                    "type": "string"
+                },
+                "update_available": {
+                    "type": "boolean"
+                },
+                "upstream_repository": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.UserResponse": {
+            "type": "object",
+            "properties": {
+                "avatar_url": {
+                    "type": "string"
+                },
+                "bio": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "0"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "is_admin": {
+                    "type": "boolean"
+                },
+                "last_login_at": {
+                    "type": "string"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "nickname": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                },
+                "website": {
+                    "type": "string"
+                }
+            }
         },
         "model.Zone": {
             "type": "object",
@@ -17259,6 +18327,108 @@ const docTemplate = `{
                     "type": "integer"
                 }
             }
+        },
+        "models.Upload": {
+            "type": "object",
+            "properties": {
+                "access_mode": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "extension": {
+                    "type": "string"
+                },
+                "file_name": {
+                    "type": "string"
+                },
+                "file_path": {
+                    "type": "string"
+                },
+                "file_size": {
+                    "type": "integer"
+                },
+                "hash": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "0"
+                },
+                "metadata": {
+                    "$ref": "#/definitions/models.UploadMetadata"
+                },
+                "mime_type": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/models.UploadStatus"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string",
+                    "example": "0"
+                }
+            }
+        },
+        "models.UploadMetadata": {
+            "type": "object",
+            "properties": {
+                "bucket": {
+                    "type": "string"
+                },
+                "client_ip": {
+                    "type": "string"
+                },
+                "duration": {
+                    "type": "number"
+                },
+                "extra": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "height": {
+                    "type": "integer"
+                },
+                "original_mime": {
+                    "type": "string"
+                },
+                "user_agent": {
+                    "type": "string"
+                },
+                "width": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.UploadStatus": {
+            "type": "string",
+            "enum": [
+                "pending",
+                "used",
+                "deleted"
+            ],
+            "x-enum-comments": {
+                "UploadStatusDeleted": "已删除",
+                "UploadStatusPending": "待使用",
+                "UploadStatusUsed": "已使用"
+            },
+            "x-enum-descriptions": [
+                "待使用",
+                "已使用",
+                "已删除"
+            ],
+            "x-enum-varnames": [
+                "UploadStatusPending",
+                "UploadStatusUsed",
+                "UploadStatusDeleted"
+            ]
         },
         "node.AgentReleaseInfo": {
             "type": "object",
@@ -17530,107 +18700,6 @@ const docTemplate = `{
                 },
                 "version": {
                     "type": "string"
-                }
-            }
-        },
-        "oauth.AuthSourceView": {
-            "type": "object",
-            "properties": {
-                "client_secret_configured": {
-                    "type": "boolean"
-                },
-                "display_name": {
-                    "type": "string"
-                },
-                "icon_url": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "oauth.BasicUserInfo": {
-            "type": "object",
-            "properties": {
-                "avatar_url": {
-                    "type": "string"
-                },
-                "bio": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "gender": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_admin": {
-                    "type": "boolean"
-                },
-                "location": {
-                    "type": "string"
-                },
-                "need_change_password": {
-                    "type": "boolean"
-                },
-                "nickname": {
-                    "type": "string"
-                },
-                "phone": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                },
-                "website": {
-                    "type": "string"
-                }
-            }
-        },
-        "oauth.CallbackRequest": {
-            "type": "object",
-            "required": [
-                "code",
-                "state"
-            ],
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "state": {
-                    "type": "string"
-                }
-            }
-        },
-        "oauth.OAuthAuthorizeResponse": {
-            "type": "object",
-            "properties": {
-                "authorize_url": {
-                    "type": "string"
-                }
-            }
-        },
-        "oauth.OAuthCallbackResult": {
-            "type": "object",
-            "properties": {
-                "status": {
-                    "type": "string"
-                },
-                "user": {
-                    "$ref": "#/definitions/oauth.BasicUserInfo"
                 }
             }
         },
@@ -19448,257 +20517,6 @@ const docTemplate = `{
                 }
             }
         },
-        "push.CreateChannelRequest": {
-            "type": "object",
-            "required": [
-                "name",
-                "type"
-            ],
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "enabled": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "other": {
-                    "type": "string"
-                },
-                "token": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "url": {
-                    "type": "string"
-                }
-            }
-        },
-        "push.CreateEventRequest": {
-            "type": "object",
-            "properties": {
-                "channels": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "enabled": {
-                    "type": "boolean"
-                },
-                "event_key": {
-                    "type": "string"
-                },
-                "targets": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "task_type": {
-                    "description": "关联的异步任务类型",
-                    "type": "string"
-                },
-                "template": {
-                    "type": "string"
-                }
-            }
-        },
-        "push.Definition": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "description": "short description",
-                    "type": "string"
-                },
-                "fields": {
-                    "description": "form fields",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/push.Field"
-                    }
-                },
-                "name": {
-                    "description": "display name",
-                    "type": "string"
-                },
-                "type": {
-                    "description": "channel type (e.g., custom, lark, email)",
-                    "type": "string"
-                }
-            }
-        },
-        "push.EventMetadata": {
-            "type": "object",
-            "properties": {
-                "default_template": {
-                    "$ref": "#/definitions/push.NotificationMessage"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "key": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "push.Field": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "description": "field explanation/help text",
-                    "type": "string"
-                },
-                "key": {
-                    "description": "unique key for the field (e.g. url, token, other)",
-                    "type": "string"
-                },
-                "label": {
-                    "description": "human readable label (e.g. \"Webhook 地址\")",
-                    "type": "string"
-                },
-                "placeholder": {
-                    "description": "input placeholder",
-                    "type": "string"
-                },
-                "required": {
-                    "description": "whether this field is required",
-                    "type": "boolean"
-                },
-                "type": {
-                    "description": "input type: \"text\" | \"password\" | \"textarea\"",
-                    "type": "string"
-                }
-            }
-        },
-        "push.NotificationMessage": {
-            "type": "object",
-            "properties": {
-                "content": {
-                    "type": "string"
-                },
-                "ext": {
-                    "type": "object",
-                    "additionalProperties": {}
-                },
-                "level": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
-        "push.TestChannelRequest": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string"
-                },
-                "other": {
-                    "type": "string"
-                },
-                "target": {
-                    "type": "string"
-                },
-                "token": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "url": {
-                    "type": "string"
-                }
-            }
-        },
-        "push.TestPushRequest": {
-            "type": "object",
-            "required": [
-                "config"
-            ],
-            "properties": {
-                "config": {
-                    "$ref": "#/definitions/push.Config"
-                },
-                "target": {
-                    "type": "string"
-                }
-            }
-        },
-        "push.UpdateChannelRequest": {
-            "type": "object",
-            "required": [
-                "type"
-            ],
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "enabled": {
-                    "type": "boolean"
-                },
-                "other": {
-                    "type": "string"
-                },
-                "token": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "url": {
-                    "type": "string"
-                }
-            }
-        },
-        "push.UpdateEventRequest": {
-            "type": "object",
-            "required": [
-                "template"
-            ],
-            "properties": {
-                "channels": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "enabled": {
-                    "type": "boolean"
-                },
-                "targets": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "template": {
-                    "type": "string"
-                }
-            }
-        },
-        "push.pushHistoriesResponse": {
-            "type": "object",
-            "properties": {
-                "results": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.PushHistory"
-                    }
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
         "relay.HeartbeatPayload": {
             "type": "object",
             "properties": {
@@ -19767,439 +20585,29 @@ const docTemplate = `{
                 }
             }
         },
-        "status.DatabaseInfoResponse": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "version": {
-                    "type": "string"
-                }
-            }
-        },
-        "status.LogDatabaseStatus": {
-            "type": "object",
-            "properties": {
-                "active_database": {
-                    "type": "string"
-                },
-                "available_targets": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "clickhouse": {
-                    "$ref": "#/definitions/Wavelet_OpenFlare_plugins_server_model_analytics.ClickHouseOperationalStats"
-                },
-                "migration": {
-                    "description": "idle | migrating",
-                    "type": "string"
-                },
-                "retention_days": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "integer"
-                    }
-                }
-            }
-        },
-        "status.SystemStatusResponse": {
-            "type": "object",
-            "properties": {
-                "alloc": {
-                    "type": "string"
-                },
-                "buck_hash_sys": {
-                    "type": "string"
-                },
-                "frees": {
-                    "type": "integer"
-                },
-                "gc_sys": {
-                    "type": "string"
-                },
-                "heap_alloc": {
-                    "type": "string"
-                },
-                "heap_idle": {
-                    "type": "string"
-                },
-                "heap_inuse": {
-                    "type": "string"
-                },
-                "heap_objects": {
-                    "type": "integer"
-                },
-                "heap_released": {
-                    "type": "string"
-                },
-                "heap_sys": {
-                    "type": "string"
-                },
-                "last_gc_time": {
-                    "type": "string"
-                },
-                "last_pause": {
-                    "type": "string"
-                },
-                "lookups": {
-                    "type": "integer"
-                },
-                "mallocs": {
-                    "type": "integer"
-                },
-                "mcache_inuse": {
-                    "type": "string"
-                },
-                "mcache_sys": {
-                    "type": "string"
-                },
-                "mspan_inuse": {
-                    "type": "string"
-                },
-                "mspan_sys": {
-                    "type": "string"
-                },
-                "next_gc": {
-                    "type": "string"
-                },
-                "num_gc": {
-                    "type": "integer"
-                },
-                "num_goroutine": {
-                    "type": "integer"
-                },
-                "other_sys": {
-                    "type": "string"
-                },
-                "pause_total_ns": {
-                    "type": "string"
-                },
-                "stack_inuse": {
-                    "type": "string"
-                },
-                "stack_sys": {
-                    "type": "string"
-                },
-                "sys": {
-                    "type": "string"
-                },
-                "total_alloc": {
-                    "type": "string"
-                },
-                "uptime": {
-                    "type": "string"
-                }
-            }
-        },
-        "system_config.CreateSystemConfigRequest": {
-            "type": "object",
-            "required": [
-                "key",
-                "type",
-                "value"
+        "time.Duration": {
+            "type": "integer",
+            "format": "int64",
+            "enum": [
+                -9223372036854775808,
+                9223372036854775807,
+                1,
+                1000,
+                1000000,
+                1000000000,
+                60000000000,
+                3600000000000
             ],
-            "properties": {
-                "description": {
-                    "type": "string",
-                    "maxLength": 255
-                },
-                "key": {
-                    "type": "string",
-                    "maxLength": 64
-                },
-                "type": {
-                    "type": "string",
-                    "enum": [
-                        "system",
-                        "business"
-                    ]
-                },
-                "value": {
-                    "type": "string"
-                },
-                "visibility": {
-                    "type": "integer",
-                    "enum": [
-                        0,
-                        1
-                    ]
-                }
-            }
-        },
-        "system_config.TestSMTPRequest": {
-            "type": "object",
-            "required": [
-                "smtp_host",
-                "smtp_password",
-                "smtp_port",
-                "smtp_username",
-                "to"
-            ],
-            "properties": {
-                "smtp_host": {
-                    "type": "string",
-                    "maxLength": 255
-                },
-                "smtp_password": {
-                    "type": "string",
-                    "maxLength": 255
-                },
-                "smtp_port": {
-                    "type": "integer"
-                },
-                "smtp_username": {
-                    "type": "string",
-                    "maxLength": 255
-                },
-                "to": {
-                    "type": "string"
-                }
-            }
-        },
-        "system_config.TestSMTPResponse": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                },
-                "log": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "system_config.UpdateSystemConfigRequest": {
-            "type": "object",
-            "required": [
-                "value"
-            ],
-            "properties": {
-                "description": {
-                    "type": "string",
-                    "maxLength": 255
-                },
-                "value": {
-                    "type": "string"
-                },
-                "visibility": {
-                    "type": "integer",
-                    "enum": [
-                        0,
-                        1
-                    ]
-                }
-            }
-        },
-        "task.CreateScheduleRequest": {
-            "type": "object",
-            "required": [
-                "cron",
-                "is_active",
-                "name",
-                "task_type"
-            ],
-            "properties": {
-                "cron": {
-                    "type": "string"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "payload": {
-                    "type": "string"
-                },
-                "task_type": {
-                    "type": "string"
-                }
-            }
-        },
-        "task.DispatchTaskRequest": {
-            "type": "object",
-            "required": [
-                "task_type"
-            ],
-            "properties": {
-                "end_time": {
-                    "type": "string"
-                },
-                "payload": {
-                    "type": "string"
-                },
-                "start_time": {
-                    "type": "string"
-                },
-                "task_type": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "task.TaskMeta": {
-            "type": "object",
-            "properties": {
-                "asynq_task": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "max_retry": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "params": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/task.TaskParam"
-                    }
-                },
-                "queue": {
-                    "type": "string"
-                },
-                "retryable": {
-                    "description": "是否支持手动重试",
-                    "type": "boolean"
-                },
-                "supports_time": {
-                    "type": "boolean"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "task.TaskParam": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "description": "描述",
-                    "type": "string"
-                },
-                "label": {
-                    "description": "显示名称",
-                    "type": "string"
-                },
-                "name": {
-                    "description": "参数键名",
-                    "type": "string"
-                },
-                "placeholder": {
-                    "description": "占位符",
-                    "type": "string"
-                },
-                "required": {
-                    "description": "是否必填",
-                    "type": "boolean"
-                },
-                "type": {
-                    "description": "类型：string, text, number, boolean",
-                    "type": "string"
-                }
-            }
-        },
-        "task.UpdateScheduleRequest": {
-            "type": "object",
-            "required": [
-                "cron",
-                "is_active",
-                "name",
-                "task_type"
-            ],
-            "properties": {
-                "cron": {
-                    "type": "string"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "payload": {
-                    "type": "string"
-                },
-                "task_type": {
-                    "type": "string"
-                }
-            }
-        },
-        "template.CreateTemplateRequest": {
-            "type": "object",
-            "required": [
-                "content",
-                "key",
-                "name",
-                "type"
-            ],
-            "properties": {
-                "content": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string",
-                    "maxLength": 255
-                },
-                "key": {
-                    "type": "string",
-                    "maxLength": 80
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 100
-                },
-                "subject": {
-                    "type": "string",
-                    "maxLength": 255
-                },
-                "type": {
-                    "type": "string",
-                    "maxLength": 20
-                }
-            }
-        },
-        "template.UpdateTemplateRequest": {
-            "type": "object",
-            "required": [
-                "content",
-                "name",
-                "type"
-            ],
-            "properties": {
-                "content": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string",
-                    "maxLength": 255
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 100
-                },
-                "subject": {
-                    "type": "string",
-                    "maxLength": 255
-                },
-                "type": {
-                    "type": "string",
-                    "maxLength": 20
-                }
-            }
+            "x-enum-varnames": [
+                "minDuration",
+                "maxDuration",
+                "Nanosecond",
+                "Microsecond",
+                "Millisecond",
+                "Second",
+                "Minute",
+                "Hour"
+            ]
         },
         "tls.ApplyInput": {
             "type": "object",
@@ -20376,8 +20784,38 @@ const docTemplate = `{
                 }
             }
         },
+        "user.AccessToken": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_admin": {
+                    "type": "boolean"
+                },
+                "masked_token": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "user.changePasswordRequest": {
             "type": "object",
+            "required": [
+                "new_password",
+                "old_password"
+            ],
             "properties": {
                 "new_password": {
                     "type": "string"
@@ -20387,9 +20825,15 @@ const docTemplate = `{
                 }
             }
         },
-        "user.createTokenRequest": {
+        "user.createAccessTokenRequest": {
             "type": "object",
+            "required": [
+                "name"
+            ],
             "properties": {
+                "expires_at": {
+                    "type": "string"
+                },
                 "is_admin": {
                     "type": "boolean"
                 },
@@ -20398,60 +20842,13 @@ const docTemplate = `{
                 }
             }
         },
-        "user.createUserRequest": {
+        "user.loginRequest": {
             "type": "object",
             "required": [
-                "email",
                 "password",
                 "username"
             ],
             "properties": {
-                "email": {
-                    "type": "string",
-                    "maxLength": 255
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "is_admin": {
-                    "type": "boolean"
-                },
-                "nickname": {
-                    "type": "string",
-                    "maxLength": 64
-                },
-                "password": {
-                    "type": "string",
-                    "maxLength": 64,
-                    "minLength": 8
-                },
-                "username": {
-                    "type": "string",
-                    "maxLength": 64,
-                    "minLength": 3
-                }
-            }
-        },
-        "user.listUsersResponse": {
-            "type": "object",
-            "properties": {
-                "total": {
-                    "type": "integer"
-                },
-                "users": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/user.user"
-                    }
-                }
-            }
-        },
-        "user.loginRequest": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
                 "password": {
                     "type": "string"
                 },
@@ -20462,49 +20859,18 @@ const docTemplate = `{
         },
         "user.registerRequest": {
             "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
             "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "display_name": {
-                    "type": "string"
-                },
                 "email": {
-                    "type": "string"
-                },
-                "nickname": {
                     "type": "string"
                 },
                 "password": {
                     "type": "string"
                 },
                 "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "user.sendEmailCodeRequest": {
-            "type": "object",
-            "required": [
-                "email",
-                "scene"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "scene": {
-                    "type": "string"
-                }
-            }
-        },
-        "user.tokenResponse": {
-            "type": "object",
-            "properties": {
-                "record": {
-                    "$ref": "#/definitions/model.AccessToken"
-                },
-                "token": {
                     "type": "string"
                 }
             }
@@ -20518,9 +20884,6 @@ const docTemplate = `{
                 "bio": {
                     "type": "string"
                 },
-                "email": {
-                    "type": "string"
-                },
                 "gender": {
                     "type": "string"
                 },
@@ -20531,89 +20894,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "phone": {
-                    "type": "string"
-                },
-                "website": {
-                    "type": "string"
-                }
-            }
-        },
-        "user.updateUserRequest": {
-            "type": "object",
-            "required": [
-                "email"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "maxLength": 255
-                },
-                "is_admin": {
-                    "type": "boolean"
-                },
-                "nickname": {
-                    "type": "string",
-                    "maxLength": 64
-                },
-                "password": {
-                    "type": "string",
-                    "maxLength": 64,
-                    "minLength": 8
-                }
-            }
-        },
-        "user.updateUserStatusRequest": {
-            "type": "object",
-            "properties": {
-                "is_active": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "user.user": {
-            "type": "object",
-            "properties": {
-                "avatar_url": {
-                    "type": "string"
-                },
-                "bio": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "gender": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string",
-                    "example": "0"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "is_admin": {
-                    "type": "boolean"
-                },
-                "last_login_at": {
-                    "type": "string"
-                },
-                "location": {
-                    "type": "string"
-                },
-                "nickname": {
-                    "type": "string"
-                },
-                "phone": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "username": {
                     "type": "string"
                 },
                 "website": {
