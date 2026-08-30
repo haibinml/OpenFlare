@@ -11,8 +11,8 @@ import (
 
 	adminmodel "Wavelet/plugins/domain/admin/model"
 	authmodel "Wavelet/plugins/domain/auth"
-	usermodel "Wavelet/plugins/domain/user"
 	uploadmodels "Wavelet/plugins/domain/upload/models"
+	usermodel "Wavelet/plugins/domain/user"
 )
 
 const (

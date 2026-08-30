@@ -11,8 +11,8 @@ import (
 
 	"gorm.io/gorm"
 
-	db "Wavelet/plugins/infra/database"
 	"Wavelet/OpenFlare/plugins/server/model"
+	db "Wavelet/plugins/infra/database"
 )
 
 // ListOpenFlareApplyLogs returns apply logs ordered by id desc with optional pagination.

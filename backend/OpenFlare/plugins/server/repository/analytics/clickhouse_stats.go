@@ -8,9 +8,9 @@ import (
 	"errors"
 	"fmt"
 
+	analyticsmodel "Wavelet/OpenFlare/plugins/server/model/analytics"
 	"Wavelet/OpenFlare/plugins/server/runtimeconfig"
 	db "Wavelet/plugins/infra/database"
-	analyticsmodel "Wavelet/OpenFlare/plugins/server/model/analytics"
 )
 
 // ClickHouseOperationalStats summarizes ClickHouse merge/mutation pressure

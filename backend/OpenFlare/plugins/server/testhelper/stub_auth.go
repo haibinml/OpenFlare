@@ -44,10 +44,10 @@ func (s StubAuth) VerifyToken(context.Context, string) (*contracts.UserDTO, erro
 func (s StubAuth) CreateSession(context.Context, uint64, map[string]any) (string, error) {
 	return "", nil
 }
-func (s StubAuth) RevokeToken(context.Context, string) error                 { return nil }
-func (s StubAuth) RevokeUserSessions(context.Context, uint64) error          { return nil }
-func (s StubAuth) InvalidateCachedUser(context.Context, uint64)              {}
-func (s StubAuth) InvalidateCachedToken(context.Context, string)             {}
+func (s StubAuth) RevokeToken(context.Context, string) error        { return nil }
+func (s StubAuth) RevokeUserSessions(context.Context, uint64) error { return nil }
+func (s StubAuth) InvalidateCachedUser(context.Context, uint64)     {}
+func (s StubAuth) InvalidateCachedToken(context.Context, string)    {}
 func (s StubAuth) ListAuthSources(context.Context) ([]contracts.AuthSourceViewDTO, error) {
 	return s.Sources, nil
 }

@@ -6,21 +6,21 @@ package server
 import (
 	"context"
 
-	"Wavelet/OpenFlare/plugins/server/openflare"
-	cf "Wavelet/OpenFlare/plugins/server/openflare/cloudflare"
-	"Wavelet/OpenFlare/plugins/server/openflare/pages"
-	"Wavelet/OpenFlare/plugins/server/openflare/tasks"
-	"Wavelet/OpenFlare/plugins/server/openflare/tls"
+	cf "Wavelet/OpenFlare/plugins/server/cloudflare"
+	"Wavelet/OpenFlare/plugins/server/fleet"
+	"Wavelet/OpenFlare/plugins/server/observability"
+	"Wavelet/OpenFlare/plugins/server/pages"
 	oftask "Wavelet/OpenFlare/plugins/server/task"
+	"Wavelet/OpenFlare/plugins/server/tls"
 	"Wavelet/core"
 	"Wavelet/core/extpoints"
 )
 
 func registerOpenFlareTasks(ctx *core.Context) {
-	registerOFTask(ctx, openflare.SSLRenewTask, &openflare.SSLRenewHandler{}, openflare.SSLRenewMeta)
-	registerOFTask(ctx, openflare.WAFIPGroupSyncTask, &openflare.WAFIPGroupSyncHandler{}, openflare.WAFIPGroupSyncMeta)
-	registerOFTask(ctx, openflare.UptimeKumaSyncTask, &openflare.UptimeKumaSyncHandler{}, openflare.UptimeKumaSyncMeta)
-	registerOFTask(ctx, openflare.LogDBSwitchTask, &tasks.LogDBSwitchHandler{}, openflare.LogDBSwitchMeta)
+	registerOFTask(ctx, fleet.SSLRenewTask, &fleet.SSLRenewHandler{}, fleet.SSLRenewMeta)
+	registerOFTask(ctx, fleet.WAFIPGroupSyncTask, &fleet.WAFIPGroupSyncHandler{}, fleet.WAFIPGroupSyncMeta)
+	registerOFTask(ctx, fleet.UptimeKumaSyncTask, &fleet.UptimeKumaSyncHandler{}, fleet.UptimeKumaSyncMeta)
+	registerOFTask(ctx, fleet.LogDBSwitchTask, &observability.LogDBSwitchHandler{}, fleet.LogDBSwitchMeta)
 
 	registerOFTask(ctx, cf.SyncMemberTask, &cf.SyncMemberTaskHandler{}, cf.SyncMemberMeta)
 	registerOFTask(ctx, cf.SyncGroupTask, &cf.SyncGroupTaskHandler{}, cf.SyncGroupMeta)

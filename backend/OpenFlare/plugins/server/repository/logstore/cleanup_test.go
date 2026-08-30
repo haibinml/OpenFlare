@@ -15,9 +15,9 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
-	db "Wavelet/plugins/infra/database"
 	"Wavelet/OpenFlare/plugins/server/model"
 	analyticsmodel "Wavelet/OpenFlare/plugins/server/model/analytics"
+	db "Wavelet/plugins/infra/database"
 )
 
 // cleanupTestModels 清理涉及的 5 张日志/可观测表。

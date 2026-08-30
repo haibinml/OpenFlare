@@ -20,7 +20,7 @@ const (
 	// QueueDefault is the default Asynq queue name.
 	QueueDefault = "default"
 	// DefaultMaxRetry is the default max retry count for OF tasks.
-	DefaultMaxRetry = 3
+	DefaultMaxRetry              = 3
 	defaultPermanentErrorMessage = "任务无法继续执行"
 )
 

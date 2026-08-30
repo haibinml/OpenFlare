@@ -6,8 +6,8 @@ package repository
 import (
 	"context"
 
-	db "Wavelet/plugins/infra/database"
 	"Wavelet/OpenFlare/plugins/server/model"
+	db "Wavelet/plugins/infra/database"
 )
 
 // HasPagesProjectsTable 判断 Pages 项目表是否已迁移。

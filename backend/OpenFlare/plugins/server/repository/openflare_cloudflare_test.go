@@ -7,8 +7,8 @@ import (
 	"context"
 	"testing"
 
-	db "Wavelet/plugins/infra/database"
 	"Wavelet/OpenFlare/plugins/server/model"
+	db "Wavelet/plugins/infra/database"
 
 	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"

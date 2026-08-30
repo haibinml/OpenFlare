@@ -10,10 +10,10 @@ import (
 	"math"
 	"time"
 
-	db "Wavelet/plugins/infra/database"
 	"Wavelet/OpenFlare/plugins/server/model"
 	analyticsmodel "Wavelet/OpenFlare/plugins/server/model/analytics"
 	analyticsrepo "Wavelet/OpenFlare/plugins/server/repository/analytics"
+	db "Wavelet/plugins/infra/database"
 
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
 )

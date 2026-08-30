@@ -9,8 +9,8 @@ import (
 
 	"gorm.io/gorm"
 
-	db "Wavelet/plugins/infra/database"
 	"Wavelet/OpenFlare/plugins/server/model"
+	db "Wavelet/plugins/infra/database"
 )
 
 // ListZones returns all zones ordered by domain ascending.

@@ -7,8 +7,8 @@ import (
 	"context"
 	"errors"
 
-	db "Wavelet/plugins/infra/database"
 	"Wavelet/OpenFlare/plugins/server/model"
+	db "Wavelet/plugins/infra/database"
 )
 
 // HasTLSProxyRoutesTable 判断代理规则表是否已迁移。

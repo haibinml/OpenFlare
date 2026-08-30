@@ -9,8 +9,8 @@ import (
 
 	"gorm.io/gorm"
 
-	db "Wavelet/plugins/infra/database"
 	"Wavelet/OpenFlare/plugins/server/model"
+	db "Wavelet/plugins/infra/database"
 )
 
 // ListConfigVersionSummaries returns config version summaries ordered by created_at desc.

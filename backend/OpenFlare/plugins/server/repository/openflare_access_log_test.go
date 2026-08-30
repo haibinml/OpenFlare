@@ -14,11 +14,11 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
-	db "Wavelet/plugins/infra/database"
 	"Wavelet/OpenFlare/plugins/server/model"
 	analyticsmodel "Wavelet/OpenFlare/plugins/server/model/analytics"
 	"Wavelet/OpenFlare/plugins/server/repository/logstore"
 	"Wavelet/pkg/idgen"
+	db "Wavelet/plugins/infra/database"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

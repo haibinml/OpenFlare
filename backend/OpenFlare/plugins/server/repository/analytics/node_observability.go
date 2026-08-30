@@ -10,8 +10,8 @@ import (
 	"slices"
 	"time"
 
-	db "Wavelet/plugins/infra/database"
 	analyticsmodel "Wavelet/OpenFlare/plugins/server/model/analytics"
+	db "Wavelet/plugins/infra/database"
 
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
 )

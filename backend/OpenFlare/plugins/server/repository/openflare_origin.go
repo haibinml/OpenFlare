@@ -8,8 +8,8 @@ import (
 
 	"gorm.io/gorm"
 
-	db "Wavelet/plugins/infra/database"
 	"Wavelet/OpenFlare/plugins/server/model"
+	db "Wavelet/plugins/infra/database"
 )
 
 // WithOriginTx runs fn inside a database transaction for origin multi-step work.

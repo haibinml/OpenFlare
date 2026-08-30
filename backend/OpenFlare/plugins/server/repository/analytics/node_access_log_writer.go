@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	db "Wavelet/plugins/infra/database"
-	"Wavelet/pkg/idgen"
 	analyticsmodel "Wavelet/OpenFlare/plugins/server/model/analytics"
+	"Wavelet/pkg/idgen"
+	db "Wavelet/plugins/infra/database"
 )
 
 // BatchInsertNodeAccessLogs writes node access logs to ClickHouse using the native batch API.

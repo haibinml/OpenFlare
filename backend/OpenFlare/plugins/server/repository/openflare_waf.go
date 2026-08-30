@@ -10,8 +10,8 @@ import (
 
 	"gorm.io/gorm"
 
-	db "Wavelet/plugins/infra/database"
 	"Wavelet/OpenFlare/plugins/server/model"
+	db "Wavelet/plugins/infra/database"
 )
 
 func wafDB(ctx context.Context) (*gorm.DB, error) {

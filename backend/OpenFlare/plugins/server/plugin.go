@@ -7,15 +7,15 @@
 package server
 
 import (
+	ofgeoip "Wavelet/OpenFlare/plugins/server/geoip"
+	ofrouter "Wavelet/OpenFlare/plugins/server/httpapi"
 	"Wavelet/OpenFlare/plugins/server/migrate"
+	"Wavelet/OpenFlare/plugins/server/observability/chwriter"
 	"Wavelet/OpenFlare/plugins/server/ofevents"
-	"Wavelet/OpenFlare/plugins/server/openflare/chwriter"
-	ofgeoip "Wavelet/OpenFlare/plugins/server/openflare/geoip"
-	"Wavelet/OpenFlare/plugins/server/openflare/ofupload"
+	"Wavelet/OpenFlare/plugins/server/ofupload"
 	"Wavelet/OpenFlare/plugins/server/publicconfig"
 	"Wavelet/OpenFlare/plugins/server/repository"
 	"Wavelet/OpenFlare/plugins/server/repository/logstore"
-	ofrouter "Wavelet/OpenFlare/plugins/server/router/v1/openflare"
 	"Wavelet/OpenFlare/plugins/server/runtimeconfig"
 	oftask "Wavelet/OpenFlare/plugins/server/task"
 	"Wavelet/core"
@@ -26,7 +26,7 @@ import (
 	"embed"
 	"reflect"
 
-	"Wavelet/OpenFlare/plugins/server/openflare/credential"
+	"Wavelet/OpenFlare/plugins/server/credential"
 	_ "Wavelet/docs"
 	adminservice "Wavelet/plugins/domain/admin/service"
 
@@ -108,6 +108,9 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 		logger.ErrorF(ctx.GoContext(), "[server] init GeoIP provider failed: %v", err)
 	}
 	chwriter.Init(ctx.GoContext())
+	ctx.OnDispose(func() error {
+		return chwriter.Stop(context.Background())
+	})
 
 	var auth contracts.AuthService
 	if err := core.Using[contracts.AuthService](ctx, func(s contracts.AuthService) { auth = s }); err != nil {

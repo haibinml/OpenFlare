@@ -37,7 +37,8 @@ var allowedInfraPersistence = []string{
 // domainScopes 是 server 插件内的业务域包（等价于改造前的 internal/apps/...）。
 // 持久化与基础设施层（repository/infra/model/…）不受本门禁约束。
 var domainScopes = []string{
-	"openflare", "updater",
+	"site", "fleet", "pages", "waf", "tls", "cloudflare",
+	"observability", "dashboard", "option", "updater",
 }
 
 func TestDomainsMustNotImportLogBackendDirectly(t *testing.T) {
