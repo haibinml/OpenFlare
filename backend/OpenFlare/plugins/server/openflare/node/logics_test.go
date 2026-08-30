@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	db "Wavelet/OpenFlare/plugins/server/infra/persistence"
+	db "Wavelet/plugins/infra/database"
 	"Wavelet/OpenFlare/plugins/server/model"
 	cf "Wavelet/OpenFlare/plugins/server/openflare/cloudflare"
 	"Wavelet/OpenFlare/plugins/server/repository"

@@ -14,10 +14,11 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
-	db "Wavelet/OpenFlare/plugins/server/infra/persistence"
+	db "Wavelet/plugins/infra/database"
 	"Wavelet/OpenFlare/plugins/server/model"
 	analyticsmodel "Wavelet/OpenFlare/plugins/server/model/analytics"
 	"Wavelet/OpenFlare/plugins/server/repository/logstore"
+	"Wavelet/pkg/idgen"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -36,6 +37,7 @@ func setupOpenFlareAccessLogTestEnvironment(t *testing.T) (context.Context, func
 	require.NoError(t, err)
 	require.NoError(t, gdb.AutoMigrate(&analyticsmodel.NodeAccessLog{}))
 	db.SetDB(gdb)
+	require.NoError(t, idgen.Init(1))
 
 	logstore.ResetForTest()
 	logstore.SetConfigReader(func(_ context.Context, key string) (string, error) {

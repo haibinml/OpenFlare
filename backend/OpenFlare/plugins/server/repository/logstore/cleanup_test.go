@@ -15,7 +15,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
-	db "Wavelet/OpenFlare/plugins/server/infra/persistence"
+	db "Wavelet/plugins/infra/database"
 	"Wavelet/OpenFlare/plugins/server/model"
 	analyticsmodel "Wavelet/OpenFlare/plugins/server/model/analytics"
 )

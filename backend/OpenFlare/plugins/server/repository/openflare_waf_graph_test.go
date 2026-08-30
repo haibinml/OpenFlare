@@ -14,7 +14,7 @@ import (
 
 	"Wavelet/OpenFlare/plugins/server/model"
 
-	db "Wavelet/OpenFlare/plugins/server/infra/persistence"
+	db "Wavelet/plugins/infra/database"
 
 	"github.com/glebarez/sqlite"
 	"github.com/pressly/goose/v3"
@@ -29,7 +29,7 @@ func wafMigrationFS(t *testing.T) fs.FS {
 	t.Helper()
 	_, filename, _, ok := runtime.Caller(0)
 	require.True(t, ok)
-	dir := filepath.Join(filepath.Dir(filename), "..", "infra", "persistence", "migrator", "goose", "sqlite")
+	dir := filepath.Join(filepath.Dir(filename), "..", "migrator", "goose", "sqlite")
 	migrations := fstest.MapFS{}
 	for _, name := range []string{
 		"202607150001_orchestrate_waf_rules.sql",

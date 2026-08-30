@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	db "Wavelet/OpenFlare/plugins/server/infra/persistence"
-	"Wavelet/OpenFlare/plugins/server/infra/persistence/idgen"
+	db "Wavelet/plugins/infra/database"
+	"Wavelet/pkg/idgen"
 	analyticsmodel "Wavelet/OpenFlare/plugins/server/model/analytics"
 )
 

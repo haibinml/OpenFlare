@@ -15,10 +15,10 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"Wavelet/OpenFlare/plugins/server/infra/task"
+	"Wavelet/OpenFlare/plugins/server/task"
 	"Wavelet/OpenFlare/plugins/server/model"
 	"Wavelet/OpenFlare/plugins/server/repository"
-	"Wavelet/OpenFlare/plugins/server/upload"
+	"Wavelet/OpenFlare/plugins/server/openflare/ofupload"
 	"Wavelet/pkg/logger"
 	"Wavelet/pkg/util"
 
@@ -54,7 +54,7 @@ type preparedRemoteSource struct {
 }
 
 type sourceIngestState struct {
-	Result     upload.IngestResult
+	Result     ofupload.IngestResult
 	HasIngest  bool
 	Referenced bool
 }
@@ -390,7 +390,7 @@ func commitSourceDeploymentWithTrigger(
 	actor string,
 	triggerType string,
 	manifest *deploymentManifest,
-	ingestResult upload.IngestResult,
+	ingestResult ofupload.IngestResult,
 	hasIngest bool,
 	nextCheckNotBefore *time.Time,
 ) (*model.PagesDeployment, bool, bool, error) {
@@ -499,7 +499,7 @@ func resolveSourceDeploymentTx(
 	actor string,
 	triggerType string,
 	manifest *deploymentManifest,
-	ingestResult upload.IngestResult,
+	ingestResult ofupload.IngestResult,
 	hasIngest bool,
 ) (*model.PagesDeployment, bool, error) {
 	var target model.PagesDeployment
@@ -533,7 +533,7 @@ func createSourceDeploymentTx(
 	actor string,
 	triggerType string,
 	manifest *deploymentManifest,
-	ingestResult upload.IngestResult,
+	ingestResult ofupload.IngestResult,
 ) (*model.PagesDeployment, bool, error) {
 	var maxNumber int
 	if err := tx.Model(&model.PagesDeployment{}).
@@ -606,7 +606,7 @@ func createSourceDeploymentFilesTx(tx *gorm.DB, deploymentID uint, files []model
 func lockSourceDeploymentUploadsTx(
 	tx *gorm.DB,
 	target *model.PagesDeployment,
-	ingestResult upload.IngestResult,
+	ingestResult ofupload.IngestResult,
 	hasIngest bool,
 ) error {
 	uploadIDs := []uint64{target.UploadID}
@@ -625,7 +625,7 @@ func lockSourceDeploymentUploadsTx(
 		if records[index].ID != target.UploadID {
 			continue
 		}
-		if records[index].Status == model.UploadStatusUsed && records[index].Type == upload.ReservedPagesDeploymentType {
+		if records[index].Status == model.UploadStatusUsed && records[index].Type == ofupload.ReservedPagesDeploymentType {
 			return nil
 		}
 		break

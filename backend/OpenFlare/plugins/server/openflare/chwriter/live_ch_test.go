@@ -12,7 +12,7 @@ import (
 
 	"Wavelet/OpenFlare/plugins/server/repository"
 
-	db "Wavelet/OpenFlare/plugins/server/infra/persistence"
+	db "Wavelet/plugins/infra/database"
 	"Wavelet/OpenFlare/plugins/server/model"
 	"Wavelet/OpenFlare/plugins/server/openflare/chwriter"
 )
@@ -21,7 +21,7 @@ import (
 //
 //	go test -tags live_ch ./internal/apps/openflare/chwriter -run TestLiveAppWritePath -count=1 -timeout 2m
 func TestLiveAppWritePath(t *testing.T) {
-	if !db.ChConnReady() {
+	if db.ChConn == nil {
 		t.Skip("ClickHouse connection not ready")
 	}
 	ctx := context.Background()

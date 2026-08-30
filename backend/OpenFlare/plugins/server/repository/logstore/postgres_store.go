@@ -13,9 +13,9 @@ import (
 	"strings"
 	"time"
 
-	"Wavelet/OpenFlare/plugins/server/infra/persistence/idgen"
 	"Wavelet/OpenFlare/plugins/server/model"
 	analyticsmodel "Wavelet/OpenFlare/plugins/server/model/analytics"
+	"Wavelet/pkg/idgen"
 	"Wavelet/pkg/util"
 
 	"gorm.io/gorm"
@@ -199,6 +199,9 @@ func (s *gormLogStore) Count(ctx context.Context, query model.OpenFlareAccessLog
 }
 
 func (s *gormLogStore) TrafficSummary(ctx context.Context, query model.OpenFlareAccessLogQuery) (model.OpenFlareAccessLogTrafficSummary, error) {
+	if s.db == nil {
+		return model.OpenFlareAccessLogTrafficSummary{}, errors.New("database not initialized")
+	}
 	f := toNodeAccessLogFilter(query)
 	var out struct {
 		RequestCount  int64

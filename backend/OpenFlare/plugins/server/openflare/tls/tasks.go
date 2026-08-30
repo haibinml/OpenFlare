@@ -11,7 +11,7 @@ import (
 
 	"Wavelet/OpenFlare/plugins/server/repository"
 
-	"Wavelet/OpenFlare/plugins/server/infra/task"
+	"Wavelet/OpenFlare/plugins/server/task"
 )
 
 const (

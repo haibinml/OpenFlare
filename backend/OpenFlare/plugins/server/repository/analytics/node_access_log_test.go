@@ -8,8 +8,9 @@ import (
 	"testing"
 	"time"
 
-	db "Wavelet/OpenFlare/plugins/server/infra/persistence"
+	db "Wavelet/plugins/infra/database"
 	analyticsmodel "Wavelet/OpenFlare/plugins/server/model/analytics"
+	"Wavelet/pkg/idgen"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -21,6 +22,7 @@ func TestBatchInsertNodeAccessLogs_Empty(t *testing.T) {
 }
 
 func TestBatchInsertNodeAccessLogs_UsesModelBatchSQL(t *testing.T) {
+	require.NoError(t, idgen.Init(1))
 	ctx := context.Background()
 	mockBatch := &mockBatch{}
 	mockConn := &mockConn{

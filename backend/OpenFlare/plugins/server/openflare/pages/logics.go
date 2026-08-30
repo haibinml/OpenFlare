@@ -18,7 +18,7 @@ import (
 
 	"Wavelet/OpenFlare/plugins/server/model"
 	"Wavelet/OpenFlare/plugins/server/repository"
-	"Wavelet/OpenFlare/plugins/server/upload"
+	"Wavelet/OpenFlare/plugins/server/openflare/ofupload"
 	"Wavelet/OpenFlare/share/pagesarchive"
 	"Wavelet/pkg/logger"
 
@@ -441,7 +441,7 @@ func createDeploymentFromTempPackage(
 			First(&uploadRecord).Error; err != nil {
 			return errors.New(errPagesPackageUploadMissing)
 		}
-		if uploadRecord.Status != model.UploadStatusUsed || uploadRecord.Type != upload.ReservedPagesDeploymentType {
+		if uploadRecord.Status != model.UploadStatusUsed || uploadRecord.Type != ofupload.ReservedPagesDeploymentType {
 			return errors.New(errPagesPackageUploadMissing)
 		}
 		var maxNumber int
@@ -790,7 +790,7 @@ func loadDeploymentActivationTarget(
 		First(&uploadRecord).Error; err != nil {
 		return nil, errors.New(errPagesPackageUploadMissing)
 	}
-	if uploadRecord.Status != model.UploadStatusUsed || uploadRecord.Type != upload.ReservedPagesDeploymentType {
+	if uploadRecord.Status != model.UploadStatusUsed || uploadRecord.Type != ofupload.ReservedPagesDeploymentType {
 		return nil, errors.New(errPagesPackageUploadMissing)
 	}
 	return &deployment, nil
@@ -957,7 +957,7 @@ func deploymentPackageHash(ctx context.Context, deployment *model.PagesDeploymen
 		}
 		return hash, nil
 	}
-	uploadRecord, err := upload.GetActiveUpload(ctx, deployment.UploadID)
+	uploadRecord, err := ofupload.GetActiveUpload(ctx, deployment.UploadID)
 	if err != nil {
 		return "", fmt.Errorf("pages 部署包不存在: %w", err)
 	}
@@ -972,7 +972,7 @@ func deploymentPackageHash(ctx context.Context, deployment *model.PagesDeploymen
 }
 
 func openDeploymentPackageFromUpload(ctx context.Context, uploadID uint64, deploymentID uint) (DeploymentPackage, error) {
-	opened, err := upload.OpenStoredUpload(ctx, uploadID)
+	opened, err := ofupload.OpenStoredUpload(ctx, uploadID)
 	if err != nil {
 		return DeploymentPackage{}, fmt.Errorf("pages 部署包不存在: %w", err)
 	}
@@ -1018,13 +1018,13 @@ func hydrateLegacyDeploymentUpload(
 		return nil, errors.New(errPagesDeploymentNotFound)
 	}
 	if deployment.UploadID > 0 {
-		uploadRecord, err := upload.GetActiveUpload(ctx, deployment.UploadID)
+		uploadRecord, err := ofupload.GetActiveUpload(ctx, deployment.UploadID)
 		if err == nil {
 			return &uploadRecord, nil
 		}
 	}
 
-	artifactPath, _, err := upload.ResolveLocalFile(ctx, upload.LocalFileCandidateRequest{
+	artifactPath, _, err := ofupload.ResolveLocalFile(ctx, ofupload.LocalFileCandidateRequest{
 		StoredPath:    deployment.ArtifactPath,
 		RelativePaths: pagesLegacyRelativeCandidates(project, deployment),
 	})
@@ -1060,7 +1060,7 @@ func hydrateLegacyDeploymentUpload(
 	if err != nil {
 		return nil, err
 	}
-	winner, err := upload.GetActiveUpload(ctx, winnerUploadID)
+	winner, err := ofupload.GetActiveUpload(ctx, winnerUploadID)
 	if err != nil {
 		return nil, err
 	}
@@ -1111,7 +1111,7 @@ func attachLegacyDeploymentUploadTx(
 		First(&uploadRecord).Error; err != nil {
 		return 0, err
 	}
-	if uploadRecord.Status != model.UploadStatusUsed || uploadRecord.Type != upload.ReservedPagesDeploymentType {
+	if uploadRecord.Status != model.UploadStatusUsed || uploadRecord.Type != ofupload.ReservedPagesDeploymentType {
 		return 0, errors.New(errPagesPackageUploadMissing)
 	}
 	result := tx.Model(&model.PagesDeployment{}).

@@ -11,7 +11,7 @@ import (
 
 	"Wavelet/OpenFlare/plugins/server/repository"
 
-	"Wavelet/OpenFlare/plugins/server/upload"
+	"Wavelet/OpenFlare/plugins/server/openflare/ofupload"
 )
 
 // ProjectLatestPackageMetadata describes the active package limits published to Agents.
@@ -43,7 +43,7 @@ func GetProjectLatestPackageMetadata(ctx context.Context, projectID uint) (*Proj
 		return nil, errors.New(errPagesDeploymentNotFound)
 	}
 
-	uploadRecord, err := upload.GetActiveUpload(ctx, deployment.UploadID)
+	uploadRecord, err := ofupload.GetActiveUpload(ctx, deployment.UploadID)
 	if err != nil {
 		return nil, fmt.Errorf("pages 部署包不存在: %w", err)
 	}

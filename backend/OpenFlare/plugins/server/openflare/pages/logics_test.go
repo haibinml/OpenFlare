@@ -17,11 +17,14 @@ import (
 	"path/filepath"
 	"testing"
 
-	"Wavelet/OpenFlare/plugins/server/infra/objectstore"
-	db "Wavelet/OpenFlare/plugins/server/infra/persistence"
 	"Wavelet/OpenFlare/plugins/server/model"
+	"Wavelet/OpenFlare/plugins/server/openflare/ofupload"
 	"Wavelet/OpenFlare/plugins/server/repository"
-	"Wavelet/OpenFlare/plugins/server/upload"
+	oftask "Wavelet/OpenFlare/plugins/server/task"
+	"Wavelet/OpenFlare/plugins/server/testhelper"
+	"Wavelet/pkg/idgen"
+	uploadshared "Wavelet/plugins/domain/upload/shared"
+	db "Wavelet/plugins/infra/database"
 
 	"github.com/glebarez/sqlite"
 	"github.com/stretchr/testify/assert"
@@ -72,49 +75,24 @@ func setupPagesTestDB(t *testing.T) func() {
 	}).Error)
 
 	db.SetDB(sqliteDB)
-	// Clear process-global system config RAM cache so tests do not see stale values.
+	require.NoError(t, idgen.Init(1))
+	oftask.SetService(&testhelper.NoopTaskService{})
+	uploadshared.SetDBService(db.NewService(sqliteDB))
+	uploadshared.SetStorageService(uploadshared.NewMockStorageService())
 	_ = repository.InvalidateSystemConfigCache(context.Background(), model.ConfigKeyPagesMaxPackageSizeMB)
 	_ = repository.InvalidateSystemConfigCache(context.Background(), model.ConfigKeyPagesMaxHistoryCount)
 	return func() {
+		uploadshared.ResetServices()
 		db.SetDB(nil)
 	}
 }
 
 func setupPagesStorageMock(t *testing.T) (restore func(), disable func()) {
 	t.Helper()
-	mockFiles := make(map[string][]byte)
-	restore = objectstore.MockStorage(
-		func(_ context.Context, key string, body io.Reader, _ int64, _ string) error {
-			data, err := io.ReadAll(body)
-			if err != nil {
-				return err
-			}
-			mockFiles[key] = data
-			return nil
-		},
-		func(_ context.Context, key string) (*objectstore.Object, error) {
-			data, ok := mockFiles[key]
-			if !ok {
-				return nil, os.ErrNotExist
-			}
-			return &objectstore.Object{
-				Body:          io.NopCloser(bytes.NewReader(data)),
-				ContentLength: int64(len(data)),
-				ContentType:   "application/zip",
-			}, nil
-		},
-		func(_ context.Context, key string) error {
-			delete(mockFiles, key)
-			return nil
-		},
-	)
-	objectstore.IsEnabledFunc = func() bool { return true }
-	objectstore.ResetCache()
-	disable = func() {
-		objectstore.IsEnabledFunc = func() bool { return false }
-		objectstore.ResetCache()
-		restore()
-	}
+	mock := uploadshared.NewMockStorageService()
+	uploadshared.SetStorageService(mock)
+	restore = func() { uploadshared.ResetServices() }
+	disable = restore
 	return restore, disable
 }
 
@@ -302,7 +280,7 @@ func TestUploadDeploymentStoresPackageInUploadFramework(t *testing.T) {
 	assert.Equal(t, int64(1), uploadCount)
 	var uploadRecord model.Upload
 	require.NoError(t, db.DB(ctx).First(&uploadRecord, storedDeployment.UploadID).Error)
-	assert.Equal(t, upload.ReservedPagesDeploymentType, uploadRecord.Type)
+	assert.Equal(t, ofupload.ReservedPagesDeploymentType, uploadRecord.Type)
 	assert.Equal(t, pagesIngestMarkerV2, uploadRecord.Metadata.Extra[pagesIngestMarkerKey])
 	assert.Equal(t, fmt.Sprint(project.ID), uploadRecord.Metadata.Extra[pagesProjectIDMetadataKey])
 	assert.NotContains(t, uploadRecord.Metadata.Extra, "project_slug")

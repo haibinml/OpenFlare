@@ -26,9 +26,9 @@ import (
 	"sync"
 	"time"
 
+	"Wavelet/OpenFlare/share/ofutil"
 	sharedprotocol "Wavelet/OpenFlare/share/protocol"
 	openrestyrender "Wavelet/OpenFlare/share/render/openresty"
-	"Wavelet/pkg/util"
 
 	"Wavelet/OpenFlare/plugins/agent/protocol"
 	"Wavelet/OpenFlare/plugins/agent/runtimeuser"
@@ -1534,7 +1534,7 @@ func ResolverDirective(explicitResolvers []string) string {
 }
 
 func resolverAddresses(explicitResolvers []string) []string {
-	if resolvers := util.UniqueAndCleanStringSlice(explicitResolvers); len(resolvers) > 0 {
+	if resolvers := ofutil.UniqueAndCleanStringSlice(explicitResolvers); len(resolvers) > 0 {
 		return resolvers
 	}
 	data, err := os.ReadFile("/etc/resolv.conf")

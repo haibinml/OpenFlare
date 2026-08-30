@@ -19,9 +19,9 @@ import (
 
 	"Wavelet/OpenFlare/plugins/server/repository"
 
-	db "Wavelet/OpenFlare/plugins/server/infra/persistence"
+	db "Wavelet/plugins/infra/database"
 	"Wavelet/OpenFlare/plugins/server/model"
-	"Wavelet/OpenFlare/plugins/server/upload"
+	"Wavelet/OpenFlare/plugins/server/openflare/ofupload"
 	"Wavelet/OpenFlare/share/pagesarchive"
 
 	"gorm.io/gorm"
@@ -179,7 +179,7 @@ func TestSyncRemoteSourceAtomicallyActivatesAndReusesChecksum(t *testing.T) {
 	if got, want := uploadRecord.Status, model.UploadStatusUsed; got != want {
 		t.Errorf("deployment upload Status = %q, want %q", got, want)
 	}
-	if got, want := uploadRecord.Type, upload.ReservedPagesDeploymentType; got != want {
+	if got, want := uploadRecord.Type, ofupload.ReservedPagesDeploymentType; got != want {
 		t.Errorf("deployment upload Type = %q, want %q", got, want)
 	}
 	if got, want := fmt.Sprint(uploadRecord.Metadata.Extra[pagesSourceIDMetadataKey]), fmt.Sprint(source.ID); got != want {
@@ -396,7 +396,7 @@ func TestCommitSourceDeploymentRechecksLeaseAfterUploadLocks(t *testing.T) {
 		deployment.SourceMeta,
 		"user:5",
 		&deploymentManifest{},
-		upload.IngestResult{},
+		ofupload.IngestResult{},
 		false,
 		nil,
 	)
@@ -537,7 +537,7 @@ func TestCommitSourceDeploymentRejectsDeletedTargetUpload(t *testing.T) {
 		MimeType:   "application/zip",
 		Extension:  "zip",
 		Hash:       revision,
-		Type:       upload.ReservedPagesDeploymentType,
+		Type:       ofupload.ReservedPagesDeploymentType,
 		Status:     model.UploadStatusDeleted,
 		AccessMode: 0,
 	}
@@ -585,7 +585,7 @@ func TestCommitSourceDeploymentRejectsDeletedTargetUpload(t *testing.T) {
 		`{"provider":"remote_url","display_name":"deleted.zip"}`,
 		"user:1",
 		manifest,
-		upload.IngestResult{},
+		ofupload.IngestResult{},
 		false,
 		nil,
 	)

@@ -10,18 +10,29 @@ import (
 	"errors"
 	"strings"
 
-	"Wavelet/OpenFlare/plugins/server/infra/config"
+	"Wavelet/OpenFlare/plugins/server/runtimeconfig"
 	"Wavelet/pkg/util"
 )
 
 // Prefix identifies values encrypted with the current credential format.
 const Prefix = "enc:v1:"
 
+var sessionSecret string
+
+// SetSessionSecret binds the host session secret used to seal credentials.
+func SetSessionSecret(secret string) {
+	sessionSecret = strings.TrimSpace(secret)
+}
+
 func encryptionKey() string {
-	if config.Config == nil || strings.TrimSpace(config.Config.App.SessionSecret) == "" {
+	secret := strings.TrimSpace(sessionSecret)
+	if secret == "" {
+		secret = strings.TrimSpace(runtimeconfig.SessionSecret())
+	}
+	if secret == "" {
 		return ""
 	}
-	sum := sha256.Sum256([]byte(config.Config.App.SessionSecret))
+	sum := sha256.Sum256([]byte(secret))
 	return hex.EncodeToString(sum[:])
 }
 

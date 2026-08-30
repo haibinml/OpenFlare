@@ -12,7 +12,7 @@ import (
 	"Wavelet/OpenFlare/plugins/server/repository"
 	"Wavelet/OpenFlare/plugins/server/testhelper"
 
-	db "Wavelet/OpenFlare/plugins/server/infra/persistence"
+	db "Wavelet/plugins/infra/database"
 	"Wavelet/OpenFlare/plugins/server/model"
 	"Wavelet/OpenFlare/plugins/server/openflare/agent"
 

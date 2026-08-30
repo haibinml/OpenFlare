@@ -18,8 +18,8 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
-	"Wavelet/OpenFlare/plugins/server/infra/config"
-	db "Wavelet/OpenFlare/plugins/server/infra/persistence"
+	"Wavelet/OpenFlare/plugins/server/runtimeconfig"
+	db "Wavelet/plugins/infra/database"
 	"Wavelet/OpenFlare/plugins/server/model"
 	analyticsmodel "Wavelet/OpenFlare/plugins/server/model/analytics"
 	"Wavelet/OpenFlare/plugins/server/repository"
@@ -49,11 +49,7 @@ func newLogDBSwitchDB(t *testing.T) *gorm.DB {
 // TestCopyAccessLogsPreservesIDs sqlite→sqlite 模拟：源 store 3 条，目标空库，
 // copyAccessLogs 后 ID 保留、数量一致。
 func TestCopyAccessLogsPreservesIDs(t *testing.T) {
-	oldDB, oldCH := config.Config.Database.Enabled, config.Config.ClickHouse.Enabled
-	config.Config.Database.Enabled, config.Config.ClickHouse.Enabled = false, false
-	t.Cleanup(func() {
-		config.Config.Database.Enabled, config.Config.ClickHouse.Enabled = oldDB, oldCH
-	})
+		t.Cleanup(runtimeconfig.Override(false, false))
 	logstore.ResetForTest()
 	defer logstore.ResetForTest()
 
@@ -99,11 +95,7 @@ func TestCopyAccessLogsPreservesIDs(t *testing.T) {
 // TestCopyUserAccessLogsPreservesIDs sqlite→sqlite 模拟：源库用户访问日志按 id 升序
 // 复制到目标库，ID 保留、数量一致，且源库保持不变。
 func TestCopyUserAccessLogsPreservesIDs(t *testing.T) {
-	oldDB, oldCH := config.Config.Database.Enabled, config.Config.ClickHouse.Enabled
-	config.Config.Database.Enabled, config.Config.ClickHouse.Enabled = false, false
-	t.Cleanup(func() {
-		config.Config.Database.Enabled, config.Config.ClickHouse.Enabled = oldDB, oldCH
-	})
+		t.Cleanup(runtimeconfig.Override(false, false))
 	logstore.ResetForTest()
 	defer logstore.ResetForTest()
 
@@ -144,11 +136,7 @@ func TestCopyUserAccessLogsPreservesIDs(t *testing.T) {
 // TestClearTargetLogTablesClearsUserAccessLogs 验证清空目标包含用户访问日志表
 // （6 张日志表之一），迁移「覆盖目标库已有日志」幂等前提成立。
 func TestClearTargetLogTablesClearsUserAccessLogs(t *testing.T) {
-	oldDB, oldCH := config.Config.Database.Enabled, config.Config.ClickHouse.Enabled
-	config.Config.Database.Enabled, config.Config.ClickHouse.Enabled = false, false
-	t.Cleanup(func() {
-		config.Config.Database.Enabled, config.Config.ClickHouse.Enabled = oldDB, oldCH
-	})
+		t.Cleanup(runtimeconfig.Override(false, false))
 	logstore.ResetForTest()
 	defer logstore.ResetForTest()
 
@@ -213,9 +201,7 @@ func TestClearTargetLogTablesDuringMigration(t *testing.T) {
 
 // TestValidateSwitch 各非法组合报错。
 func TestValidateSwitch(t *testing.T) {
-	oldDB, oldCH := config.Config.Database.Enabled, config.Config.ClickHouse.Enabled
-	t.Cleanup(func() {
-		config.Config.Database.Enabled, config.Config.ClickHouse.Enabled = oldDB, oldCH
+		t.Cleanup(func() {
 	})
 
 	gdb := newLogDBSwitchDB(t)
@@ -228,35 +214,35 @@ func TestValidateSwitch(t *testing.T) {
 
 	t.Run("same target rejected", func(t *testing.T) {
 		setLogDB("sqlite")
-		config.Config.Database.Enabled, config.Config.ClickHouse.Enabled = false, false
+		t.Cleanup(runtimeconfig.Override(false, false))
 		err := validateSwitch(ctx, "sqlite")
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "相同")
 	})
 	t.Run("clickhouse disabled rejected", func(t *testing.T) {
 		setLogDB("sqlite")
-		config.Config.Database.Enabled, config.Config.ClickHouse.Enabled = false, false
+		t.Cleanup(runtimeconfig.Override(false, false))
 		err := validateSwitch(ctx, "clickhouse")
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "ClickHouse 未启用")
 	})
 	t.Run("postgres requires main db enabled", func(t *testing.T) {
 		setLogDB("sqlite")
-		config.Config.Database.Enabled, config.Config.ClickHouse.Enabled = false, false
+		t.Cleanup(runtimeconfig.Override(false, false))
 		err := validateSwitch(ctx, "postgres")
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "PostgreSQL 未启用")
 	})
 	t.Run("sqlite rejected when main db is postgres", func(t *testing.T) {
 		setLogDB("postgres")
-		config.Config.Database.Enabled, config.Config.ClickHouse.Enabled = true, false
+		t.Cleanup(runtimeconfig.Override(true, false))
 		err := validateSwitch(ctx, "sqlite")
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "SQLite")
 	})
 	t.Run("valid postgres migration", func(t *testing.T) {
 		setLogDB("sqlite")
-		config.Config.Database.Enabled, config.Config.ClickHouse.Enabled = true, false
+		t.Cleanup(runtimeconfig.Override(true, false))
 		require.NoError(t, validateSwitch(ctx, "postgres"))
 	})
 }
@@ -296,9 +282,7 @@ func TestLogDBSwitchValidatePayload(t *testing.T) {
 // 在 FRESH DB（不预置 log_db_migration 行）上验证：setMigrationFlag 必须 upsert 建行，
 // 且失败后经缓存路径（GetSystemConfigByKey）可观察为空。
 func TestExecuteFailureClearsMigrationFlag(t *testing.T) {
-	oldDB := config.Config.Database.Enabled
-	config.Config.Database.Enabled = true
-	t.Cleanup(func() { config.Config.Database.Enabled = oldDB })
+		t.Cleanup(runtimeconfig.Override(true, runtimeconfig.ClickHouseEnabled()))
 
 	logstore.ResetForTest()
 	defer logstore.ResetForTest()

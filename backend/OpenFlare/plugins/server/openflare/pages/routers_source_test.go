@@ -13,16 +13,12 @@ import (
 	"testing"
 	"time"
 
-	db "Wavelet/OpenFlare/plugins/server/infra/persistence"
-	"Wavelet/OpenFlare/plugins/server/infra/task"
+	db "Wavelet/plugins/infra/database"
 	"Wavelet/OpenFlare/plugins/server/model"
-	"Wavelet/OpenFlare/plugins/server/oauth"
 	"Wavelet/OpenFlare/plugins/server/testhelper"
+	"Wavelet/core/contracts"
 
-	"github.com/alicebob/miniredis/v2"
 	"github.com/gin-gonic/gin"
-	"github.com/hibiken/asynq"
-	"github.com/redis/go-redis/v9"
 )
 
 type sourceHandlerEnvelope struct {
@@ -32,7 +28,7 @@ type sourceHandlerEnvelope struct {
 
 func newPagesSourceTestRouter(userID uint64) *gin.Engine {
 	router := testhelper.NewTestGinEngine(func(ctx *gin.Context) {
-		oauth.SetToContext(ctx, oauth.UserObjKey, &model.User{ID: userID})
+		ctx.Set(contracts.AuthUserIDKey, userID)
 		ctx.Next()
 	})
 	router.GET("/api/v1/d/pages/:id/source", GetSourceHandler)
@@ -66,24 +62,6 @@ func performPagesSourceRequest(
 
 func setupPagesSourceDispatchTest(t *testing.T) {
 	t.Helper()
-	miniRedis, err := miniredis.Run()
-	if err != nil {
-		t.Fatalf("miniredis.Run() error = %v, want nil", err)
-	}
-	redisClient := redis.NewClient(&redis.Options{Addr: miniRedis.Addr()})
-	asynqClient := asynq.NewClient(asynq.RedisClientOpt{Addr: miniRedis.Addr()})
-	previousRedis := db.Redis
-	previousAsynqClient := task.AsynqClient
-	db.Redis = redisClient
-	task.AsynqClient = asynqClient
-	task.RegisterTaskMeta(PagesSourceActionMeta)
-	t.Cleanup(func() {
-		_ = asynqClient.Close()
-		_ = redisClient.Close()
-		miniRedis.Close()
-		task.AsynqClient = previousAsynqClient
-		db.Redis = previousRedis
-	})
 }
 
 func TestPagesSourceHandlersReturnStableActionErrors(t *testing.T) {
@@ -203,7 +181,7 @@ func TestSyncSourceHandlerAcceptsEmptyBodyAndEmptyObject(t *testing.T) {
 	}
 
 	var executions []model.TaskExecution
-	if err := db.DB(ctx).Where("task_type = ?", PagesSourceActionTask).Order("id asc").Find(&executions).Error; err != nil {
+	if err := db.DB(ctx).Where("task_type = ?", TaskTypePagesSourceAction).Order("id asc").Find(&executions).Error; err != nil {
 		t.Fatalf("list Pages source task executions error = %v, want nil", err)
 	}
 	if got, want := len(executions), 2; got != want {

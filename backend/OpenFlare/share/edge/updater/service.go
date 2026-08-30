@@ -19,7 +19,7 @@ import (
 	"strings"
 	"time"
 
-	"Wavelet/pkg/util"
+	"Wavelet/OpenFlare/share/ofutil"
 )
 
 const (
@@ -422,5 +422,5 @@ func buildReleaseCheckKey(options UpdateOptions, remoteVersion string) string {
 }
 
 func compareVersions(local string, remote string) int {
-	return util.CompareVersions(local, remote)
+	return ofutil.CompareVersions(local, remote)
 }

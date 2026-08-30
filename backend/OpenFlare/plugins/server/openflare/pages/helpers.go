@@ -20,7 +20,7 @@ import (
 
 	"Wavelet/OpenFlare/plugins/server/model"
 	"Wavelet/OpenFlare/plugins/server/repository"
-	"Wavelet/OpenFlare/plugins/server/upload"
+	"Wavelet/OpenFlare/plugins/server/openflare/ofupload"
 	"Wavelet/OpenFlare/share/pagesarchive"
 	"Wavelet/pkg/logger"
 
@@ -259,7 +259,7 @@ func ingestPagesDeploymentPackage(
 	projectID uint,
 	fileName string,
 	format pagesarchive.Format,
-) (upload.IngestResult, error) {
+) (ofupload.IngestResult, error) {
 	return ingestPagesDeploymentPackageWithSource(ctx, localPath, checksum, projectID, 0, fileName, format)
 }
 
@@ -271,7 +271,7 @@ func ingestPagesDeploymentPackageWithSource(
 	sourceID uint,
 	fileName string,
 	format pagesarchive.Format,
-) (upload.IngestResult, error) {
+) (ofupload.IngestResult, error) {
 	systemUser := repository.GetSystemUser(ctx)
 	accessMode := 0
 	extension := pagesarchive.NormalizeNameExtension(fileName, format)
@@ -282,16 +282,16 @@ func ingestPagesDeploymentPackageWithSource(
 	if sourceID != 0 {
 		extra[pagesSourceIDMetadataKey] = strconv.FormatUint(uint64(sourceID), 10)
 	}
-	return upload.IngestFromLocalPath(ctx, localPath, upload.IngestRequest{
+	return ofupload.IngestFromLocalPath(ctx, localPath, ofupload.IngestRequest{
 		UserID:             systemUser.ID,
 		FileName:           fileName,
 		MimeType:           pagesarchive.MIMEType(format),
 		Extension:          extension,
 		Hash:               checksum,
-		Type:               upload.ReservedPagesDeploymentType,
+		Type:               ofupload.ReservedPagesDeploymentType,
 		AccessMode:         &accessMode,
 		SkipExtensionCheck: true,
-		Policy:             upload.PolicyDedupNewRecord,
+		Policy:             ofupload.PolicyDedupNewRecord,
 		Metadata: model.UploadMetadata{
 			Extra: extra,
 		},
@@ -337,7 +337,7 @@ func removePagesUploadIfUnreferenced(ctx context.Context, projectID uint, upload
 			}
 			return err
 		}
-		if uploadRecord.Type != upload.ReservedPagesDeploymentType {
+		if uploadRecord.Type != ofupload.ReservedPagesDeploymentType {
 			return fmt.Errorf("pages 部署包上传类型不匹配: %s", uploadRecord.Type)
 		}
 
@@ -350,12 +350,12 @@ func removePagesUploadIfUnreferenced(ctx context.Context, projectID uint, upload
 		if references > 0 {
 			return nil
 		}
-		_, err := upload.RemoveLockedTx(tx, &uploadRecord)
+		_, err := ofupload.RemoveLockedTx(tx, &uploadRecord)
 		return err
 	})
 	// Always invalidate after transaction completion, including idempotent no-op,
 	// so a prior post-commit cache interruption can heal on retry.
-	upload.InvalidateUploadMetaCache(ctx, uploadID)
+	ofupload.InvalidateUploadMetaCache(ctx, uploadID)
 	return err
 }
 

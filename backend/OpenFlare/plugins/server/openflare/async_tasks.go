@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"Wavelet/OpenFlare/plugins/server/infra/task"
+	"Wavelet/OpenFlare/plugins/server/task"
 	"Wavelet/OpenFlare/plugins/server/model"
 	"Wavelet/OpenFlare/plugins/server/openflare/tasks"
 	"Wavelet/OpenFlare/plugins/server/openflare/uptimekuma"

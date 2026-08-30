@@ -12,9 +12,10 @@ import (
 	"testing"
 
 	"Wavelet/OpenFlare/plugins/server"
-	"Wavelet/OpenFlare/plugins/server/infra/config"
 	ofrouter "Wavelet/OpenFlare/plugins/server/router/v1/openflare"
+	"Wavelet/OpenFlare/plugins/server/testhelper"
 	"Wavelet/core"
+	"Wavelet/core/contracts"
 	"Wavelet/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -64,13 +65,9 @@ func unmarshalAPISlice(t *testing.T, data any) []any {
 // mountOpenFlareTestRoutes 复刻 driver_http 的挂载方式：先由 server 插件经内核
 // 路由注册表声明路由，再把每条 (方法, 路径, 中间件+处理链) 挂到测试引擎上。
 func mountOpenFlareTestRoutes(engine *gin.Engine) {
-	// 与生产 config.example.yaml 一致：插件按 app.api_prefix 组装路径。
-	if config.Config.App.APIPrefix == "" {
-		config.Config.App.APIPrefix = "/api"
-	}
-
 	ctx := core.NewContext(context.Background())
-	if err := (&server.Plugin{}).Apply(ctx); err != nil {
+	core.Provide[contracts.AuthService](ctx, testhelper.StubAuth{})
+	if err := server.New().Apply(ctx); err != nil {
 		panic(err)
 	}
 	for _, rd := range ctx.Router().Routes() {

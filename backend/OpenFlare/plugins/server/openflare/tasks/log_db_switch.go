@@ -10,8 +10,8 @@ import (
 	"fmt"
 	"time"
 
-	"Wavelet/OpenFlare/plugins/server/infra/config"
-	"Wavelet/OpenFlare/plugins/server/infra/task"
+	"Wavelet/OpenFlare/plugins/server/runtimeconfig"
+	"Wavelet/OpenFlare/plugins/server/task"
 	"Wavelet/OpenFlare/plugins/server/model"
 	analyticsmodel "Wavelet/OpenFlare/plugins/server/model/analytics"
 	"Wavelet/OpenFlare/plugins/server/openflare/chwriter"
@@ -152,15 +152,15 @@ func validateSwitch(ctx context.Context, target string) error {
 	}
 	switch target {
 	case "clickhouse":
-		if !config.Config.ClickHouse.Enabled {
+		if !runtimeconfig.ClickHouseEnabled() {
 			return errors.New("ClickHouse 未启用，无法迁移到 ClickHouse")
 		}
 	case "postgres":
-		if !config.Config.Database.Enabled {
+		if !runtimeconfig.DatabaseEnabled() {
 			return errors.New("PostgreSQL 未启用（当前主库为 SQLite），无法迁移到 PostgreSQL")
 		}
 	case "sqlite":
-		if config.Config.Database.Enabled {
+		if runtimeconfig.DatabaseEnabled() {
 			return errors.New("当前主库为 PostgreSQL，日志库不能设置为 SQLite")
 		}
 	}

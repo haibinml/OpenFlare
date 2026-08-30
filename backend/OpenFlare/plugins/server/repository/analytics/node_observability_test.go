@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	db "Wavelet/OpenFlare/plugins/server/infra/persistence"
+	db "Wavelet/plugins/infra/database"
 	analyticsmodel "Wavelet/OpenFlare/plugins/server/model/analytics"
 
 	"github.com/stretchr/testify/assert"

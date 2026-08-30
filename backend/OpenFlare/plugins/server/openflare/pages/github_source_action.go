@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"Wavelet/OpenFlare/plugins/server/infra/task"
+	"Wavelet/OpenFlare/plugins/server/task"
 	"Wavelet/OpenFlare/plugins/server/integration/githubrelease"
 	"Wavelet/OpenFlare/plugins/server/model"
 	"Wavelet/OpenFlare/plugins/server/repository"

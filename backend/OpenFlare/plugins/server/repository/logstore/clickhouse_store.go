@@ -10,7 +10,7 @@ import (
 	"math"
 	"time"
 
-	db "Wavelet/OpenFlare/plugins/server/infra/persistence"
+	db "Wavelet/plugins/infra/database"
 	"Wavelet/OpenFlare/plugins/server/model"
 	analyticsmodel "Wavelet/OpenFlare/plugins/server/model/analytics"
 	analyticsrepo "Wavelet/OpenFlare/plugins/server/repository/analytics"
@@ -38,7 +38,7 @@ var (
 )
 
 func chConnErr() error {
-	if !db.ChConnReady() {
+	if db.ChConn == nil {
 		return errors.New("clickhouse connection is not initialized")
 	}
 	return nil

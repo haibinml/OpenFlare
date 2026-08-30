@@ -18,8 +18,8 @@ import (
 
 	"Wavelet/OpenFlare/plugins/server/repository"
 
-	db "Wavelet/OpenFlare/plugins/server/infra/persistence"
-	"Wavelet/OpenFlare/plugins/server/infra/task"
+	db "Wavelet/plugins/infra/database"
+	"Wavelet/OpenFlare/plugins/server/task"
 	"Wavelet/OpenFlare/plugins/server/integration/githubrelease"
 	"Wavelet/OpenFlare/plugins/server/model"
 
@@ -176,9 +176,8 @@ func TestGitHubSourceValidationNormalizationAndProviderSwitch(t *testing.T) {
 func TestGitHubSourceSaveSurvivesInitialCheckDispatchFailure(t *testing.T) {
 	ctx := setupPagesSourceTest(t)
 	// Isolate from other tests that may leave a global Asynq client registered.
-	previousClient := task.AsynqClient
-	task.AsynqClient = nil
-	t.Cleanup(func() { task.AsynqClient = previousClient })
+	task.SetService(nil)
+	t.Cleanup(func() { task.SetService(nil) })
 
 	project := mustCreatePagesSourceProject(t, ctx, "github-dispatch-warning")
 	result, err := UpdateSourceAs(ctx, project.ID, SourceUpdateInput{

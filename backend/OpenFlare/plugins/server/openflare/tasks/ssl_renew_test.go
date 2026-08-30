@@ -8,15 +8,14 @@ import (
 	"testing"
 	"time"
 
-	"Wavelet/OpenFlare/plugins/server/infra/config"
-	db "Wavelet/OpenFlare/plugins/server/infra/persistence"
-	"Wavelet/OpenFlare/plugins/server/infra/task"
 	"Wavelet/OpenFlare/plugins/server/model"
 	"Wavelet/OpenFlare/plugins/server/openflare/tls"
 	"Wavelet/OpenFlare/plugins/server/repository"
+	"Wavelet/OpenFlare/plugins/server/runtimeconfig"
+	oftask "Wavelet/OpenFlare/plugins/server/task"
 	"Wavelet/OpenFlare/plugins/server/testhelper"
+	db "Wavelet/plugins/infra/database"
 
-	"github.com/hibiken/asynq"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -24,24 +23,13 @@ import (
 func setupSSLRenewTestDB(t *testing.T) func() {
 	t.Helper()
 
-	task.RegisterTaskMeta(tls.SSLSingleRenewMeta)
-
-	_, mr, cleanup := testhelper.SetupTestEnvironment(t)
-	require.NoError(t, db.DB(nil).AutoMigrate(&model.TLSCertificate{}, &model.TaskExecution{}))
-
-	// task 包 init() 会按配置创建指向真实 Redis 的客户端；测试显式改用
-	// miniredis（与 executor_test 一致），避免依赖本地 redis 实例。
-	oldClient := task.AsynqClient
-	task.AsynqClient = asynq.NewClient(asynq.RedisClientOpt{Addr: mr.Addr()})
-	t.Cleanup(func() {
-		_ = task.AsynqClient.Close()
-		task.AsynqClient = oldClient
-	})
-
-	oldSecret := config.Config.App.SessionSecret
-	config.Config.App.SessionSecret = "test_session_secret_for_ssl_renew"
+	_, _, cleanup := testhelper.SetupTestEnvironment(t)
+	require.NoError(t, db.DB(context.Background()).AutoMigrate(&model.TLSCertificate{}, &model.TaskExecution{}))
+	previous := runtimeconfig.Get()
+	runtimeconfig.SetSessionSecret("test_session_secret_for_ssl_renew")
+	oftask.SetService(&testhelper.NoopTaskService{})
 	return func() {
-		config.Config.App.SessionSecret = oldSecret
+		runtimeconfig.Set(previous)
 		cleanup()
 	}
 }

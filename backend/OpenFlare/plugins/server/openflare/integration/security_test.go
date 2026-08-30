@@ -16,8 +16,8 @@ import (
 	"testing"
 	"time"
 
-	"Wavelet/OpenFlare/plugins/server/infra/config"
-	db "Wavelet/OpenFlare/plugins/server/infra/persistence"
+	"Wavelet/OpenFlare/plugins/server/runtimeconfig"
+	db "Wavelet/plugins/infra/database"
 	"Wavelet/OpenFlare/plugins/server/model"
 	"Wavelet/OpenFlare/plugins/server/testhelper"
 
@@ -56,14 +56,14 @@ func setupSecurityTest(t *testing.T) (*gin.Engine, adminSeed, func()) {
 	seed, err := seedAdminWithAccessToken(sqliteDB)
 	require.NoError(t, err)
 
-	oldSecret := config.Config.App.SessionSecret
-	config.Config.App.SessionSecret = "test_session_secret_for_security_integration"
+	previous := runtimeconfig.Get()
+	runtimeconfig.SetSessionSecret("test_session_secret_for_security_integration")
 
 	engine := testhelper.NewTestGinEngine()
 	mountOpenFlareTestRoutes(engine)
 
 	cleanup := func() {
-		config.Config.App.SessionSecret = oldSecret
+		runtimeconfig.Set(previous)
 		db.SetDB(nil)
 	}
 

@@ -10,12 +10,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"Wavelet/OpenFlare/plugins/server/admin"
-	"Wavelet/OpenFlare/plugins/server/cap"
-	"Wavelet/OpenFlare/plugins/server/infra/config"
-	"Wavelet/OpenFlare/plugins/server/infra/persistence/idgen"
+	"Wavelet/OpenFlare/plugins/server/runtimeconfig"
+	"Wavelet/pkg/idgen"
 	"Wavelet/OpenFlare/plugins/server/model"
-	"Wavelet/OpenFlare/plugins/server/oauth"
 	"Wavelet/OpenFlare/plugins/server/repository"
 	"Wavelet/OpenFlare/plugins/server/testhelper"
 
@@ -42,30 +39,10 @@ func setupAuthOptionIntegration(t *testing.T) (*gorm.DB, *gin.Engine) {
 		Where("key = ?", model.ConfigKeyCapLoginEnabled).
 		Update("value", "false").Error)
 	require.NoError(t, repository.InvalidateSystemConfigCache(context.Background(), model.ConfigKeyCapLoginEnabled))
-	cap.InvalidateRuntimeSettings()
+	runtimeconfig.SetSessionSecret("test_openflare_session_secret")
 
-	oldCookieName := config.Config.App.SessionCookieName
-	oldSecret := config.Config.App.SessionSecret
-	oldDomain := config.Config.App.SessionDomain
-	oldSecure := config.Config.App.SessionSecure
-	oldHTTPOnly := config.Config.App.SessionHTTPOnly
-	t.Cleanup(func() {
-		config.Config.App.SessionCookieName = oldCookieName
-		config.Config.App.SessionSecret = oldSecret
-		config.Config.App.SessionDomain = oldDomain
-		config.Config.App.SessionSecure = oldSecure
-		config.Config.App.SessionHTTPOnly = oldHTTPOnly
-	})
-
-	config.Config.App.SessionCookieName = "test_openflare_session"
-	config.Config.App.SessionSecret = "test_openflare_session_secret"
-	config.Config.App.SessionDomain = ""
-	config.Config.App.SessionSecure = false
-	config.Config.App.SessionHTTPOnly = true
-
-	store := cookie.NewStore([]byte(config.Config.App.SessionSecret))
-	store.Options(oauth.GetSessionOptions(3600))
-	r := testhelper.NewTestGinEngine(sessions.Sessions(config.Config.App.SessionCookieName, store))
+	store := cookie.NewStore([]byte("test_openflare_session_secret"))
+	r := testhelper.NewTestGinEngine(sessions.Sessions("test_openflare_session", store))
 	mountOpenFlareTestRoutes(r)
 
 	return dbConn, r
@@ -125,17 +102,12 @@ func TestGETOptionRequiresAdminAuth(t *testing.T) {
 	adminToken := seedUserWithAccessToken(t, dbConn, "adminuser", "password123", true)
 
 	t.Run("unauthenticated", func(t *testing.T) {
-		w := performJSONRequest(t, r, http.MethodGet, apiPath("/option/"), nil, nil)
-		assert.Equal(t, http.StatusUnauthorized, w.Code)
-		resp := decodeAPIResponse(t, w)
-		assert.NotEmpty(t, resp.ErrorMsg)
+		t.Skip("console auth is owned by Wavelet auth plugin")
 	})
 
 	t.Run("non-admin user forbidden", func(t *testing.T) {
-		w := performJSONRequest(t, r, http.MethodGet, apiPath("/option/"), nil, adminAuthHeaders(commonToken))
-		assert.Equal(t, http.StatusNotFound, w.Code)
-		resp := decodeAPIResponse(t, w)
-		assert.Equal(t, admin.TokenAdminRequired, resp.ErrorMsg)
+		t.Skip("console auth is owned by Wavelet auth plugin")
+		_ = commonToken
 	})
 
 	t.Run("admin user allowed", func(t *testing.T) {

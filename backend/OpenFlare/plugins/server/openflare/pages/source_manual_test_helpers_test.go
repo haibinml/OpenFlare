@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"Wavelet/OpenFlare/plugins/server/model"
-	"Wavelet/OpenFlare/plugins/server/upload"
+	"Wavelet/OpenFlare/plugins/server/openflare/ofupload"
 )
 
 func syncRemoteSource(
@@ -40,7 +40,7 @@ func commitSourceDeployment(
 	detailJSON string,
 	actor string,
 	manifest *deploymentManifest,
-	ingestResult upload.IngestResult,
+	ingestResult ofupload.IngestResult,
 	hasIngest bool,
 	nextCheckNotBefore *time.Time,
 ) (*model.PagesDeployment, bool, bool, error) {

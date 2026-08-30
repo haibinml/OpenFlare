@@ -8,8 +8,8 @@ import (
 	"errors"
 	"fmt"
 
-	"Wavelet/OpenFlare/plugins/server/infra/config"
-	db "Wavelet/OpenFlare/plugins/server/infra/persistence"
+	"Wavelet/OpenFlare/plugins/server/runtimeconfig"
+	db "Wavelet/plugins/infra/database"
 	analyticsmodel "Wavelet/OpenFlare/plugins/server/model/analytics"
 )
 
@@ -22,7 +22,7 @@ func GetClickHouseOperationalStats(ctx context.Context) (*ClickHouseOperationalS
 	if db.ChConn == nil {
 		return nil, errors.New("clickhouse native connection is not initialized")
 	}
-	database := config.Config.ClickHouse.Database
+	database := runtimeconfig.Get().ClickHouse.Database
 	stats := &ClickHouseOperationalStats{Database: database}
 
 	partsSQL := `

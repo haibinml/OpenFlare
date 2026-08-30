@@ -14,9 +14,7 @@ import (
 	"testing"
 
 	"Wavelet/OpenFlare/plugins/server/repository"
-
-	"Wavelet/OpenFlare/plugins/server/model"
-	"Wavelet/OpenFlare/plugins/server/oauth"
+	"Wavelet/core/contracts"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -47,7 +45,7 @@ func TestUploadDeploymentHandlerRecordsCurrentUserActor(t *testing.T) {
 	c, _ := gin.CreateTestContext(recorder)
 	c.Request = req
 	c.Params = gin.Params{{Key: "id", Value: strconv.FormatUint(uint64(project.ID), 10)}}
-	oauth.SetToContext(c, oauth.UserObjKey, &model.User{ID: 42})
+	c.Set(contracts.AuthUserIDKey, uint64(42))
 
 	UploadDeploymentHandler(c)
 	assert.Equal(t, http.StatusOK, recorder.Code)
@@ -82,7 +80,7 @@ func TestUploadDeploymentFromURLHandlerRecordsCurrentUserActor(t *testing.T) {
 	c, _ := gin.CreateTestContext(recorder)
 	c.Request = req
 	c.Params = gin.Params{{Key: "id", Value: fmt.Sprint(project.ID)}}
-	oauth.SetToContext(c, oauth.UserObjKey, &model.User{ID: 77})
+	c.Set(contracts.AuthUserIDKey, uint64(77))
 
 	UploadDeploymentFromURLHandler(c)
 	assert.Equal(t, http.StatusOK, recorder.Code, recorder.Body.String())

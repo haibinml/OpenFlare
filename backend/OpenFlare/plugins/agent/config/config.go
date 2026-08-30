@@ -16,7 +16,7 @@ import (
 	"time"
 
 	"Wavelet/OpenFlare/share/edge/nodeip"
-	"Wavelet/pkg/util"
+	"Wavelet/OpenFlare/share/ofutil"
 )
 
 const (
@@ -150,7 +150,7 @@ func Load(path string) (*Config, error) {
 func applyDefaults(cfg *Config, baseDir string) {
 	baseDir = filepath.Clean(baseDir)
 	cfg.Version = Version
-	cfg.OpenrestyResolvers = util.UniqueAndCleanStringSlice(cfg.OpenrestyResolvers)
+	cfg.OpenrestyResolvers = ofutil.UniqueAndCleanStringSlice(cfg.OpenrestyResolvers)
 	applyAgentIdentityDefaults(cfg)
 	applyAgentPathDefaults(cfg, baseDir)
 	applyAgentTimingDefaults(cfg)

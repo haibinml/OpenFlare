@@ -3,7 +3,9 @@
 
 package model
 
-import "time"
+import (
+	adminmodel "Wavelet/plugins/domain/admin/model"
+)
 
 // 配置键常量 - 所有系统配置的 key 定义
 const (
@@ -134,23 +136,10 @@ const (
 
 const (
 	// ConfigVisibilityHidden 表示配置不通过公共配置接口暴露
-	ConfigVisibilityHidden = 0
+	ConfigVisibilityHidden = adminmodel.ConfigVisibilityHidden
 	// ConfigVisibilityVisible 表示配置通过公共配置接口暴露
-	ConfigVisibilityVisible = 1
+	ConfigVisibilityVisible = adminmodel.ConfigVisibilityVisible
 )
 
-// SystemConfig 系统配置实体
-type SystemConfig struct {
-	Key         string    `json:"key" gorm:"primaryKey;size:64;not null"`
-	Value       string    `json:"value" gorm:"type:text;not null"`
-	Type        string    `json:"type" gorm:"size:32;not null;default:'system'"`
-	Visibility  int       `json:"visibility" gorm:"not null;default:0"`
-	Description string    `json:"description" gorm:"size:255"`
-	UpdatedAt   time.Time `json:"updated_at" gorm:"autoUpdateTime"`
-	CreatedAt   time.Time `json:"created_at" gorm:"autoCreateTime"`
-}
-
-// TableName 表名
-func (SystemConfig) TableName() string {
-	return "w_system_configs"
-}
+// SystemConfig is the Wavelet w_system_configs entity.
+type SystemConfig = adminmodel.SystemConfig

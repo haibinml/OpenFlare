@@ -11,9 +11,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"Wavelet/OpenFlare/plugins/server/model"
-	"Wavelet/OpenFlare/plugins/server/oauth"
 	"Wavelet/OpenFlare/plugins/server/openflare/apiutil"
+	"Wavelet/core/contracts"
 	"Wavelet/pkg/logger"
 	"Wavelet/pkg/response"
 
@@ -99,12 +98,32 @@ func deploymentIDParam(c *gin.Context) (uint, bool) {
 }
 
 func currentPagesActor(c *gin.Context) (string, bool) {
-	user, ok := oauth.GetFromContext[*model.User](c, oauth.UserObjKey)
-	if !ok || user == nil || user.ID == 0 {
-		response.AbortUnauthorized(c, errPagesActorMissing)
-		return "", false
+	if raw, ok := c.Get(contracts.AuthUserObjKey); ok {
+		switch user := raw.(type) {
+		case *contracts.UserDTO:
+			if user != nil && user.ID != 0 {
+				return fmt.Sprintf("user:%d", user.ID), true
+			}
+		case contracts.UserDTO:
+			if user.ID != 0 {
+				return fmt.Sprintf("user:%d", user.ID), true
+			}
+		}
 	}
-	return fmt.Sprintf("user:%d", user.ID), true
+	if raw, ok := c.Get(contracts.AuthUserIDKey); ok {
+		switch id := raw.(type) {
+		case uint64:
+			if id != 0 {
+				return fmt.Sprintf("user:%d", id), true
+			}
+		case int:
+			if id > 0 {
+				return fmt.Sprintf("user:%d", uint64(id)), true
+			}
+		}
+	}
+	response.AbortUnauthorized(c, errPagesActorMissing)
+	return "", false
 }
 
 // ListProjectsHandler 列出全部 Pages 项目。

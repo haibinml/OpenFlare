@@ -10,8 +10,8 @@ import (
 	"sync"
 	"time"
 
-	"Wavelet/OpenFlare/plugins/server/infra/config"
-	db "Wavelet/OpenFlare/plugins/server/infra/persistence"
+	"Wavelet/OpenFlare/plugins/server/runtimeconfig"
+	db "Wavelet/plugins/infra/database"
 	"Wavelet/OpenFlare/plugins/server/model"
 	"Wavelet/pkg/logger"
 )
@@ -200,10 +200,10 @@ func resolveDatabase(ctx context.Context) (string, error) {
 	if resolved == "" {
 		// 首次启动 seed：CH 启用 → clickhouse；否则随主库。
 		resolved = dbNameSQLite
-		if config.Config.Database.Enabled {
+		if runtimeconfig.DatabaseEnabled() {
 			resolved = dbNamePostgres
 		}
-		if config.Config.ClickHouse.Enabled {
+		if runtimeconfig.ClickHouseEnabled() {
 			resolved = dbNameClickHouse
 		}
 	}

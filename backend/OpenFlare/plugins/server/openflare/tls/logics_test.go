@@ -18,15 +18,15 @@ import (
 
 	"Wavelet/OpenFlare/plugins/server/openflare/credential"
 	"Wavelet/OpenFlare/plugins/server/repository"
+	oftask "Wavelet/OpenFlare/plugins/server/task"
+	"Wavelet/OpenFlare/plugins/server/testhelper"
 
-	"Wavelet/OpenFlare/plugins/server/infra/config"
-	db "Wavelet/OpenFlare/plugins/server/infra/persistence"
-	"Wavelet/OpenFlare/plugins/server/infra/task"
 	"Wavelet/OpenFlare/plugins/server/model"
+	"Wavelet/OpenFlare/plugins/server/runtimeconfig"
+	"Wavelet/pkg/idgen"
+	db "Wavelet/plugins/infra/database"
 
-	"github.com/alicebob/miniredis/v2"
 	"github.com/glebarez/sqlite"
-	"github.com/hibiken/asynq"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
@@ -52,26 +52,16 @@ func setupTLSTestDB(t *testing.T) func() {
 	))
 
 	db.SetDB(sqliteDB)
-	oldSecret := config.Config.App.SessionSecret
-	config.Config.App.SessionSecret = "test_session_secret_for_tls_encryption"
-
-	mr, err := miniredis.Run()
-	require.NoError(t, err)
-
-	task.AsynqClient = asynq.NewClient(asynq.RedisClientOpt{
-		Addr: mr.Addr(),
-	})
-
-	task.RegisterTaskMeta(SSLSingleRenewMeta)
+	require.NoError(t, idgen.Init(1))
+	previous := runtimeconfig.Get()
+	runtimeconfig.SetSessionSecret("test_session_secret_for_tls_encryption")
+	credential.SetSessionSecret("test_session_secret_for_tls_encryption")
+	oftask.SetService(&testhelper.NoopTaskService{})
 
 	return func() {
-		if task.AsynqClient != nil {
-			_ = task.AsynqClient.Close()
-			task.AsynqClient = nil
-		}
-		mr.Close()
 		db.SetDB(nil)
-		config.Config.App.SessionSecret = oldSecret
+		runtimeconfig.Set(previous)
+		credential.SetSessionSecret(previous.SessionSecret)
 		tlsTestDBMu.Unlock()
 	}
 }

@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+const tableOfProxyRoutes = "of_proxy_routes"
+
 // ProxyRoute OpenFlare 代理规则实体。
 // 域名与证书仅通过 of_zone_domains 关联，不再持久化在本表。
 type ProxyRoute struct {

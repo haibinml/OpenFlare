@@ -19,10 +19,12 @@ import (
 
 	"Wavelet/OpenFlare/plugins/server/model"
 	analyticsmodel "Wavelet/OpenFlare/plugins/server/model/analytics"
+	"Wavelet/pkg/idgen"
 )
 
 func newTestGormStore(t *testing.T) *gormLogStore {
 	t.Helper()
+	_ = idgen.Init(1)
 	return newTestGormStoreWithModels(t, &analyticsmodel.NodeAccessLog{})
 }
 

@@ -10,7 +10,7 @@ import (
 
 	"Wavelet/OpenFlare/plugins/server/repository"
 
-	db "Wavelet/OpenFlare/plugins/server/infra/persistence"
+	db "Wavelet/plugins/infra/database"
 	"Wavelet/OpenFlare/plugins/server/model"
 
 	"github.com/glebarez/sqlite"

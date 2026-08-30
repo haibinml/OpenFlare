@@ -7,13 +7,16 @@ import (
 	"strings"
 	"testing"
 
-	"Wavelet/OpenFlare/plugins/server/infra/config"
+	"Wavelet/OpenFlare/plugins/server/runtimeconfig"
 )
 
 func TestSealAndOpenSensitiveValue(t *testing.T) {
-	previous := config.Config.App.SessionSecret
-	config.Config.App.SessionSecret = "cloudflare-pointing-test-secret"
-	t.Cleanup(func() { config.Config.App.SessionSecret = previous })
+	previous := runtimeconfig.Get()
+	SetSessionSecret("cloudflare-pointing-test-secret")
+	t.Cleanup(func() {
+		SetSessionSecret(previous.SessionSecret)
+		runtimeconfig.Set(previous)
+	})
 
 	sealed, err := Seal(`{"api_token":"secret-token"}`)
 	if err != nil {
@@ -36,9 +39,13 @@ func TestSealAndOpenSensitiveValue(t *testing.T) {
 }
 
 func TestSealWithoutSessionSecretKeepsPlaintextCompatibility(t *testing.T) {
-	previous := config.Config.App.SessionSecret
-	config.Config.App.SessionSecret = ""
-	t.Cleanup(func() { config.Config.App.SessionSecret = previous })
+	previous := runtimeconfig.Get()
+	SetSessionSecret("")
+	runtimeconfig.Set(runtimeconfig.Snapshot{})
+	t.Cleanup(func() {
+		SetSessionSecret(previous.SessionSecret)
+		runtimeconfig.Set(previous)
+	})
 
 	sealed, err := Seal(" legacy-value ")
 	if err != nil {
@@ -58,15 +65,19 @@ func TestSealWithoutSessionSecretKeepsPlaintextCompatibility(t *testing.T) {
 }
 
 func TestOpenEncryptedValueRequiresSessionSecret(t *testing.T) {
-	previous := config.Config.App.SessionSecret
-	config.Config.App.SessionSecret = "cloudflare-pointing-test-secret"
+	previous := runtimeconfig.Get()
+	SetSessionSecret("cloudflare-pointing-test-secret")
 	sealed, err := Seal("secret")
 	if err != nil {
 		t.Fatalf("Seal() error = %v", err)
 	}
 
-	config.Config.App.SessionSecret = ""
-	t.Cleanup(func() { config.Config.App.SessionSecret = previous })
+	SetSessionSecret("")
+	runtimeconfig.Set(runtimeconfig.Snapshot{})
+	t.Cleanup(func() {
+		SetSessionSecret(previous.SessionSecret)
+		runtimeconfig.Set(previous)
+	})
 	if _, err := Open(sealed); err == nil {
 		t.Fatal("Open(encrypted) error = nil, want missing session secret error")
 	}

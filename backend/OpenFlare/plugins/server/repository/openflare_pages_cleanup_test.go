@@ -11,7 +11,7 @@ import (
 
 	"Wavelet/OpenFlare/plugins/server/model"
 
-	db "Wavelet/OpenFlare/plugins/server/infra/persistence"
+	db "Wavelet/plugins/infra/database"
 
 	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"

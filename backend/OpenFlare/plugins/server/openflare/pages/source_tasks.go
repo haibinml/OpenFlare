@@ -13,7 +13,7 @@ import (
 	"strconv"
 	"strings"
 
-	"Wavelet/OpenFlare/plugins/server/infra/task"
+	"Wavelet/OpenFlare/plugins/server/task"
 	"Wavelet/OpenFlare/plugins/server/model"
 	"Wavelet/OpenFlare/plugins/server/repository"
 	"Wavelet/pkg/logger"
@@ -392,9 +392,6 @@ func dispatchSourceActionSnapshotWithTrigger(
 	confirmedRevision string,
 	triggeredBy string,
 ) (*SourceActionReceipt, error) {
-	if task.AsynqClient == nil {
-		return nil, errors.New(errPagesSourceTaskDispatchFailed)
-	}
 	handler := &SourceActionHandler{}
 	rawPayload, err := json.Marshal(SourceActionPayload{
 		SourceID:          source.ID,

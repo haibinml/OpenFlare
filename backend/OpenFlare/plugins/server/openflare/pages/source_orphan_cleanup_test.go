@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	db "Wavelet/OpenFlare/plugins/server/infra/persistence"
+	db "Wavelet/plugins/infra/database"
 	"Wavelet/OpenFlare/plugins/server/model"
-	"Wavelet/OpenFlare/plugins/server/upload"
+	"Wavelet/OpenFlare/plugins/server/openflare/ofupload"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -110,7 +110,7 @@ func TestReconcilePagesOrphanUploadsDeletesEligibleUploadOnce(t *testing.T) {
 	now := time.Now().UTC()
 	project := createPagesOrphanProject(t, ctx, "eligible-orphan")
 	candidate := createPagesOrphanUpload(t, ctx, now.Add(-3*time.Hour), project.ID, nil)
-	if err := upload.RebuildUploadStats(ctx); err != nil {
+	if err := ofupload.RebuildUploadStats(ctx); err != nil {
 		t.Fatalf("RebuildUploadStats() error = %v, want nil", err)
 	}
 
@@ -281,7 +281,7 @@ func TestPagesOrphanCleanupAndDeploymentCommitInterleavings(t *testing.T) {
 			if err := tx.Clauses(clause.Locking{Strength: pagesRowLockStrength}).First(&lockedProject, project.ID).Error; err != nil {
 				return err
 			}
-			return lockSourceDeploymentUploadsTx(tx, target, upload.IngestResult{}, false)
+			return lockSourceDeploymentUploadsTx(tx, target, ofupload.IngestResult{}, false)
 		})
 		if !errors.Is(err, errSourceFinalFence) {
 			t.Errorf("final deployment upload lock after cleanup error = %v, want %v", err, errSourceFinalFence)
@@ -346,7 +346,7 @@ func createPagesOrphanUpload(
 		MimeType:   "application/zip",
 		Extension:  "zip",
 		Hash:       "orphan-checksum",
-		Type:       upload.ReservedPagesDeploymentType,
+		Type:       ofupload.ReservedPagesDeploymentType,
 		Status:     model.UploadStatusUsed,
 		AccessMode: 0,
 		Metadata:   model.UploadMetadata{Extra: extra},

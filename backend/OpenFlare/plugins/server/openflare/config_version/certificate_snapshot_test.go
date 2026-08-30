@@ -17,8 +17,8 @@ import (
 
 	"Wavelet/OpenFlare/plugins/server/repository"
 
-	"Wavelet/OpenFlare/plugins/server/infra/config"
-	db "Wavelet/OpenFlare/plugins/server/infra/persistence"
+	"Wavelet/OpenFlare/plugins/server/runtimeconfig"
+	db "Wavelet/plugins/infra/database"
 	"Wavelet/OpenFlare/plugins/server/model"
 	oftls "Wavelet/OpenFlare/plugins/server/openflare/tls"
 
@@ -31,9 +31,9 @@ func TestBuildCertificateSupportFilesDecryptsSealedPrivateKey(t *testing.T) {
 	defer cleanup()
 	require.NoError(t, db.DB(context.Background()).AutoMigrate(&model.TLSCertificate{}))
 
-	oldSecret := config.Config.App.SessionSecret
-	config.Config.App.SessionSecret = "test-session-secret-for-tls-seal"
-	t.Cleanup(func() { config.Config.App.SessionSecret = oldSecret })
+	previous := runtimeconfig.Get()
+	runtimeconfig.SetSessionSecret("test-session-secret-for-tls-seal")
+	t.Cleanup(func() { runtimeconfig.Set(previous) })
 
 	ctx := context.Background()
 	certPEM, keyPEM := generateTestCertKeyPairForSnapshot(t)
@@ -67,9 +67,9 @@ func TestBuildSnapshotReadsZoneDomainCertificates(t *testing.T) {
 	ctx := context.Background()
 	require.NoError(t, db.DB(ctx).AutoMigrate(&model.TLSCertificate{}))
 
-	oldSecret := config.Config.App.SessionSecret
-	config.Config.App.SessionSecret = "test-session-secret-for-zone-domain-snapshots"
-	t.Cleanup(func() { config.Config.App.SessionSecret = oldSecret })
+	previous := runtimeconfig.Get()
+	runtimeconfig.SetSessionSecret("test-session-secret-for-zone-domain-snapshots")
+	t.Cleanup(func() { runtimeconfig.Set(previous) })
 
 	firstCertPEM, firstKeyPEM := generateTestCertKeyPairForSnapshotForDomain(t, "one.example.com")
 	first, err := oftls.CreateCertificate(ctx, oftls.CertificateInput{Name: "first", CertPEM: firstCertPEM, KeyPEM: firstKeyPEM})

@@ -12,7 +12,7 @@ import (
 
 	"Wavelet/OpenFlare/plugins/server/model"
 	"Wavelet/OpenFlare/plugins/server/repository"
-	"Wavelet/OpenFlare/plugins/server/upload"
+	"Wavelet/OpenFlare/plugins/server/openflare/ofupload"
 	"Wavelet/pkg/logger"
 
 	"gorm.io/gorm"
@@ -64,7 +64,7 @@ func ReconcilePagesOrphanUploads(
 	systemUser := repository.GetSystemUser(ctx)
 	candidates, err := repository.ListPagesOrphanUploadCandidates(ctx, model.PagesOrphanUploadCandidateQuery{
 		SystemUserID:  systemUser.ID,
-		UploadType:    upload.ReservedPagesDeploymentType,
+		UploadType:    ofupload.ReservedPagesDeploymentType,
 		Marker:        pagesIngestMarkerV2,
 		CreatedBefore: cutoff,
 	})
@@ -162,7 +162,7 @@ func reconcilePagesOrphanUploadCandidate(
 	if uploadLocked {
 		// Also heal a prior post-commit cache invalidation interruption when the
 		// status transition was an idempotent no-op.
-		upload.InvalidateUploadMetaCache(ctx, candidate.ID)
+		ofupload.InvalidateUploadMetaCache(ctx, candidate.ID)
 	}
 	return outcome, nil
 }
@@ -233,7 +233,7 @@ func reconcileLockedPagesOrphanUpload(
 	}
 	if lockedUpload.Status != model.UploadStatusUsed ||
 		lockedUpload.UserID != systemUserID ||
-		lockedUpload.Type != upload.ReservedPagesDeploymentType ||
+		lockedUpload.Type != ofupload.ReservedPagesDeploymentType ||
 		!lockedUpload.CreatedAt.Before(cutoff) {
 		return pagesOrphanCleanupSkipped, true, nil
 	}
@@ -252,7 +252,7 @@ func reconcileLockedPagesOrphanUpload(
 		return pagesOrphanCleanupReferenced, true, nil
 	}
 
-	transitioned, err := upload.RemoveLockedTx(tx, &lockedUpload)
+	transitioned, err := ofupload.RemoveLockedTx(tx, &lockedUpload)
 	if err != nil {
 		return pagesOrphanCleanupSkipped, true, err
 	}
