@@ -16,6 +16,7 @@
 | `share/protocol` | server 与边缘三进制的控制消息线格式 | `server`、`agent`、`relay`、`flared` |
 | `share/geoip` | GeoIP 解析与 IP 工具（含 `iputil` 子包） | `server`、`agent` |
 | `share/edge/logging` | 边缘守护进程统一日志初始化 | `agent`、`relay`、`flared` |
+| `share/githubrelease` | GitHub Release 资产解析、校验与下载 | `server`（Pages）、边缘更新器 |
 
 ## 所有权与上游同步
 

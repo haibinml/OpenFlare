@@ -13,10 +13,10 @@ import (
 	"strings"
 	"time"
 
-	"Wavelet/openflare/plugins/server/kernel/githubrelease"
 	"Wavelet/openflare/plugins/server/kernel/model"
 	"Wavelet/openflare/plugins/server/kernel/repository"
 	"Wavelet/openflare/plugins/server/kernel/task"
+	"Wavelet/openflare/share/githubrelease"
 	"Wavelet/openflare/share/pagesarchive"
 	"Wavelet/pkg/logger"
 

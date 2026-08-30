@@ -16,11 +16,10 @@ import (
 	"testing"
 	"time"
 
-	"Wavelet/openflare/plugins/server/kernel/repository"
-
-	"Wavelet/openflare/plugins/server/kernel/githubrelease"
 	"Wavelet/openflare/plugins/server/kernel/model"
+	"Wavelet/openflare/plugins/server/kernel/repository"
 	"Wavelet/openflare/plugins/server/kernel/task"
+	"Wavelet/openflare/share/githubrelease"
 	db "Wavelet/plugins/infra/database"
 
 	"github.com/hibiken/asynq"
