@@ -19,7 +19,7 @@ func handleLogicError(c *gin.Context, err error) bool {
 	if err == nil {
 		return false
 	}
-	return apiutil.AbortNotFoundIfMissing(c, err, errNodeNotFound)
+	return response.AbortNotFoundIfMissing(c, err, errNodeNotFound)
 }
 
 // ListNodesHandler lists all nodes.

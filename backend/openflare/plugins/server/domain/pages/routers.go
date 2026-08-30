@@ -24,7 +24,7 @@ func handleLogicError(c *gin.Context, err error) bool {
 	if err == nil {
 		return false
 	}
-	return apiutil.AbortNotFoundIfMissing(c, err, errPagesProjectNotFound)
+	return response.AbortNotFoundIfMissing(c, err, errPagesProjectNotFound)
 }
 
 func handleSourceLogicError(c *gin.Context, err error) bool {

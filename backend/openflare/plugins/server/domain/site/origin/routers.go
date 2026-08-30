@@ -16,7 +16,7 @@ func handleLogicError(c *gin.Context, err error) bool {
 	if err == nil {
 		return false
 	}
-	return apiutil.AbortNotFoundIfMissing(c, err, errOriginNotFound)
+	return response.AbortNotFoundIfMissing(c, err, errOriginNotFound)
 }
 
 // GetOrigins 列出全部源站。

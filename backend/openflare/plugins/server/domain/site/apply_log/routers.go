@@ -35,7 +35,7 @@ func GetApplyLogs(c *gin.Context) {
 		PageNo:   readIntQuery(c, "pageNo", "page_no"),
 		PageSize: readIntQuery(c, "pageSize", "page_size"),
 	})
-	if apiutil.AbortBadRequestOnError(c, err) {
+	if response.AbortBadRequestOnError(c, err) {
 		return
 	}
 	c.JSON(http.StatusOK, response.OK(result))
@@ -61,7 +61,7 @@ func CleanupApplyLogs(c *gin.Context) {
 	}
 
 	result, err := Cleanup(c.Request.Context(), input)
-	if apiutil.AbortBadRequestOnError(c, err) {
+	if response.AbortBadRequestOnError(c, err) {
 		return
 	}
 	c.JSON(http.StatusOK, response.OK(result))

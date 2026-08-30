@@ -16,7 +16,7 @@ func handleLogicError(c *gin.Context, err error) bool {
 	if err == nil {
 		return false
 	}
-	return apiutil.AbortNotFoundIfMissing(c, err, "记录不存在")
+	return response.AbortNotFoundIfMissing(c, err, "记录不存在")
 }
 
 func versionParam(c *gin.Context) (string, bool) {
@@ -83,7 +83,7 @@ func GetConfigVersionHandler(c *gin.Context) {
 // @Router /api/v1/d/config-versions/active [get]
 func GetActiveConfigVersionHandler(c *gin.Context) {
 	version, err := GetActiveConfigVersion(c.Request.Context())
-	if apiutil.AbortNotFoundIfMissing(c, err, errNoActiveVersion) {
+	if response.AbortNotFoundIfMissing(c, err, errNoActiveVersion) {
 		return
 	}
 	c.JSON(http.StatusOK, response.OK(version))
