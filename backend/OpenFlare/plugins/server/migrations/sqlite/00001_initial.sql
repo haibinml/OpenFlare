@@ -481,5 +481,83 @@ CREATE TABLE IF NOT EXISTS of_zones (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_of_zones_domain ON of_zones (domain);
 
+INSERT OR IGNORE INTO w_schedules (id, name, task_type, cron, payload, is_active, created_at, updated_at)
+VALUES
+    (101, 'OpenFlare SSL 自动续期', 'of_ssl_renew', '0 0 * * *', '{}', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (103, 'OpenFlare WAF IP 组同步', 'of_waf_ip_group_sync', '*/5 * * * *', '{}', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (104, 'OpenFlare Uptime Kuma 同步', 'of_uptime_kuma_sync', '* * * * *', '{}', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+INSERT INTO w_schedules (name, task_type, cron, payload, is_active, created_at, updated_at)
+SELECT 'OpenFlare Pages 部署源扫描', 'of_pages_source_scan', '0 0 * * *', '{}', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM w_schedules WHERE task_type = 'of_pages_source_scan');
+
+INSERT OR IGNORE INTO w_system_configs (key, value, type, visibility, description, created_at, updated_at)
+VALUES
+    ('agent_heartbeat_interval', '3000', 'business', 0, 'Agent 心跳间隔（毫秒）', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('agent_update_repo', 'Rain-kl/OpenFlare', 'business', 0, 'Agent 更新仓库', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('agent_websocket_upgrade_enabled', 'true', 'business', 0, 'Agent WebSocket 升级开关', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('geoip_provider', 'ipinfo', 'business', 0, 'GeoIP 服务商', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('log_retention_days_clickhouse', '30', 'business', 0, 'ClickHouse 日志保留天数', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('log_retention_days_postgres', '30', 'business', 0, 'PostgreSQL 日志保留天数（访问日志与可观测统一）', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('log_retention_days_sqlite', '30', 'business', 0, 'SQLite 日志保留天数', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('metric_retention_days', '3', 'business', 0, '性能指标（CPU/内存/磁盘/网络）保留天数（三库共用）', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('node_offline_threshold', '60000', 'business', 0, '节点离线阈值（毫秒）', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_cache_enabled', 'false', 'business', 0, '缓存开关', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_cache_inactive', '30m', 'business', 0, '缓存不活跃时间', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_cache_key_template', '$scheme$host$request_uri', 'business', 0, '缓存键模板', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_cache_levels', '1:2', 'business', 0, '缓存层级', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_cache_lock_enabled', 'true', 'business', 0, '缓存锁开关', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_cache_lock_timeout', '5s', 'business', 0, '缓存锁超时', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_cache_max_size', '1g', 'business', 0, '缓存最大大小', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_cache_use_stale', 'error timeout updating http_500 http_502 http_503 http_504', 'business', 0, '缓存失效策略', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_client_body_timeout', '15', 'business', 0, '客户端体超时（秒）', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_client_header_timeout', '15', 'business', 0, '客户端头超时（秒）', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_client_max_body_size', '64m', 'business', 0, '客户端最大体大小', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_default_limit_conn_per_ip', '0', 'business', 0, '默认单 IP 并发连接上限（0 关闭）', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_default_limit_conn_per_server', '0', 'business', 0, '默认站点并发连接上限（0 关闭）', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_default_limit_rate', '', 'business', 0, '默认单请求带宽限速（空关闭）', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_default_limit_req_per_ip', '', 'business', 0, '默认单 IP 请求频率限制（空关闭，例如 10r/s、100r/m）', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_default_server_return_status', '421', 'business', 0, '默认服务器返回状态码', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_events_multi_accept_enabled', 'true', 'business', 0, '多路接受开关', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_events_use', 'epoll', 'business', 0, '事件模型', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_gzip_comp_level', '5', 'business', 0, 'Gzip 压缩级别', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_gzip_enabled', 'true', 'business', 0, 'Gzip 压缩开关', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_gzip_min_length', '1024', 'business', 0, 'Gzip 最小长度', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_http3_enabled', 'true', 'business', 0, 'HTTP/3 支持开关', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_keepalive_requests', '1000', 'business', 0, 'Keepalive 请求数', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_keepalive_timeout', '20', 'business', 0, 'Keepalive 超时（秒）', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_large_client_header_buffers', '4 16k', 'business', 0, '大客户端头缓冲区', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_proxy_buffer_size', '8k', 'business', 0, '代理缓冲区大小', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_proxy_buffering_enabled', 'true', 'business', 0, '代理响应缓冲开关', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_proxy_buffers', '16 16k', 'business', 0, '代理缓冲区', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_proxy_busy_buffers_size', '64k', 'business', 0, '代理繁忙缓冲区大小', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_proxy_connect_timeout', '3', 'business', 0, '代理连接超时（秒）', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_proxy_read_timeout', '60', 'business', 0, '代理读取超时（秒）', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_proxy_request_buffering_enabled', 'false', 'business', 0, '代理请求缓冲开关', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_proxy_send_timeout', '60', 'business', 0, '代理发送超时（秒）', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_send_timeout', '30', 'business', 0, '发送超时（秒）', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_websocket_enabled', 'true', 'business', 0, 'WebSocket 支持开关', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_worker_connections', '4096', 'business', 0, 'Worker 连接数', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_worker_processes', 'auto', 'business', 0, 'Worker 进程数', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('openresty_worker_rlimit_nofile', '65535', 'business', 0, 'Worker 文件描述符限制', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('origin_error_page_enabled', 'true', 'business', 0, '是否启用源站错误页', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('origin_error_page_get_only', 'false', 'business', 0, '源站错误页是否仅对 GET 请求生效（其它方法透传）', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('origin_error_page_html', '', 'business', 0, '源站错误页自定义 HTML，空则使用内置默认', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('origin_error_page_status_codes', '["500-599"]', 'business', 0, '源站错误页触发状态码标签 JSON 数组', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('pages_max_history_count', '20', 'business', 0, 'Pages 每个项目最大历史部署保留数（0 表示不限制）', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('pages_max_package_size_mb', '100', 'business', 0, 'Pages 部署包上传大小上限（MiB）', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('relay_frps_web_ui_enabled', 'false', 'business', 0, '是否启用 FRPS 内置 Web 管理界面', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('relay_frps_web_ui_port', '17500', 'business', 0, 'FRPS 内置 Web 管理界面端口', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('sw_offline_domains', '[]', 'business', 0, 'SW 离线兜底生效域名列表（JSON 数组，空则仅总开关无效）', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('sw_offline_enabled', 'false', 'business', 0, '是否启用 Service Worker 离线兜底', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('sw_offline_html', '', 'business', 0, '离线联系页自定义 HTML，空则使用内置默认', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('uptime_kuma_enabled', 'false', 'business', 0, 'UptimeKuma 集成开关', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('uptime_kuma_interval', '60', 'business', 0, 'UptimeKuma 监控间隔（秒）', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('uptime_kuma_monitor_scope', 'all', 'business', 0, 'UptimeKuma 监控范围', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('uptime_kuma_retry', '0', 'business', 0, 'UptimeKuma 重试次数', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('uptime_kuma_retry_interval', '60', 'business', 0, 'UptimeKuma 重试间隔（秒）', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('uptime_kuma_sync_interval', '5', 'business', 0, 'UptimeKuma 同步间隔（分钟）', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('uptime_kuma_timeout', '48', 'business', 0, 'UptimeKuma 超时（秒）', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
 -- +goose Down
 SELECT 1;
