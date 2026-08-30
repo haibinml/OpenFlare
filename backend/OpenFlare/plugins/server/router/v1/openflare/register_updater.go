@@ -4,7 +4,7 @@
 package openflare
 
 import (
-	"Wavelet/OpenFlare/plugins/server/admin/updater"
+	"Wavelet/OpenFlare/plugins/server/updater"
 	"Wavelet/OpenFlare/plugins/server/openflare/apiutil"
 	"Wavelet/core"
 	"Wavelet/core/contracts"

@@ -7,7 +7,7 @@
 package server
 
 import (
-	"Wavelet/OpenFlare/plugins/server/chmigrate"
+	"Wavelet/OpenFlare/plugins/server/migrate"
 	"Wavelet/OpenFlare/plugins/server/ofevents"
 	"Wavelet/OpenFlare/plugins/server/openflare/chwriter"
 	ofgeoip "Wavelet/OpenFlare/plugins/server/openflare/geoip"
@@ -30,13 +30,14 @@ import (
 	_ "Wavelet/docs"
 	adminservice "Wavelet/plugins/domain/admin/service"
 
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	"net/http"
 )
 
-//go:embed migrations/*/*.sql
+//go:embed migrate/postgres/*.sql migrate/sqlite/*.sql
 var serverMigrations embed.FS
 
 // Plugin 实现 core.Plugin，是 OpenFlare 控制面的装载入口。
@@ -72,7 +73,7 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	credential.SetSessionSecret(runtimeconfig.SessionSecret())
 
 	ctx.Migrations().Register("server", serverMigrations)
-	if err := chmigrate.Up(); err != nil {
+	if err := migrate.UpClickHouse(); err != nil {
 		return err
 	}
 

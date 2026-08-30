@@ -5,7 +5,7 @@ package cmd
 
 import (
 	ofserver "Wavelet/OpenFlare/plugins/server"
-	"Wavelet/OpenFlare/plugins/server/stamp"
+	"Wavelet/OpenFlare/plugins/server/migrate"
 	"Wavelet/core"
 	"Wavelet/core/contracts"
 	"Wavelet/plugins/domain/admin"
@@ -80,7 +80,7 @@ func newOpenFlareApp(profile core.Profile, opts ...core.AppOption) *core.App {
 		core.WithProfile(profile),
 		core.WithConfigSource(src),
 		core.WithShutdownTimeout(defaultShutdownTimeout),
-		core.WithMigrationBaseline(stamp.Legacy),
+		core.WithMigrationBaseline(migrate.Legacy),
 	}
 	appOpts = append(appOpts, opts...)
 

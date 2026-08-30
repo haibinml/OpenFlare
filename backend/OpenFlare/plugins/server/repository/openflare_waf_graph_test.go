@@ -5,82 +5,19 @@ package repository
 
 import (
 	"context"
-	"io/fs"
-	"os"
-	"path/filepath"
-	"runtime"
 	"testing"
-	"testing/fstest"
 
 	"Wavelet/OpenFlare/plugins/server/model"
 
 	db "Wavelet/plugins/infra/database"
 
 	"github.com/glebarez/sqlite"
-	"github.com/pressly/goose/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )
 
 const defaultWAFRuleGraph = `{"schema_version":1,"nodes":[{"id":"start","type":"start","position":{"x":0,"y":0},"config":{}},{"id":"allow","type":"allow","position":{"x":320,"y":0},"config":{}}],"edges":[{"id":"start-allow","source":"start","source_handle":"next","target":"allow"}]}`
-
-func wafMigrationFS(t *testing.T) fs.FS {
-	t.Helper()
-	_, filename, _, ok := runtime.Caller(0)
-	require.True(t, ok)
-	dir := filepath.Join(filepath.Dir(filename), "..", "migrator", "goose", "sqlite")
-	migrations := fstest.MapFS{}
-	for _, name := range []string{
-		"202607150001_orchestrate_waf_rules.sql",
-		"202607150002_reset_waf_rule_graphs.sql",
-		"202607150003_drop_legacy_waf_rule_fields.sql",
-	} {
-		contents, err := os.ReadFile(filepath.Join(dir, name))
-		require.NoError(t, err)
-		migrations[name] = &fstest.MapFile{Data: contents}
-	}
-	return migrations
-}
-
-func TestOpenFlareWAFGraphMigrationResetsGraphsAndOrdersBindings(t *testing.T) {
-	conn, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	require.NoError(t, err)
-	sqlDB, err := conn.DB()
-	require.NoError(t, err)
-
-	require.NoError(t, conn.Exec(`CREATE TABLE of_waf_rule_groups (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, block_status_code INTEGER NOT NULL DEFAULT 418, block_response_body TEXT NOT NULL DEFAULT '', ip_whitelist TEXT NOT NULL DEFAULT '[]', ip_blacklist TEXT NOT NULL DEFAULT '[]', ip_whitelist_groups TEXT NOT NULL DEFAULT '[]', ip_blacklist_groups TEXT NOT NULL DEFAULT '[]', country_whitelist TEXT NOT NULL DEFAULT '[]', country_blacklist TEXT NOT NULL DEFAULT '[]', region_whitelist TEXT NOT NULL DEFAULT '[]', region_blacklist TEXT NOT NULL DEFAULT '[]', pow_enabled BOOLEAN NOT NULL DEFAULT 0, pow_config TEXT NOT NULL DEFAULT '{}')`).Error)
-	require.NoError(t, conn.Exec(`CREATE TABLE of_waf_rule_group_bindings (id INTEGER PRIMARY KEY AUTOINCREMENT, rule_group_id INTEGER NOT NULL, proxy_route_id INTEGER NOT NULL)`).Error)
-	require.NoError(t, conn.Exec(`INSERT INTO of_waf_rule_groups (id, name) VALUES (1, 'one'), (2, 'two')`).Error)
-	require.NoError(t, conn.Exec(`INSERT INTO of_waf_rule_group_bindings (id, rule_group_id, proxy_route_id) VALUES (20, 2, 7), (10, 1, 7)`).Error)
-
-	goose.SetBaseFS(wafMigrationFS(t))
-	require.NoError(t, goose.SetDialect("sqlite3"))
-	require.NoError(t, goose.Up(sqlDB, "."))
-
-	var groups []model.OpenFlareWAFRuleGroup
-	require.NoError(t, conn.Order("id asc").Find(&groups).Error)
-	require.Len(t, groups, 2)
-	for _, group := range groups {
-		require.JSONEq(t, defaultWAFRuleGraph, group.Graph)
-		assert.Equal(t, uint64(1), group.Revision)
-	}
-	for _, column := range []string{"block_status_code", "ip_whitelist", "pow_enabled"} {
-		assert.False(t, conn.Migrator().HasColumn("of_waf_rule_groups", column))
-	}
-
-	require.NoError(t, conn.Exec(`INSERT INTO of_waf_rule_groups (name) VALUES ('new')`).Error)
-	var newGroup model.OpenFlareWAFRuleGroup
-	require.NoError(t, conn.First(&newGroup, 3).Error)
-	assert.Empty(t, newGroup.Graph)
-	assert.Equal(t, uint64(1), newGroup.Revision)
-
-	var bindings []model.OpenFlareWAFRuleGroupBinding
-	require.NoError(t, conn.Where("proxy_route_id = ?", 7).Order("sequence asc").Order("id asc").Find(&bindings).Error)
-	require.Len(t, bindings, 2)
-	assert.Equal(t, []int{0, 1}, []int{bindings[0].Sequence, bindings[1].Sequence})
-	assert.Equal(t, []uint{10, 20}, []uint{bindings[0].ID, bindings[1].ID})
-}
 
 func TestOpenFlareWAFGraphOptimisticUpdate(t *testing.T) {
 	conn, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})

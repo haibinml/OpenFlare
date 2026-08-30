@@ -13,6 +13,7 @@ sidebar: false
 ### 🛠 修复
 
 - 人机验证与健康检查去掉双路径：浏览器只请求 `/api/v1/cap/challenge` 与 `/api/v1/cap/redeem`，探针只保留 `GET /api/healthz`（`{"status":"ok"}`）。旧的 `/api/cap/*`、`/api/health` 与 `/healthz` 不再注册。
+- `server` 插件把 stamp、of_* SQL 与 ClickHouse 迁入单一 `migrate/` 包，updater 提到 `server/updater/`；删除已停用的 76 条历史迁移。全新安装会写入 OpenFlare 定时任务与产品配置默认值，已 stamp 的升级库不重插。
 
 ### 💄 其他/体验
 
