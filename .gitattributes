@@ -1,1 +1,5 @@
 * -text
+backend/OpenFlare/**    merge=ours
+frontend/**             merge=ours
+docs/changelog/**       merge=ours
+docs/superpowers/**     merge=ours
