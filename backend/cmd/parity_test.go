@@ -27,9 +27,36 @@ func TestPluginRoutesContainGoldenBaseline(t *testing.T) {
 
 	got := routeSet(app.Context())
 	want := loadBaseline(t)
+	for _, drop := range []string{
+		"GET /api/health",
+		"GET /healthz",
+		"POST /api/cap/challenge",
+		"POST /api/cap/redeem",
+	} {
+		delete(want, drop)
+	}
 	for k := range want {
 		if !got[k] {
 			t.Errorf("missing golden route %s", k)
+		}
+	}
+	for _, must := range []string{
+		"GET /api/healthz",
+		"POST /api/v1/cap/challenge",
+		"POST /api/v1/cap/redeem",
+	} {
+		if !got[must] {
+			t.Errorf("missing required route %s", must)
+		}
+	}
+	for _, drop := range []string{
+		"GET /api/health",
+		"GET /healthz",
+		"POST /api/cap/challenge",
+		"POST /api/cap/redeem",
+	} {
+		if got[drop] {
+			t.Errorf("removed route still registered: %s", drop)
 		}
 	}
 }

@@ -51,13 +51,22 @@ func TestNewOpenFlareAppRegistersServerAndWaveletUser(t *testing.T) {
 		got[rd.Method+" "+rd.Path] = true
 	}
 	for _, want := range []string{
-		"GET /api/health",
+		"GET /api/healthz",
 		"GET /api/v1/user/self",
 		"GET /api/v1/d/nodes",
-		"POST /api/cap/challenge",
+		"POST /api/v1/cap/challenge",
 	} {
 		if !got[want] {
 			t.Errorf("missing route %s", want)
+		}
+	}
+	for _, drop := range []string{
+		"GET /api/health",
+		"GET /healthz",
+		"POST /api/cap/challenge",
+	} {
+		if got[drop] {
+			t.Errorf("removed route still registered: %s", drop)
 		}
 	}
 }

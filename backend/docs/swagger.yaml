@@ -4277,89 +4277,6 @@ info:
   title: OpenFlare API
   version: 1.0.0
 paths:
-  /api/cap/challenge:
-    post:
-      consumes:
-      - application/json
-      description: 客户端获取 PoW 难题和签名的 JWT Token，并在后台计算。
-      parameters:
-      - description: 可选范围限制参数
-        in: body
-        name: request
-        schema:
-          $ref: '#/definitions/cap.challengeRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 成功返回 PoW 难题
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.Any'
-            - properties:
-                data:
-                  $ref: '#/definitions/cap.ChallengeResponse'
-              type: object
-        "500":
-          description: 内部服务错误
-          schema:
-            $ref: '#/definitions/response.Any'
-      summary: 生成人机验证难题
-      tags:
-      - cap
-  /api/cap/redeem:
-    post:
-      consumes:
-      - application/json
-      description: 提交 PoW 解答进行核销，成功后返回一次性 X-Cap-Token 凭证
-      parameters:
-      - description: 难题 Token 与解答 solutions 数组
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/cap.redeemRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 核销成功，返回 X-Cap-Token
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.Any'
-            - properties:
-                data:
-                  $ref: '#/definitions/cap.RedeemResponse'
-              type: object
-        "400":
-          description: 参数错误或核销失败
-          schema:
-            $ref: '#/definitions/response.Any'
-        "500":
-          description: 内部服务错误
-          schema:
-            $ref: '#/definitions/response.Any'
-      summary: 校验人机验证解答
-      tags:
-      - cap
-  /api/health:
-    get:
-      description: 检查服务是否正常运行，可用于负载均衡存活探测
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 服务正常
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.Any'
-            - properties:
-                data:
-                  type: string
-              type: object
-      summary: 健康检查
-      tags:
-      - health
   /api/v1/admin/auth-sources:
     get:
       description: 返回所有已配置的 OAuth/OIDC 认证源列表，包括已启用和未启用的，需要管理员权限
@@ -7294,6 +7211,100 @@ paths:
       summary: Agent WebSocket 连接
       tags:
       - openflare-agent
+  /api/v1/cap/challenge:
+    get:
+      consumes:
+      - application/json
+      description: 客户端获取 PoW 难题和签名的 JWT Token，并在后台计算。
+      parameters:
+      - description: 可选范围限制参数
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/cap.challengeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功返回 PoW 难题
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/cap.ChallengeResponse'
+              type: object
+        "500":
+          description: 内部服务错误
+          schema:
+            $ref: '#/definitions/response.Any'
+      summary: 生成人机验证难题
+      tags:
+      - cap
+    post:
+      consumes:
+      - application/json
+      description: 客户端获取 PoW 难题和签名的 JWT Token，并在后台计算。
+      parameters:
+      - description: 可选范围限制参数
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/cap.challengeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功返回 PoW 难题
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/cap.ChallengeResponse'
+              type: object
+        "500":
+          description: 内部服务错误
+          schema:
+            $ref: '#/definitions/response.Any'
+      summary: 生成人机验证难题
+      tags:
+      - cap
+  /api/v1/cap/redeem:
+    post:
+      consumes:
+      - application/json
+      description: 提交 PoW 解答进行核销，成功后返回一次性 X-Cap-Token 凭证
+      parameters:
+      - description: 难题 Token 与解答 solutions 数组
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/cap.redeemRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 核销成功，返回 X-Cap-Token
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/cap.RedeemResponse'
+              type: object
+        "400":
+          description: 参数错误或核销失败
+          schema:
+            $ref: '#/definitions/response.Any'
+        "500":
+          description: 内部服务错误
+          schema:
+            $ref: '#/definitions/response.Any'
+      summary: 校验人机验证解答
+      tags:
+      - cap
   /api/v1/config/public:
     get:
       consumes:
