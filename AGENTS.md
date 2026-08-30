@@ -86,13 +86,13 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 - 触碰框架目录 `backend/{core,pkg,plugins}` 前，先判断能力归属：
   - **通用能力**（与 OpenFlare 业务无关、任何下游都用得上）→ 必须同步在 **Wavelet 上游**完成修改，
-    本仓库只能通过 `scripts/sync-upstream.sh` 取得，不得长期持有本地补丁。
+    本仓库通过 `git fetch wavelet && git merge wavelet/main` 取得，不得长期持有本地补丁。
   - **非通用能力**（OpenFlare 业务特有）→ 在自己的插件内（`backend/OpenFlare/plugins/<name>/`）实现，
     或新建一个下游插件，禁止塞进上游目录。
 - 开发下游功能优先**复用上游已有能力**（`core/contracts`、`backend/plugins/*`、`backend/pkg/*`）；
   发现上游已提供而下游仍保留本地副本的，删除本地副本改为复用，或把差量回流上游。
 - 上游暂缺而确属通用能力时，可先在本仓库实现并登记到 `backend/OpenFlare/upstream-patches.md`
-  （`sync-upstream.sh` 同步后会提示核对），回流 Wavelet 后删除登记并重新同步。
+  （merge 上游后请确认补丁仍在），回流 Wavelet 后删除登记并重新 merge。
 
 - 禁止删除 `frontend/node_modules`。
 - `backend/pkg/util/` 保持纯净：禁止导入 Gin、GORM、sessions 等 HTTP/Web/DB 框架（会话选项在 `backend/OpenFlare/plugins/server/oauth/session.go`）。

@@ -19,8 +19,8 @@
 
 ## 所有权与上游同步
 
-**本目录由 OpenFlare 拥有，不属于上游同步范围**：`scripts/sync-upstream.sh` 仅覆盖
-`backend/{core,pkg,plugins}`，从不写入 `share/` 与 `OpenFlare/`。
+**本目录由 OpenFlare 拥有，不属于上游 merge 范围**：`git merge wavelet/main` 吸收
+`backend/{core,pkg,plugins}` 等上游变更，从不覆盖 `share/` 与 `OpenFlare/`。
 
 计划迁入的候选（随插件化进度）：`wsclient`（需先合并 `pkg/util` 的仅存符号）、
 `render`（openresty 配置渲染）、`pagesarchive`（Pages 产物解包）。

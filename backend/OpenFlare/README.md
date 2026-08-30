@@ -2,8 +2,9 @@
 
 本目录占据上游 `backend/downstream/` 的位置，存放 OpenFlare 的全部业务，
 按功能职责拆为 **4 个插件 + 1 个共享层**。上游目录
-（`backend/{core,pkg,plugins}`）由 `scripts/sync-upstream.sh` 覆盖同步，
-本目录与 `backend/cmd` 永不被覆盖。
+（`backend/{core,pkg,plugins}`）通过 `git fetch wavelet && git merge wavelet/main`
+吸收（第一次接线已 merge `wavelet/feat/cordis-alignment`，待该分支合入上游 main
+后改走 `wavelet/main`）。本目录、`frontend/` 与 `backend/cmd` 由本仓库持有。
 
 ```
 backend/OpenFlare/
