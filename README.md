@@ -165,6 +165,18 @@ docker run -d --name openflare-agent --restart unless-stopped \
   ghcr.io/rain-kl/openflare-agent:latest
 ```
 
+## Cordis / Wavelet upstream
+
+OpenFlare is built on Wavelet Cordis. After cloning, enable `merge=ours` from `.gitattributes` so `git merge wavelet/main` keeps OpenFlare-owned paths:
+
+```bash
+git config include.path ../.gitconfig
+# worktree-safe:
+git config include.path "$(git rev-parse --show-toplevel)/.gitconfig"
+```
+
+`docker compose` uses `docker-compose.yaml`. `docker-compose.wavelet.yml` is the upstream Wavelet stack and is not the product default. Image publishes go through `.github/workflows/build-image-openflare*.yml`; the Wavelet `build-image.yml` is isolated.
+
 ## Open Source License
 
 This project is licensed under the [Apache License 2.0](./LICENSE).

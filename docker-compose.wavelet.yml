@@ -1,3 +1,5 @@
+# Upstream Wavelet stack. Not the OpenFlare default.
+# Use docker-compose.yaml (or `docker compose up`) for the product.
 services:
   wavelet:
     build:

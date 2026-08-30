@@ -1,0 +1,6 @@
+# Isolated Wavelet compose filename.
+# OpenFlare's default stack is docker-compose.yaml (`docker compose` prefers
+# that name over this one). This stub is kept so `git merge wavelet/main`
+# cannot restore a wavelet product stack under the default compose name.
+include:
+  - path: docker-compose.yaml

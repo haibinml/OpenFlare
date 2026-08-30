@@ -5,6 +5,9 @@
 （`backend/{core,pkg,plugins}`）通过 `git fetch wavelet && git merge wavelet/main`
 吸收（第一次接线已 merge `wavelet/feat/cordis-alignment`，待该分支合入上游 main
 后改走 `wavelet/main`）。本目录、`frontend/` 与 `backend/cmd` 由本仓库持有。
+合并前请 `git config include.path ../.gitconfig`（或 worktree 安全写法
+`git config include.path "$(git rev-parse --show-toplevel)/.gitconfig"`），
+以启用 `.gitattributes` 的 `merge=ours`。
 
 ```
 backend/OpenFlare/

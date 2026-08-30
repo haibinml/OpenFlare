@@ -165,6 +165,18 @@ docker run -d --name openflare-agent --restart unless-stopped \
   ghcr.io/rain-kl/openflare-agent:latest
 ```
 
+## Cordis / Wavelet 上游
+
+OpenFlare 构建在 Wavelet Cordis 之上。克隆后请启用 `.gitattributes` 中的 `merge=ours`，这样 `git merge wavelet/main` 会保留 OpenFlare 自有路径：
+
+```bash
+git config include.path ../.gitconfig
+# worktree 安全写法：
+git config include.path "$(git rev-parse --show-toplevel)/.gitconfig"
+```
+
+`docker compose` 使用 `docker-compose.yaml`。`docker-compose.wavelet.yml` 是上游 Wavelet 编排，不是本产品的默认栈。镜像发布走 `.github/workflows/build-image-openflare*.yml`；Wavelet 的 `build-image.yml` 已隔离。
+
 ## 开源协议
 
 本项目采用 [Apache License 2.0](./LICENSE) 开源。

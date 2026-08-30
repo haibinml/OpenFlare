@@ -12,6 +12,7 @@ sidebar: false
 
 ### 💄 其他/体验
 
+- 内嵌前端拷贝目标改为 `backend/plugins/drivers/driver_http/dist`，与上游 `//go:embed all:dist` 对齐；发布工作流改为读取 `backend/go.mod`。仓库内 `.gitconfig` 提供 `merge.ours` 驱动，合并上游时保留 OpenFlare 自有路径；Wavelet 的 `build-image.yml` 与 `docker-compose.yml` 已隔离，避免 canary 发布成 wavelet 镜像。
 - 后端代码整体迁入 `backend/`，与上游 Wavelet 的仓库布局对齐（Cordis 插件化改造第一阶段），模块名保持 `Wavelet` 以保证上游包路径逐字一致。构建、测试、镜像与发布链路已同步调整，`make build-all` / `make dev` / `make swagger` 等本地命令用法不变；HTTP 接口与控制台行为均无变化。
 - 引入上游 Cordis 微内核与平台插件到 `backend/{core,pkg,plugins}`（与上游逐字一致，可用 `scripts/sync-upstream.sh` 重复同步），并新增 `backend/OpenFlare/share/` 承载多插件共享资源（控制消息协议、GeoIP、边缘日志）。此阶段仅落位结构与共享层，尚未改变运行时行为。
 - 下游代码按功能职责拆为 `server`/`agent`/`relay`/`flared` 四个插件与 `backend/OpenFlare/share` 共享层；三个边缘守护进程改由 Cordis 内核装配启动（profile `agent`/`relay`/`flared`），`-config` 旗标、默认配置路径、退出码与启动日志保持原样。
