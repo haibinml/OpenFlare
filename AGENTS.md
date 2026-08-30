@@ -87,15 +87,15 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - 触碰框架目录 `backend/{core,pkg,plugins}` 前，先判断能力归属：
   - **通用能力**（与 OpenFlare 业务无关、任何下游都用得上）→ 必须同步在 **Wavelet 上游**完成修改，
     本仓库通过 `git fetch wavelet && git merge wavelet/main` 取得，不得长期持有本地补丁。
-  - **非通用能力**（OpenFlare 业务特有）→ 在自己的插件内（`backend/OpenFlare/plugins/<name>/`）实现，
+  - **非通用能力**（OpenFlare 业务特有）→ 在自己的插件内（`backend/openflare/plugins/<name>/`）实现，
     或新建一个下游插件，禁止塞进上游目录。
 - 开发下游功能优先**复用上游已有能力**（`core/contracts`、`backend/plugins/*`、`backend/pkg/*`）；
   发现上游已提供而下游仍保留本地副本的，删除本地副本改为复用，或把差量回流上游。
-- 上游暂缺而确属通用能力时，可先在本仓库实现并登记到 `backend/OpenFlare/upstream-patches.md`
+- 上游暂缺而确属通用能力时，可先在本仓库实现并登记到 `backend/openflare/upstream-patches.md`
   （merge 上游后请确认补丁仍在），回流 Wavelet 后删除登记并重新 merge。
 
 - 禁止删除 `frontend/node_modules`。
-- `backend/pkg/util/` 保持纯净：禁止导入 Gin、GORM、sessions 等 HTTP/Web/DB 框架（会话选项在 `backend/OpenFlare/plugins/server/oauth/session.go`）。
+- `backend/pkg/util/` 保持纯净：禁止导入 Gin、GORM、sessions 等 HTTP/Web/DB 框架（会话选项在 `backend/openflare/plugins/server/oauth/session.go`）。
 - 测试临时目录只用 `t.TempDir()`，禁止硬编码相对路径写源码树。
 - HTTP 路由只由插件在 `Apply` 中经 `ctx.Router()` 声明；`router.BuildEngine()` 只挂引擎级中间件与前端 SPA 兜底，禁止进程级初始化（如 `SyncEvents`、`InitLogWriter`）。
 - API 变更后：`make swagger`；开发完成：`make code-check`；提交前：`make format`。
@@ -104,9 +104,9 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - **分层**：`apps → repository → model`，`repository → infra/persistence`；禁止 `model → repository`。
   - `model`：实体、表名、配置 key、查询 DTO、无 IO 规则。禁止 `db.DB` / Redis / CH；禁止 `import repository`。GORM hook 仅可 mutate 自身字段，禁止在 hook 内再查 DB/缓存。
   - `repository`：唯一持久化入口。apps/logics 禁止为业务 CRUD 直调 `db.DB`（管理端 SQL 控制台、infra 内部等例外保留）。禁止新增 `model.Get/List/Create/...` 类数据访问 API。
-- 日志/分析表（节点访问日志、用户访问日志、可观测时序）走 `backend/OpenFlare/plugins/server/kernel/repository/logstore`，禁止 apps 直连 `repository/analytics` 或 `db.ChConn`/`db.ChDB`。判定与接入步骤见 `logstore` skill。
-- 跨模块集成（任务 Handler、推送事件、域监听、完成钩子）禁止 `init()` 注册；经 `backend/OpenFlare/plugins/server/platform/bootstrap` 在 `backend/cmd` 入口显式装配。
-- 核心业务（如 `oauth`、`user`）禁止直接 import push/custom_events；经 `backend/OpenFlare/plugins/server/listener` 发域事件，push 在 bootstrap 订阅。
+- 日志/分析表（节点访问日志、用户访问日志、可观测时序）走 `backend/openflare/plugins/server/kernel/repository/logstore`，禁止 apps 直连 `repository/analytics` 或 `db.ChConn`/`db.ChDB`。判定与接入步骤见 `logstore` skill。
+- 跨模块集成（任务 Handler、推送事件、域监听、完成钩子）禁止 `init()` 注册；经 `backend/openflare/plugins/server/platform/bootstrap` 在 `backend/cmd` 入口显式装配。
+- 核心业务（如 `oauth`、`user`）禁止直接 import push/custom_events；经 `backend/openflare/plugins/server/listener` 发域事件，push 在 bootstrap 订阅。
 - 依赖任务/推送注册的测试须显式 `bootstrap.RegisterTasks()` / `RegisterPushDomainEvents()` 等，不依赖 `init()`。
 - API 错误必须 `response.Abort*` + `ErrorHandlerMiddleware`；禁止 Handler 直接 `c.JSON(..., response.Err(...))` 或用 HTTP 200 表示失败。
 

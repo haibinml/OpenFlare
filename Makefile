@@ -41,7 +41,7 @@ build-embedded:
 code-check:
 	@echo "==> Architecture guards..."
 	@command -v rg >/dev/null 2>&1 || { echo 'error: rg (ripgrep) is required for architecture guards' >&2; exit 1; }
-	@if rg -n 'db\.DB\(|db\.Redis' backend/OpenFlare/plugins/server/model --glob '*.go' -g '!*_test.go' ; then \
+	@if rg -n 'db\.DB\(|db\.Redis' backend/openflare/plugins/server/kernel/model --glob '*.go' -g '!*_test.go' ; then \
 		echo 'error: internal/model must not access db.DB or db.Redis (non-test code)' >&2; \
 		exit 1; \
 	fi
@@ -58,21 +58,21 @@ build-backend:
 build-agent:
 	@echo "==> Building agent version=$(VERSION)..."
 	cd backend && go build \
-		-ldflags "-s -w -X '$(MODULE)/OpenFlare/plugins/agent/config.Version=$(VERSION)'" \
+		-ldflags "-s -w -X '$(MODULE)/openflare/plugins/agent/config.Version=$(VERSION)'" \
 		-o ../bin/openflare-agent \
 		cmd/agent/main.go
 
 build-relay:
 	@echo "==> Building relay version=$(VERSION)..."
 	cd backend && go build \
-		-ldflags "-s -w -X '$(MODULE)/OpenFlare/plugins/relay/config.Version=$(VERSION)'" \
+		-ldflags "-s -w -X '$(MODULE)/openflare/plugins/relay/config.Version=$(VERSION)'" \
 		-o ../bin/openflare-relay \
 		cmd/relay/main.go
 
 build-flared:
 	@echo "==> Building flared version=$(VERSION)..."
 	cd backend && go build \
-		-ldflags "-s -w -X '$(MODULE)/OpenFlare/plugins/flared/config.Version=$(VERSION)'" \
+		-ldflags "-s -w -X '$(MODULE)/openflare/plugins/flared/config.Version=$(VERSION)'" \
 		-o ../bin/flared \
 		cmd/flared/main.go
 

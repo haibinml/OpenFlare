@@ -1,26 +1,26 @@
 basePath: /
 definitions:
-  Wavelet_OpenFlare_share_protocol.ActiveConfigMeta:
+  Wavelet_openflare_share_protocol.ActiveConfigMeta:
     properties:
       checksum:
         type: string
       version:
         type: string
     type: object
-  Wavelet_OpenFlare_share_protocol.BufferedObservabilityRecord:
+  Wavelet_openflare_share_protocol.BufferedObservabilityRecord:
     properties:
       access_logs:
         items:
-          $ref: '#/definitions/Wavelet_OpenFlare_share_protocol.NodeAccessLog'
+          $ref: '#/definitions/Wavelet_openflare_share_protocol.NodeAccessLog'
         type: array
       captured_at_unix:
         type: integer
       edge_health:
-        $ref: '#/definitions/Wavelet_OpenFlare_share_protocol.NodeEdgeHealth'
+        $ref: '#/definitions/Wavelet_openflare_share_protocol.NodeEdgeHealth'
       host_metrics:
-        $ref: '#/definitions/Wavelet_OpenFlare_share_protocol.NodeMetricSnapshot'
+        $ref: '#/definitions/Wavelet_openflare_share_protocol.NodeMetricSnapshot'
     type: object
-  Wavelet_OpenFlare_share_protocol.NodeAccessLog:
+  Wavelet_openflare_share_protocol.NodeAccessLog:
     properties:
       bytes_sent:
         description: body bytes = 已提供数据
@@ -47,7 +47,7 @@ definitions:
       user_agent:
         type: string
     type: object
-  Wavelet_OpenFlare_share_protocol.NodeEdgeHealth:
+  Wavelet_openflare_share_protocol.NodeEdgeHealth:
     properties:
       captured_at_unix:
         type: integer
@@ -58,7 +58,7 @@ definitions:
       status:
         type: string
     type: object
-  Wavelet_OpenFlare_share_protocol.NodeHealthEvent:
+  Wavelet_openflare_share_protocol.NodeHealthEvent:
     properties:
       event_type:
         type: string
@@ -73,7 +73,7 @@ definitions:
       triggered_at_unix:
         type: integer
     type: object
-  Wavelet_OpenFlare_share_protocol.NodeMetricSnapshot:
+  Wavelet_openflare_share_protocol.NodeMetricSnapshot:
     properties:
       captured_at_unix:
         type: integer
@@ -92,7 +92,7 @@ definitions:
       storage_used_bytes:
         type: integer
     type: object
-  Wavelet_OpenFlare_share_protocol.NodeSystemProfile:
+  Wavelet_openflare_share_protocol.NodeSystemProfile:
     properties:
       architecture:
         type: string
@@ -117,14 +117,14 @@ definitions:
       uptime_seconds:
         type: integer
     type: object
-  Wavelet_OpenFlare_share_protocol.PagesDeploymentHashResponse:
+  Wavelet_openflare_share_protocol.PagesDeploymentHashResponse:
     properties:
       deployment_id:
         type: integer
       hash:
         type: string
     type: object
-  Wavelet_OpenFlare_share_protocol.PagesProjectLatestHashResponse:
+  Wavelet_openflare_share_protocol.PagesProjectLatestHashResponse:
     properties:
       deployment_id:
         type: integer
@@ -139,7 +139,7 @@ definitions:
       total_size:
         type: integer
     type: object
-  Wavelet_OpenFlare_share_protocol.WAFIPGroup:
+  Wavelet_openflare_share_protocol.WAFIPGroup:
     properties:
       checksum:
         type: string
@@ -314,24 +314,24 @@ definitions:
     properties:
       access_logs:
         items:
-          $ref: '#/definitions/Wavelet_OpenFlare_share_protocol.NodeAccessLog'
+          $ref: '#/definitions/Wavelet_openflare_share_protocol.NodeAccessLog'
         type: array
       buffered:
         items:
-          $ref: '#/definitions/Wavelet_OpenFlare_share_protocol.BufferedObservabilityRecord'
+          $ref: '#/definitions/Wavelet_openflare_share_protocol.BufferedObservabilityRecord'
         type: array
       current_version:
         type: string
       edge_health:
-        $ref: '#/definitions/Wavelet_OpenFlare_share_protocol.NodeEdgeHealth'
+        $ref: '#/definitions/Wavelet_openflare_share_protocol.NodeEdgeHealth'
       ext_version:
         type: string
       health_events:
         items:
-          $ref: '#/definitions/Wavelet_OpenFlare_share_protocol.NodeHealthEvent'
+          $ref: '#/definitions/Wavelet_openflare_share_protocol.NodeHealthEvent'
         type: array
       host_metrics:
-        $ref: '#/definitions/Wavelet_OpenFlare_share_protocol.NodeMetricSnapshot'
+        $ref: '#/definitions/Wavelet_openflare_share_protocol.NodeMetricSnapshot'
       ip:
         type: string
       last_error:
@@ -345,7 +345,7 @@ definitions:
       openresty_status:
         type: string
       profile:
-        $ref: '#/definitions/Wavelet_OpenFlare_share_protocol.NodeSystemProfile'
+        $ref: '#/definitions/Wavelet_openflare_share_protocol.NodeSystemProfile'
       schema_version:
         type: integer
       version:
@@ -422,7 +422,7 @@ definitions:
     properties:
       groups:
         items:
-          $ref: '#/definitions/Wavelet_OpenFlare_share_protocol.WAFIPGroup'
+          $ref: '#/definitions/Wavelet_openflare_share_protocol.WAFIPGroup'
         type: array
     type: object
   apply_log.CleanupInput:
@@ -1037,7 +1037,7 @@ definitions:
   flared.HeartbeatResponse:
     properties:
       active_config:
-        $ref: '#/definitions/Wavelet_OpenFlare_share_protocol.ActiveConfigMeta'
+        $ref: '#/definitions/Wavelet_openflare_share_protocol.ActiveConfigMeta'
       tunnel_settings:
         $ref: '#/definitions/protocol.RelaySettings'
     type: object
@@ -7054,7 +7054,7 @@ paths:
             - $ref: '#/definitions/response.Any'
             - properties:
                 data:
-                  $ref: '#/definitions/Wavelet_OpenFlare_share_protocol.PagesDeploymentHashResponse'
+                  $ref: '#/definitions/Wavelet_openflare_share_protocol.PagesDeploymentHashResponse'
               type: object
         "400":
           description: 参数错误
@@ -7117,7 +7117,7 @@ paths:
             - $ref: '#/definitions/response.Any'
             - properties:
                 data:
-                  $ref: '#/definitions/Wavelet_OpenFlare_share_protocol.PagesProjectLatestHashResponse'
+                  $ref: '#/definitions/Wavelet_openflare_share_protocol.PagesProjectLatestHashResponse'
               type: object
         "400":
           description: 参数错误

@@ -20,8 +20,8 @@ sidebar: false
 
 - 内嵌前端拷贝目标改为 `backend/plugins/drivers/driver_http/dist`，与上游 `//go:embed all:dist` 对齐；发布工作流改为读取 `backend/go.mod`。仓库内 `.gitconfig` 提供 `merge.ours` 驱动，合并上游时保留 OpenFlare 自有路径；Wavelet 的 `build-image.yml` 与 `docker-compose.yml` 已隔离，避免 canary 发布成 wavelet 镜像。
 - 后端代码整体迁入 `backend/`，与上游 Wavelet 的仓库布局对齐（Cordis 插件化改造第一阶段），模块名保持 `Wavelet` 以保证上游包路径逐字一致。构建、测试、镜像与发布链路已同步调整，`make build-all` / `make dev` / `make swagger` 等本地命令用法不变；HTTP 接口与控制台行为均无变化。
-- 引入上游 Cordis 微内核与平台插件到 `backend/{core,pkg,plugins}`（与上游逐字一致，可用 `scripts/sync-upstream.sh` 重复同步），并新增 `backend/OpenFlare/share/` 承载多插件共享资源（控制消息协议、GeoIP、边缘日志）。此阶段仅落位结构与共享层，尚未改变运行时行为。
-- 下游代码按功能职责拆为 `server`/`agent`/`relay`/`flared` 四个插件与 `backend/OpenFlare/share` 共享层；三个边缘守护进程改由 Cordis 内核装配启动（profile `agent`/`relay`/`flared`），`-config` 旗标、默认配置路径、退出码与启动日志保持原样。
+- 引入上游 Cordis 微内核与平台插件到 `backend/{core,pkg,plugins}`（与上游逐字一致，可用 `scripts/sync-upstream.sh` 重复同步），并新增 `backend/openflare/share/` 承载多插件共享资源（控制消息协议、GeoIP、边缘日志）。此阶段仅落位结构与共享层，尚未改变运行时行为。
+- 下游代码按功能职责拆为 `server`/`agent`/`relay`/`flared` 四个插件与 `backend/openflare/share` 共享层；三个边缘守护进程改由 Cordis 内核装配启动（profile `agent`/`relay`/`flared`），`-config` 旗标、默认配置路径、退出码与启动日志保持原样。
 - 控制台 API 改由 Cordis 内核提供服务：`server` 插件以声明式路由注册，HTTP 监听与优雅退出交给内核的 http 驱动。全部 256 条路由（含 20 条带尾部斜杠的历史列表接口）与改造前逐条一致，232 条对外 API 操作无变化。
 
 - 清理与上游 Wavelet 重复的平台实现：响应封装、日志、邮件、链路追踪、HTTP 连接池、内存/磁盘缓存、批量写入等 8 个本地副本删除并改为使用上游能力（约 600 行重复代码消失，接口形状与文档定义完全一致）；顺带把磁盘缓存的类型断言健壮性修复回流上游。
@@ -30,7 +30,7 @@ sidebar: false
 - 控制面读写系统配置改为走上游管理仓储并同步失效缓存，避免选项/节点/日志库切换写入后 `/api/v1/config/public` 仍返回旧值。
 - 已部署库启动时把历史 `goose_db_version` 一次性写入 `w_schema_versions`（`openflare/legacy` 与 `server`），不再重跑 76 条混合迁移；全新安装只创建当前的 `of_*` 业务表。ClickHouse 继续只升级节点访问/可观测相关表，用户访问日志表改由上游负责。
 - `make swagger` 重新扫描上游平台插件，对外文档覆盖金标准全部 232 条 path+method（允许超集）；`GET /api/v1/config/public` 仍返回扁平键值。
-- 用 git merge 接入 Wavelet 上游历史（第一次 merge `wavelet/feat/cordis-alignment`，含 W1–W9）；此后以 `git fetch wavelet && git merge wavelet/main` 吸收 `backend/{core,pkg,plugins}`，不再使用 rsync 同步脚本。`frontend/` 与 `backend/OpenFlare/` 仍由本仓库持有。
+- 用 git merge 接入 Wavelet 上游历史（第一次 merge `wavelet/feat/cordis-alignment`，含 W1–W9）；此后以 `git fetch wavelet && git merge wavelet/main` 吸收 `backend/{core,pkg,plugins}`，不再使用 rsync 同步脚本。`frontend/` 与 `backend/openflare/` 仍由本仓库持有。
 ## [v3.5.4] - 2026-08-29
 
 ### ✨ 新功能

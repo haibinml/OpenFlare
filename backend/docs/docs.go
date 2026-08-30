@@ -4652,7 +4652,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/Wavelet_OpenFlare_share_protocol.PagesDeploymentHashResponse"
+                                            "$ref": "#/definitions/Wavelet_openflare_share_protocol.PagesDeploymentHashResponse"
                                         }
                                     }
                                 }
@@ -4756,7 +4756,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/Wavelet_OpenFlare_share_protocol.PagesProjectLatestHashResponse"
+                                            "$ref": "#/definitions/Wavelet_openflare_share_protocol.PagesProjectLatestHashResponse"
                                         }
                                     }
                                 }
@@ -14974,7 +14974,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "Wavelet_OpenFlare_share_protocol.ActiveConfigMeta": {
+        "Wavelet_openflare_share_protocol.ActiveConfigMeta": {
             "type": "object",
             "properties": {
                 "checksum": {
@@ -14985,27 +14985,27 @@ const docTemplate = `{
                 }
             }
         },
-        "Wavelet_OpenFlare_share_protocol.BufferedObservabilityRecord": {
+        "Wavelet_openflare_share_protocol.BufferedObservabilityRecord": {
             "type": "object",
             "properties": {
                 "access_logs": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/Wavelet_OpenFlare_share_protocol.NodeAccessLog"
+                        "$ref": "#/definitions/Wavelet_openflare_share_protocol.NodeAccessLog"
                     }
                 },
                 "captured_at_unix": {
                     "type": "integer"
                 },
                 "edge_health": {
-                    "$ref": "#/definitions/Wavelet_OpenFlare_share_protocol.NodeEdgeHealth"
+                    "$ref": "#/definitions/Wavelet_openflare_share_protocol.NodeEdgeHealth"
                 },
                 "host_metrics": {
-                    "$ref": "#/definitions/Wavelet_OpenFlare_share_protocol.NodeMetricSnapshot"
+                    "$ref": "#/definitions/Wavelet_openflare_share_protocol.NodeMetricSnapshot"
                 }
             }
         },
-        "Wavelet_OpenFlare_share_protocol.NodeAccessLog": {
+        "Wavelet_openflare_share_protocol.NodeAccessLog": {
             "type": "object",
             "properties": {
                 "bytes_sent": {
@@ -15044,7 +15044,7 @@ const docTemplate = `{
                 }
             }
         },
-        "Wavelet_OpenFlare_share_protocol.NodeEdgeHealth": {
+        "Wavelet_openflare_share_protocol.NodeEdgeHealth": {
             "type": "object",
             "properties": {
                 "captured_at_unix": {
@@ -15061,7 +15061,7 @@ const docTemplate = `{
                 }
             }
         },
-        "Wavelet_OpenFlare_share_protocol.NodeHealthEvent": {
+        "Wavelet_openflare_share_protocol.NodeHealthEvent": {
             "type": "object",
             "properties": {
                 "event_type": {
@@ -15084,7 +15084,7 @@ const docTemplate = `{
                 }
             }
         },
-        "Wavelet_OpenFlare_share_protocol.NodeMetricSnapshot": {
+        "Wavelet_openflare_share_protocol.NodeMetricSnapshot": {
             "type": "object",
             "properties": {
                 "captured_at_unix": {
@@ -15113,7 +15113,7 @@ const docTemplate = `{
                 }
             }
         },
-        "Wavelet_OpenFlare_share_protocol.NodeSystemProfile": {
+        "Wavelet_openflare_share_protocol.NodeSystemProfile": {
             "type": "object",
             "properties": {
                 "architecture": {
@@ -15151,7 +15151,7 @@ const docTemplate = `{
                 }
             }
         },
-        "Wavelet_OpenFlare_share_protocol.PagesDeploymentHashResponse": {
+        "Wavelet_openflare_share_protocol.PagesDeploymentHashResponse": {
             "type": "object",
             "properties": {
                 "deployment_id": {
@@ -15162,7 +15162,7 @@ const docTemplate = `{
                 }
             }
         },
-        "Wavelet_OpenFlare_share_protocol.PagesProjectLatestHashResponse": {
+        "Wavelet_openflare_share_protocol.PagesProjectLatestHashResponse": {
             "type": "object",
             "properties": {
                 "deployment_id": {
@@ -15185,7 +15185,7 @@ const docTemplate = `{
                 }
             }
         },
-        "Wavelet_OpenFlare_share_protocol.WAFIPGroup": {
+        "Wavelet_openflare_share_protocol.WAFIPGroup": {
             "type": "object",
             "properties": {
                 "checksum": {
@@ -15451,20 +15451,20 @@ const docTemplate = `{
                 "access_logs": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/Wavelet_OpenFlare_share_protocol.NodeAccessLog"
+                        "$ref": "#/definitions/Wavelet_openflare_share_protocol.NodeAccessLog"
                     }
                 },
                 "buffered": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/Wavelet_OpenFlare_share_protocol.BufferedObservabilityRecord"
+                        "$ref": "#/definitions/Wavelet_openflare_share_protocol.BufferedObservabilityRecord"
                     }
                 },
                 "current_version": {
                     "type": "string"
                 },
                 "edge_health": {
-                    "$ref": "#/definitions/Wavelet_OpenFlare_share_protocol.NodeEdgeHealth"
+                    "$ref": "#/definitions/Wavelet_openflare_share_protocol.NodeEdgeHealth"
                 },
                 "ext_version": {
                     "type": "string"
@@ -15472,11 +15472,11 @@ const docTemplate = `{
                 "health_events": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/Wavelet_OpenFlare_share_protocol.NodeHealthEvent"
+                        "$ref": "#/definitions/Wavelet_openflare_share_protocol.NodeHealthEvent"
                     }
                 },
                 "host_metrics": {
-                    "$ref": "#/definitions/Wavelet_OpenFlare_share_protocol.NodeMetricSnapshot"
+                    "$ref": "#/definitions/Wavelet_openflare_share_protocol.NodeMetricSnapshot"
                 },
                 "ip": {
                     "type": "string"
@@ -15497,7 +15497,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "profile": {
-                    "$ref": "#/definitions/Wavelet_OpenFlare_share_protocol.NodeSystemProfile"
+                    "$ref": "#/definitions/Wavelet_openflare_share_protocol.NodeSystemProfile"
                 },
                 "schema_version": {
                     "type": "integer"
@@ -15616,7 +15616,7 @@ const docTemplate = `{
                 "groups": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/Wavelet_OpenFlare_share_protocol.WAFIPGroup"
+                        "$ref": "#/definitions/Wavelet_openflare_share_protocol.WAFIPGroup"
                     }
                 }
             }
@@ -16553,7 +16553,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "active_config": {
-                    "$ref": "#/definitions/Wavelet_OpenFlare_share_protocol.ActiveConfigMeta"
+                    "$ref": "#/definitions/Wavelet_openflare_share_protocol.ActiveConfigMeta"
                 },
                 "tunnel_settings": {
                     "$ref": "#/definitions/protocol.RelaySettings"

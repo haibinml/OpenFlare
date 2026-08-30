@@ -93,4 +93,4 @@ backend/plugins/**/uploads/
 backend/plugins/**/dist/
 backend/core/**/dist/
 backend/pkg/**/uploads/
-/backend/OpenFlare/plugins/server/upload/filesrv/uploads/
+/backend/openflare/plugins/server/upload/filesrv/uploads/

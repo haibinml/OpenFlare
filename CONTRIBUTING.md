@@ -22,7 +22,7 @@
 
 ## 合并上游
 
-`.gitattributes` 对 `backend/OpenFlare/`、`frontend/` 等路径使用 `merge=ours`。该驱动不会自动生效，请在仓库根目录执行一次：
+`.gitattributes` 对 `backend/openflare/`、`frontend/` 等路径使用 `merge=ours`。该驱动不会自动生效，请在仓库根目录执行一次：
 
 ```bash
 git config include.path ../.gitconfig

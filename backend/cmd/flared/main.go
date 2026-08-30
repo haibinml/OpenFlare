@@ -10,9 +10,9 @@ import (
 	"os"
 	"time"
 
-	flaredplugin "Wavelet/OpenFlare/plugins/flared"
-	edgelogging "Wavelet/OpenFlare/share/edge/logging"
 	"Wavelet/core"
+	flaredplugin "Wavelet/openflare/plugins/flared"
+	edgelogging "Wavelet/openflare/share/edge/logging"
 )
 
 // shutdownTimeout 为 frpc 子进程收敛预留的退出窗口。

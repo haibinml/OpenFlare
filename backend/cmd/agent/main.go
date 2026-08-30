@@ -10,9 +10,9 @@ import (
 	"os"
 	"time"
 
-	agentplugin "Wavelet/OpenFlare/plugins/agent"
-	"Wavelet/OpenFlare/plugins/agent/logging"
 	"Wavelet/core"
+	agentplugin "Wavelet/openflare/plugins/agent"
+	"Wavelet/openflare/plugins/agent/logging"
 )
 
 // shutdownTimeout 为 openresty 收敛与在途配置同步预留的退出窗口。

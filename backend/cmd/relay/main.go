@@ -10,9 +10,9 @@ import (
 	"os"
 	"time"
 
-	relayplugin "Wavelet/OpenFlare/plugins/relay"
-	edgelogging "Wavelet/OpenFlare/share/edge/logging"
 	"Wavelet/core"
+	relayplugin "Wavelet/openflare/plugins/relay"
+	edgelogging "Wavelet/openflare/share/edge/logging"
 )
 
 // shutdownTimeout 为 frps 子进程收敛预留的退出窗口。

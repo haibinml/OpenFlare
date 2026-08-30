@@ -4,10 +4,10 @@
 package cmd
 
 import (
-	ofserver "Wavelet/OpenFlare/plugins/server"
-	"Wavelet/OpenFlare/plugins/server/migrate"
 	"Wavelet/core"
 	"Wavelet/core/contracts"
+	ofserver "Wavelet/openflare/plugins/server"
+	"Wavelet/openflare/plugins/server/migrate"
 	"Wavelet/plugins/domain/admin"
 	"Wavelet/plugins/domain/auth"
 	"Wavelet/plugins/domain/cap"
