@@ -1,9 +1,10 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-package migrator
+package chmigrate
 
 import (
+	"strings"
 	"testing"
 
 	"Wavelet/OpenFlare/plugins/server/runtimeconfig"
@@ -20,22 +21,20 @@ func TestClickHouseMigrationFilesEmbedded(t *testing.T) {
 		t.Fatal("expected embedded ClickHouse migrations, got none")
 	}
 
-	expected := map[string]bool{
-		"202606190001_create_user_access_logs.sql": false,
-		"202606200001_create_node_access_logs.sql": false,
-	}
+	foundNodeLogs := false
 	for _, entry := range entries {
 		if entry.IsDir() {
 			continue
 		}
-		if _, ok := expected[entry.Name()]; ok {
-			expected[entry.Name()] = true
+		if strings.Contains(entry.Name(), "user_access") {
+			t.Errorf("user access log migration %s must not be embedded", entry.Name())
+		}
+		if entry.Name() == "202606200001_create_node_access_logs.sql" {
+			foundNodeLogs = true
 		}
 	}
-	for name, found := range expected {
-		if !found {
-			t.Fatalf("expected %s in embedded migrations", name)
-		}
+	if !foundNodeLogs {
+		t.Fatal("expected 202606200001_create_node_access_logs.sql in embedded migrations")
 	}
 }
 
@@ -45,7 +44,9 @@ func TestClickHouseGooseDialect(t *testing.T) {
 	}
 }
 
-func TestMigrateClickHouseSkipsWhenDisabled(t *testing.T) {
+func TestUpSkipsWhenDisabled(t *testing.T) {
 	t.Cleanup(runtimeconfig.Override(runtimeconfig.DatabaseEnabled(), false))
-	MigrateClickHouse()
+	if err := Up(); err != nil {
+		t.Fatalf("Up() error = %v, want nil when ClickHouse disabled", err)
+	}
 }

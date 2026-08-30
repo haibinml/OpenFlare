@@ -7,6 +7,7 @@
 package server
 
 import (
+	"Wavelet/OpenFlare/plugins/server/chmigrate"
 	"Wavelet/OpenFlare/plugins/server/ofevents"
 	"Wavelet/OpenFlare/plugins/server/openflare/chwriter"
 	ofgeoip "Wavelet/OpenFlare/plugins/server/openflare/geoip"
@@ -22,6 +23,7 @@ import (
 	"Wavelet/pkg/logger"
 	"Wavelet/plugins/infra/database"
 	"context"
+	"embed"
 	"reflect"
 
 	"Wavelet/OpenFlare/plugins/server/openflare/credential"
@@ -33,6 +35,9 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"net/http"
 )
+
+//go:embed migrations/*/*.sql
+var serverMigrations embed.FS
 
 // Plugin 实现 core.Plugin，是 OpenFlare 控制面的装载入口。
 type Plugin struct{}
@@ -65,6 +70,11 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 		ClickHouse:      chCfg,
 	})
 	credential.SetSessionSecret(runtimeconfig.SessionSecret())
+
+	ctx.Migrations().Register("server", serverMigrations)
+	if err := chmigrate.Up(); err != nil {
+		return err
+	}
 
 	if ts, err := core.Inject[contracts.TaskService](ctx); err == nil && ts != nil {
 		oftask.SetService(ts)

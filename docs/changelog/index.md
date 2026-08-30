@@ -21,6 +21,7 @@ sidebar: false
 - 控制面改为与上游 Wavelet 同构装配：`newOpenFlareApp` 挂载 Wavelet 平台插件后再挂 OpenFlare `server` 业务路由，健康检查/用户/验证码由上游插件提供；`app.redirect_trailing_slash` 默认关闭，避免列表接口尾部斜杠被 301。
 - 删除 OpenFlare 内与 Wavelet 重复的 oauth/cap/user/upload/config/health/admin 平台副本，业务改走契约（登录中间件、公共配置、推送注册、异步任务）；用户/文件/系统配置由上游插件提供，控制台接口形状保持金标准子集。
 - 控制面读写系统配置改为走上游管理仓储并同步失效缓存，避免选项/节点/日志库切换写入后 `/api/v1/config/public` 仍返回旧值。
+- 已部署库启动时把历史 `goose_db_version` 一次性写入 `w_schema_versions`（`openflare/legacy` 与 `server`），不再重跑 76 条混合迁移；全新安装只创建当前的 `of_*` 业务表。ClickHouse 继续只升级节点访问/可观测相关表，用户访问日志表改由上游负责。
 ## [v3.5.4] - 2026-08-29
 
 ### ✨ 新功能

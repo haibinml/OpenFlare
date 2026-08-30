@@ -1,7 +1,5 @@
 -- +goose Up
 -- Add TTL policies to analytics tables so ClickHouse can expire rows automatically.
-ALTER TABLE w_user_access_logs MODIFY TTL created_at + INTERVAL 180 DAY;
-
 -- DateTime64 columns must be cast for TTL (ClickHouse requires DateTime/Date in TTL expr).
 ALTER TABLE of_node_access_logs MODIFY TTL toDateTime(logged_at) + INTERVAL 90 DAY;
 

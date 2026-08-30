@@ -2,7 +2,8 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-package migrator
+// Package chmigrate applies ClickHouse of_node_* goose migrations.
+package chmigrate
 
 import (
 	"context"
@@ -25,15 +26,13 @@ const (
 	clickhouseReadTimeoutFactor = 2
 )
 
-// clickhouseMigrationFS contains SQL migrations under goose/clickhouse.
-//
 //go:embed goose/clickhouse/*.sql
 var clickhouseMigrationFS embed.FS
 
-// MigrateClickHouse runs goose migrations against ClickHouse when enabled.
-func MigrateClickHouse() Report {
+// Up runs of_node_* goose migrations against ClickHouse when enabled.
+func Up() error {
 	if !runtimeconfig.ClickHouseEnabled() {
-		return Report{Backend: "ClickHouse"}
+		return nil
 	}
 
 	cfg := runtimeconfig.Get().ClickHouse
@@ -58,10 +57,11 @@ func MigrateClickHouse() Report {
 		BlockBufferSize: cfg.BlockBufferSize,
 	})
 
-	subFS, err := fs.Sub(clickhouseMigrationFS, "goose/clickhouse")
+	subFS, err := fs.Sub(clickhouseMigrationFS, clickhouseMigrationDir)
 	if err != nil {
 		closeClickHouseDB(sqlDB)
-		log.Fatalf("[ClickHouse] get sub fs failed: %v\n", err)
+		log.Printf("[ClickHouse] get sub fs failed: %v\n", err)
+		return err
 	}
 
 	provider, err := goose.NewProvider(
@@ -73,32 +73,29 @@ func MigrateClickHouse() Report {
 	)
 	if err != nil {
 		closeClickHouseDB(sqlDB)
-		log.Fatalf("[ClickHouse] create goose provider failed: %v\n", err)
+		log.Printf("[ClickHouse] create goose provider failed: %v\n", err)
+		return err
 	}
-	previousVersion, err := provider.GetDBVersion(context.Background())
-	if err != nil {
+	if _, err := provider.GetDBVersion(context.Background()); err != nil {
 		closeClickHouseDB(sqlDB)
-		log.Fatalf("[ClickHouse] get goose version failed: %v\n", err)
+		log.Printf("[ClickHouse] get goose version failed: %v\n", err)
+		return err
 	}
 
 	if _, err := provider.Up(context.Background()); err != nil {
 		closeClickHouseDB(sqlDB)
-		log.Fatalf("[ClickHouse] goose migrate failed: %v\n", err)
+		log.Printf("[ClickHouse] goose migrate failed: %v\n", err)
+		return err
 	}
-	currentVersion, err := provider.GetDBVersion(context.Background())
-	if err != nil {
+	if _, err := provider.GetDBVersion(context.Background()); err != nil {
 		closeClickHouseDB(sqlDB)
-		log.Fatalf("[ClickHouse] get migrated goose version failed: %v\n", err)
+		log.Printf("[ClickHouse] get migrated goose version failed: %v\n", err)
+		return err
 	}
 	closeClickHouseDB(sqlDB)
 
 	log.Println("[ClickHouse] goose migrate success")
-	return Report{
-		Backend: "ClickHouse",
-		Enabled: true,
-		Version: currentVersion,
-		Applied: currentVersion != previousVersion,
-	}
+	return nil
 }
 
 func closeClickHouseDB(sqlDB *sql.DB) {
