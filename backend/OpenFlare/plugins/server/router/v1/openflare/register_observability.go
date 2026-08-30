@@ -7,11 +7,12 @@ import (
 	"Wavelet/OpenFlare/plugins/server/openflare/apiutil"
 	"Wavelet/OpenFlare/plugins/server/openflare/observability"
 	"Wavelet/core"
+	"Wavelet/core/contracts"
 )
 
-func registerObservabilityRoutes(apiGroup core.RouterExtension) {
+func registerObservabilityRoutes(apiGroup core.RouterExtension, auth contracts.AuthService) {
 	accessLogRoute := apiGroup.Group("/access-logs")
-	accessLogRoute.Use(apiutil.AdminMiddlewares()...)
+	accessLogRoute.Use(apiutil.AdminMiddlewares(auth)...)
 	{
 		apiutil.RegisterCollection(accessLogRoute, "GET", observability.GetAccessLogsHandler)
 		accessLogRoute.GET("/overview", observability.GetAccessLogOverviewHandler)

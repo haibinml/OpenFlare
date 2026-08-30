@@ -7,11 +7,12 @@ import (
 	"Wavelet/OpenFlare/plugins/server/openflare/apiutil"
 	"Wavelet/OpenFlare/plugins/server/openflare/tls"
 	"Wavelet/core"
+	"Wavelet/core/contracts"
 )
 
-func registerTLSRoutes(apiGroup core.RouterExtension) {
+func registerTLSRoutes(apiGroup core.RouterExtension, auth contracts.AuthService) {
 	tlsCertificateRoute := apiGroup.Group("/tls-certificates")
-	tlsCertificateRoute.Use(apiutil.AdminMiddlewares()...)
+	tlsCertificateRoute.Use(apiutil.AdminMiddlewares(auth)...)
 	{
 		apiutil.RegisterCollection(tlsCertificateRoute, "GET", tls.GetCertificates)
 		tlsCertificateRoute.GET("/:id", tls.GetCertificateDetail)
@@ -27,13 +28,13 @@ func registerTLSRoutes(apiGroup core.RouterExtension) {
 	}
 
 	acmeAccountRoute := apiGroup.Group("/acme-accounts")
-	acmeAccountRoute.Use(apiutil.AdminMiddlewares()...)
+	acmeAccountRoute.Use(apiutil.AdminMiddlewares(auth)...)
 	{
 		acmeAccountRoute.GET("/default", tls.GetDefaultAcmeAccountHandler)
 	}
 
 	dnsAccountRoute := apiGroup.Group("/dns-accounts")
-	dnsAccountRoute.Use(apiutil.AdminMiddlewares()...)
+	dnsAccountRoute.Use(apiutil.AdminMiddlewares(auth)...)
 	{
 		apiutil.RegisterCollection(dnsAccountRoute, "GET", tls.GetDNSAccounts)
 		apiutil.RegisterCollection(dnsAccountRoute, "POST", tls.CreateDNSAccountHandler)

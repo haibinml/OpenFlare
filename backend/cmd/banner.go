@@ -4,28 +4,33 @@
 package cmd
 
 import (
+	"Wavelet/pkg/buildinfo"
 	"fmt"
-	"log"
 	"runtime"
 	"strings"
-
-	"Wavelet/OpenFlare/plugins/server/infra/config"
-	"Wavelet/OpenFlare/plugins/server/infra/persistence/migrator"
-	"Wavelet/pkg/buildinfo"
 )
 
 type startupState struct {
 	mode           string
-	relationalDB   migrator.Report
-	clickHouseDB   migrator.Report
 	listensForHTTP bool
+	env            string
+	addr           string
 }
 
 func printStartupBanner(state startupState) {
-	log.Print(formatStartupBanner(state))
+	fmt.Println(formatStartupBanner(state))
 }
 
 func formatStartupBanner(state startupState) string {
+	env := state.env
+	if env == "" {
+		env = "production"
+	}
+	addr := state.addr
+	if addr == "" {
+		addr = "127.0.0.1:3000"
+	}
+
 	lines := []string{
 		"",
 		"   ____                   ________               ",
@@ -34,18 +39,16 @@ func formatStartupBanner(state startupState) string {
 		"/ /_/ / /_/ /  __/ / / / __/ / / /_/ / /  /  __/",
 		"\\____/ .___/\\___/_/ /_/_/   /_/\\__,_/_/   \\___/ ",
 		"      /_/                                         ",
-		" OpenFlare " + buildinfo.Version,
+		fmt.Sprintf(" OpenFlare %s", buildinfo.Version),
 		"",
-		" Environment: " + config.Config.App.Env,
+		fmt.Sprintf(" Environment: %s", env),
 		fmt.Sprintf(" Runtime:     %s/%s (%s)", runtime.GOOS, runtime.GOARCH, runtime.Version()),
-		" Build time:  " + buildTime(),
-		" Database:    " + formatMigration(state.relationalDB),
-		" Analytics:   " + formatMigration(state.clickHouseDB),
+		fmt.Sprintf(" Build time:  %s", buildTime()),
 	}
 	if state.listensForHTTP {
-		lines = append(lines, " Listening:   http://"+config.Config.App.Addr)
+		lines = append(lines, fmt.Sprintf(" Listening:   http://%s", addr))
 	}
-	lines = append(lines, " Mode:        "+state.mode, "")
+	lines = append(lines, fmt.Sprintf(" Mode:        %s", state.mode), "")
 	return strings.Join(lines, "\n")
 }
 
@@ -54,15 +57,4 @@ func buildTime() string {
 		return "development build"
 	}
 	return buildinfo.BuildTime
-}
-
-func formatMigration(report migrator.Report) string {
-	if !report.Enabled {
-		return "disabled"
-	}
-	state := "up to date"
-	if report.Applied {
-		state = "upgraded"
-	}
-	return fmt.Sprintf("%s (version %d, %s)", report.Backend, report.Version, state)
 }

@@ -7,13 +7,14 @@ import (
 	"Wavelet/OpenFlare/plugins/server/openflare/apiutil"
 	"Wavelet/OpenFlare/plugins/server/openflare/option"
 	"Wavelet/core"
+	"Wavelet/core/contracts"
 )
 
-func registerOptionRoutes(apiGroup core.RouterExtension) {
+func registerOptionRoutes(apiGroup core.RouterExtension, auth contracts.AuthService) {
 	apiGroup.GET("/status", option.GetStatusHandler)
 
 	optionRoute := apiGroup.Group("/option")
-	optionRoute.Use(apiutil.AdminMiddlewares()...)
+	optionRoute.Use(apiutil.AdminMiddlewares(auth)...)
 	{
 		apiutil.RegisterCollection(optionRoute, "GET", option.ListOptionsHandler)
 		optionRoute.POST("/update", option.UpdateOptionHandler)
@@ -22,7 +23,7 @@ func registerOptionRoutes(apiGroup core.RouterExtension) {
 	}
 
 	uptimeKumaRoute := apiGroup.Group("/uptimekuma")
-	uptimeKumaRoute.Use(apiutil.AdminMiddlewares()...)
+	uptimeKumaRoute.Use(apiutil.AdminMiddlewares(auth)...)
 	{
 		uptimeKumaRoute.POST("/sync", option.SyncUptimeKumaHandler)
 	}

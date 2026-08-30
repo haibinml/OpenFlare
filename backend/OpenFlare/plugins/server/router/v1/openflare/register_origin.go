@@ -7,11 +7,12 @@ import (
 	"Wavelet/OpenFlare/plugins/server/openflare/apiutil"
 	"Wavelet/OpenFlare/plugins/server/openflare/origin"
 	"Wavelet/core"
+	"Wavelet/core/contracts"
 )
 
-func registerOriginRoutes(apiGroup core.RouterExtension) {
+func registerOriginRoutes(apiGroup core.RouterExtension, auth contracts.AuthService) {
 	originRoute := apiGroup.Group("/origins")
-	originRoute.Use(apiutil.AdminMiddlewares()...)
+	originRoute.Use(apiutil.AdminMiddlewares(auth)...)
 	{
 		apiutil.RegisterCollection(originRoute, "GET", origin.GetOrigins)
 		originRoute.GET("/:id", origin.GetOrigin)

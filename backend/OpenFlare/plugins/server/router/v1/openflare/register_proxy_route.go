@@ -7,11 +7,12 @@ import (
 	"Wavelet/OpenFlare/plugins/server/openflare/apiutil"
 	"Wavelet/OpenFlare/plugins/server/openflare/proxy_route"
 	"Wavelet/core"
+	"Wavelet/core/contracts"
 )
 
-func registerProxyRouteRoutes(apiGroup core.RouterExtension) {
+func registerProxyRouteRoutes(apiGroup core.RouterExtension, auth contracts.AuthService) {
 	proxyRouteGroup := apiGroup.Group("/proxy-routes")
-	proxyRouteGroup.Use(apiutil.AdminMiddlewares()...)
+	proxyRouteGroup.Use(apiutil.AdminMiddlewares(auth)...)
 	{
 		apiutil.RegisterCollection(proxyRouteGroup, "GET", proxy_route.GetProxyRoutes)
 		proxyRouteGroup.GET("/:id", proxy_route.GetProxyRouteHandler)

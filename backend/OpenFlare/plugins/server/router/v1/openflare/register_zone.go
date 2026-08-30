@@ -7,11 +7,12 @@ import (
 	"Wavelet/OpenFlare/plugins/server/openflare/apiutil"
 	"Wavelet/OpenFlare/plugins/server/openflare/zone"
 	"Wavelet/core"
+	"Wavelet/core/contracts"
 )
 
-func registerZoneRoutes(apiGroup core.RouterExtension) {
+func registerZoneRoutes(apiGroup core.RouterExtension, auth contracts.AuthService) {
 	zoneGroup := apiGroup.Group("/zones")
-	zoneGroup.Use(apiutil.AdminMiddlewares()...)
+	zoneGroup.Use(apiutil.AdminMiddlewares(auth)...)
 	apiutil.RegisterCollection(zoneGroup, "GET", zone.ListHandler)
 	apiutil.RegisterCollection(zoneGroup, "POST", zone.CreateHandler)
 	zoneGroup.GET("/:id/overview", zone.GetOverviewHandler)

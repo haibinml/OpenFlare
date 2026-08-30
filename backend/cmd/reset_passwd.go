@@ -4,6 +4,8 @@
 package cmd
 
 import (
+	"Wavelet/plugins/domain/auth"
+	"Wavelet/plugins/infra/database"
 	"bufio"
 	"context"
 	"crypto/rand"
@@ -13,12 +15,7 @@ import (
 	"os"
 	"strings"
 
-	db "Wavelet/OpenFlare/plugins/server/infra/persistence"
-	"Wavelet/OpenFlare/plugins/server/infra/persistence/migrator"
-	"Wavelet/OpenFlare/plugins/server/model"
-	"Wavelet/OpenFlare/plugins/server/oauth"
-	"Wavelet/OpenFlare/plugins/server/platform/bootstrap"
-	"Wavelet/OpenFlare/plugins/server/repository"
+	userdomain "Wavelet/plugins/domain/user"
 
 	"github.com/spf13/cobra"
 	"gorm.io/gorm"
@@ -48,12 +45,14 @@ func generateRandomPassword(length int) (string, error) {
 var resetPasswdCmd = &cobra.Command{
 	Use:   "reset-passwd",
 	Short: "重置指定账号密码",
-	PreRun: func(_ *cobra.Command, _ []string) {
-		migrator.Migrate()
-	},
 	Run: func(_ *cobra.Command, _ []string) {
 		ctx := context.Background()
-		runBootstrap(bootstrap.Options{})
+
+		// Ensure database is initialized
+		dbConn := database.DB(ctx)
+		if dbConn != nil {
+			userdomain.SetDBService(database.NewService(dbConn))
+		}
 
 		var username string
 		if usernameFlag != "" {
@@ -71,7 +70,7 @@ var resetPasswdCmd = &cobra.Command{
 			}
 		}
 
-		user, err := repository.GetUserByUsername(ctx, username)
+		user, err := userdomain.GetUserByUsername(ctx, username)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				log.Fatalf("错误: 用户 '%s' 不存在\n", username)
@@ -93,26 +92,26 @@ var resetPasswdCmd = &cobra.Command{
 			log.Fatalf("加密密码失败: %v\n", err)
 		}
 
-		err = db.DB(ctx).Transaction(func(tx *gorm.DB) error {
+		err = database.DB(ctx).Transaction(func(tx *gorm.DB) error {
 			if err := tx.Model(&user).Update("password", user.Password).Error; err != nil {
 				return err
 			}
 
 			// Invalidate existing tokens
-			var tokens []model.AccessToken
+			var tokens []userdomain.AccessToken
 			if err := tx.Where("user_id = ?", user.ID).Find(&tokens).Error; err == nil {
 				for _, token := range tokens {
-					oauth.InvalidateCachedToken(ctx, token.TokenHash)
+					auth.InvalidateCachedToken(ctx, token.TokenHash)
 				}
 			}
 
-			return tx.Where("user_id = ?", user.ID).Delete(&model.AccessToken{}).Error
+			return tx.Where("user_id = ?", user.ID).Delete(&userdomain.AccessToken{}).Error
 		})
 		if err != nil {
 			log.Fatalf("重置密码失败: %v\n", err)
 		}
 
-		oauth.InvalidateCachedUser(ctx, user.ID)
+		auth.InvalidateCachedUser(ctx, user.ID)
 
 		fmt.Println("成功重置密码！")
 		fmt.Printf("用户名: %s\n", user.Username)

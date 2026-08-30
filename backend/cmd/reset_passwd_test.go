@@ -4,14 +4,14 @@
 package cmd
 
 import (
+	"Wavelet/pkg/testhelper"
 	"bytes"
 	"io"
 	"os"
 	"testing"
 	"time"
 
-	"Wavelet/OpenFlare/plugins/server/model"
-	"Wavelet/OpenFlare/plugins/server/testhelper"
+	userdomain "Wavelet/plugins/domain/user"
 )
 
 func TestResetPasswdCmd_WithUserAndPassword(t *testing.T) {
@@ -19,7 +19,7 @@ func TestResetPasswdCmd_WithUserAndPassword(t *testing.T) {
 	defer cleanup()
 
 	// Seed test user
-	user := model.User{
+	user := userdomain.User{
 		ID:          1001,
 		Username:    "testuser1",
 		Nickname:    "Test User 1",
@@ -33,7 +33,7 @@ func TestResetPasswdCmd_WithUserAndPassword(t *testing.T) {
 	}
 
 	// Create access token to test invalidation/deletion
-	token := model.AccessToken{
+	token := userdomain.AccessToken{
 		ID:          1,
 		UserID:      user.ID,
 		Name:        "testtoken",
@@ -74,7 +74,7 @@ func TestResetPasswdCmd_WithUserAndPassword(t *testing.T) {
 	}
 
 	// Verify password in DB
-	var dbUser model.User
+	var dbUser userdomain.User
 	if err := dbConn.Where("id = ?", user.ID).First(&dbUser).Error; err != nil {
 		t.Fatalf("failed to query user from DB: %v", err)
 	}
@@ -84,7 +84,7 @@ func TestResetPasswdCmd_WithUserAndPassword(t *testing.T) {
 
 	// Verify token deleted
 	var count int64
-	dbConn.Model(&model.AccessToken{}).Where("user_id = ?", user.ID).Count(&count)
+	dbConn.Model(&userdomain.AccessToken{}).Where("user_id = ?", user.ID).Count(&count)
 	if count != 0 {
 		t.Errorf("expected access tokens to be deleted, got %d", count)
 	}
@@ -95,7 +95,7 @@ func TestResetPasswdCmd_WithUserAndRandomPassword(t *testing.T) {
 	defer cleanup()
 
 	// Seed test user
-	user := model.User{
+	user := userdomain.User{
 		ID:          1002,
 		Username:    "testuser2",
 		Nickname:    "Test User 2",
@@ -142,7 +142,7 @@ func TestResetPasswdCmd_WithUserAndRandomPassword(t *testing.T) {
 	}
 
 	// Verify password in DB (should be updated and not equal to old one)
-	var dbUser model.User
+	var dbUser userdomain.User
 	if err := dbConn.Where("id = ?", user.ID).First(&dbUser).Error; err != nil {
 		t.Fatalf("failed to query user from DB: %v", err)
 	}
@@ -156,7 +156,7 @@ func TestResetPasswdCmd_InteractiveMode(t *testing.T) {
 	defer cleanup()
 
 	// Seed test user
-	user := model.User{
+	user := userdomain.User{
 		ID:          1003,
 		Username:    "testuser3",
 		Nickname:    "Test User 3",
@@ -217,7 +217,7 @@ func TestResetPasswdCmd_InteractiveMode(t *testing.T) {
 	}
 
 	// Verify user password changed in DB
-	var dbUser model.User
+	var dbUser userdomain.User
 	if err := dbConn.Where("id = ?", user.ID).First(&dbUser).Error; err != nil {
 		t.Fatalf("failed to query user from DB: %v", err)
 	}

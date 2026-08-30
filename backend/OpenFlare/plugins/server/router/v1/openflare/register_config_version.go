@@ -7,11 +7,12 @@ import (
 	"Wavelet/OpenFlare/plugins/server/openflare/apiutil"
 	"Wavelet/OpenFlare/plugins/server/openflare/config_version"
 	"Wavelet/core"
+	"Wavelet/core/contracts"
 )
 
-func registerConfigVersionRoutes(apiGroup core.RouterExtension) {
+func registerConfigVersionRoutes(apiGroup core.RouterExtension, auth contracts.AuthService) {
 	configVersionGroup := apiGroup.Group("/config-versions")
-	configVersionGroup.Use(apiutil.AdminMiddlewares()...)
+	configVersionGroup.Use(apiutil.AdminMiddlewares(auth)...)
 	{
 		apiutil.RegisterCollection(configVersionGroup, "GET", config_version.ListConfigVersionsHandler)
 		configVersionGroup.GET("/active", config_version.GetActiveConfigVersionHandler)

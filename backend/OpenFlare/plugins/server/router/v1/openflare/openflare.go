@@ -6,10 +6,13 @@
 // Agent/Relay/Tunnel protocol routes are mounted via RegisterRoutes under /api/v1.
 package openflare
 
-import "Wavelet/core"
+import (
+	"Wavelet/core"
+	"Wavelet/core/contracts"
+)
 
 // RegisterRoutes mounts Agent/Relay/Tunnel protocol routes under the /api/v1 group.
-func RegisterRoutes(apiV1Router core.RouterExtension) {
+func RegisterRoutes(apiV1Router core.RouterExtension, _ contracts.AuthService) {
 	registerAgentRoutes(apiV1Router)
 	registerRelayRoutes(apiV1Router)
 	registerTunnelRoutes(apiV1Router)

@@ -7,11 +7,12 @@ import (
 	"Wavelet/OpenFlare/plugins/server/openflare/apiutil"
 	"Wavelet/OpenFlare/plugins/server/openflare/pages"
 	"Wavelet/core"
+	"Wavelet/core/contracts"
 )
 
-func registerPagesRoutes(apiGroup core.RouterExtension) {
+func registerPagesRoutes(apiGroup core.RouterExtension, auth contracts.AuthService) {
 	pagesRoute := apiGroup.Group("/pages")
-	pagesRoute.Use(apiutil.AdminMiddlewares()...)
+	pagesRoute.Use(apiutil.AdminMiddlewares(auth)...)
 	{
 		apiutil.RegisterCollection(pagesRoute, "GET", pages.ListProjectsHandler)
 		pagesRoute.GET("/:id", pages.GetProjectHandler)

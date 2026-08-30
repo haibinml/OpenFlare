@@ -20,7 +20,6 @@ import (
 
 	"Wavelet/OpenFlare/plugins/server/model"
 	ofws "Wavelet/OpenFlare/plugins/server/openflare/websocket"
-	"Wavelet/pkg/util"
 )
 
 const (
@@ -307,10 +306,6 @@ func buildNodeAgentReleaseView(node *model.OpenFlareNode, release *githubRelease
 
 func isVersionNewer(current string, latest string) bool {
 	return compareVersions(current, latest) < 0
-}
-
-func compareVersions(local, remote string) int {
-	return util.CompareVersions(local, remote)
 }
 
 func fetchLatestGitHubRelease(ctx context.Context, repo string, channel releaseChannel) (*githubReleaseResponse, error) {

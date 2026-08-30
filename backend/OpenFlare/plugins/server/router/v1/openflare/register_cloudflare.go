@@ -7,11 +7,12 @@ import (
 	"Wavelet/OpenFlare/plugins/server/openflare/apiutil"
 	cf "Wavelet/OpenFlare/plugins/server/openflare/cloudflare"
 	"Wavelet/core"
+	"Wavelet/core/contracts"
 )
 
-func registerCloudflareRoutes(apiGroup core.RouterExtension) {
+func registerCloudflareRoutes(apiGroup core.RouterExtension, auth contracts.AuthService) {
 	route := apiGroup.Group("/cloudflare")
-	route.Use(apiutil.AdminMiddlewares()...)
+	route.Use(apiutil.AdminMiddlewares(auth)...)
 	route.GET("/connection", cf.GetConnectionHandler)
 	route.PUT("/connection", cf.SaveConnectionHandler)
 	route.POST("/connection/verify", cf.VerifyConnectionHandler)

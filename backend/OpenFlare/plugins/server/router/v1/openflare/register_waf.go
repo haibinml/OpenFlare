@@ -7,11 +7,12 @@ import (
 	"Wavelet/OpenFlare/plugins/server/openflare/apiutil"
 	"Wavelet/OpenFlare/plugins/server/openflare/waf"
 	"Wavelet/core"
+	"Wavelet/core/contracts"
 )
 
-func registerWAFRoutes(apiGroup core.RouterExtension) {
+func registerWAFRoutes(apiGroup core.RouterExtension, auth contracts.AuthService) {
 	wafRoute := apiGroup.Group("/waf")
-	wafRoute.Use(apiutil.AdminMiddlewares()...)
+	wafRoute.Use(apiutil.AdminMiddlewares(auth)...)
 	{
 		wafRoute.GET("/ip-groups", waf.ListIPGroupsHandler)
 		wafRoute.GET("/ip-groups/:id", waf.GetIPGroupHandler)

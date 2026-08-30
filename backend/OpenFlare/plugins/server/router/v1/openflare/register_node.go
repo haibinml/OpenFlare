@@ -7,11 +7,12 @@ import (
 	"Wavelet/OpenFlare/plugins/server/openflare/apiutil"
 	"Wavelet/OpenFlare/plugins/server/openflare/node"
 	"Wavelet/core"
+	"Wavelet/core/contracts"
 )
 
-func registerNodeRoutes(apiGroup core.RouterExtension) {
+func registerNodeRoutes(apiGroup core.RouterExtension, auth contracts.AuthService) {
 	nodeRoute := apiGroup.Group("/nodes")
-	nodeRoute.Use(apiutil.AdminMiddlewares()...)
+	nodeRoute.Use(apiutil.AdminMiddlewares(auth)...)
 	{
 		nodeRoute.GET("/bootstrap-token", node.GetBootstrapTokenHandler)
 		nodeRoute.POST("/bootstrap-token/rotate", node.RotateBootstrapTokenHandler)

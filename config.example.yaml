@@ -16,6 +16,7 @@ app:
   session_secure: false
   session_http_only: false
   api_prefix: "/api"
+  redirect_trailing_slash: false
 
 # ─── PostgreSQL ─────────────────────────────────────────────────────────────────
 # Supports Standalone and Primary-Replica (read/write split) modes.
