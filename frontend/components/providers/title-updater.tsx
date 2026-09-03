@@ -4,37 +4,31 @@ import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { ConfigService } from '@/lib/services/config';
 import { usePathname } from 'next/navigation';
-import { useTranslations } from 'next-intl';
 
 export function SiteTitleUpdater() {
   const pathname = usePathname();
-  const t = useTranslations('providers.titleUpdater');
   const publicConfigQuery = useQuery({
     queryKey: ['public-config'],
     queryFn: () => ConfigService.getPublicConfig(),
   });
 
   useEffect(() => {
-    const siteName = publicConfigQuery.data?.site_name || 'Wavelet Platform';
+    const siteName = publicConfigQuery.data?.site_name || 'OpenFlare';
 
     // Determine the page suffix based on path
     let suffix = '';
     if (pathname === '/login') {
-      suffix = ` - ${t('login')}`;
+      suffix = ' - 登录';
     } else if (pathname === '/register') {
-      suffix = ` - ${t('register')}`;
+      suffix = ' - 注册';
     } else if (pathname.startsWith('/admin')) {
-      suffix = ` - ${t('admin')}`;
-    } else if (pathname === '/home') {
-      suffix = ` - ${t('dashboard')}`;
-    } else if (pathname === '/403') {
-      suffix = ` - ${t('forbidden')}`;
+      suffix = ' - 后台管理';
     } else if (pathname === '/') {
-      suffix = '';
+      suffix = ' - 总览';
     }
 
     document.title = `${siteName}${suffix}`;
-  }, [publicConfigQuery.data?.site_name, pathname, t]);
+  }, [publicConfigQuery.data?.site_name, pathname]);
 
   return null;
 }

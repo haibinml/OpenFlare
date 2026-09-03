@@ -10,6 +10,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Spinner } from '@/components/ui/spinner';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -25,13 +32,6 @@ import {
   Layers,
   Play,
 } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 
 import type {
   DispatchTaskRequest,
@@ -81,7 +81,7 @@ const TASK_CONFIGS: Record<
     gradient:
       'from-rose-500/10 via-rose-500/5 to-transparent border-rose-200/50 dark:border-rose-800/50 hover:border-rose-400 dark:hover:border-rose-500',
   },
-  logs_db_switch: {
+  of_log_db_switch: {
     icon: Database,
     color: 'text-teal-600 dark:text-teal-400',
     gradient:
@@ -89,10 +89,10 @@ const TASK_CONFIGS: Record<
   },
 };
 
-const LOG_DATABASE_LABELS: Record<string, string> = {
-  postgres: 'PostgreSQL（主库）',
-  sqlite: 'SQLite（主库）',
-  clickhouse: 'ClickHouse',
+const LOG_DATABASE_LABEL_KEYS: Record<string, string> = {
+  postgres: 'dbPostgresPrimary',
+  sqlite: 'dbSqlitePrimary',
+  clickhouse: 'dbClickhouse',
 };
 
 const DEFAULT_TASK_CONFIG = {
@@ -109,6 +109,7 @@ function DatePickerWithTime({
   date: Date | undefined;
   setDate: (date: Date | undefined) => void;
 }) {
+  const t = useTranslations('admin.tasks');
   const timeString = date ? format(date, 'HH:mm:ss') : '';
 
   const handleDateSelect = (newDate: Date | undefined) => {
@@ -164,7 +165,11 @@ function DatePickerWithTime({
               )}
             >
               <CalendarIcon className='mr-1 size-3' />
-              {date ? format(date, 'yyyy-MM-dd') : <span>选择日期</span>}
+              {date ? (
+                format(date, 'yyyy-MM-dd')
+              ) : (
+                <span>{t('selectDate')}</span>
+              )}
             </Button>
           </PopoverTrigger>
           <PopoverContent className='w-auto p-0' align='start'>
@@ -224,6 +229,7 @@ export function TaskManager() {
     null,
   );
 
+  // 日志库状态用于「切换日志数据库」卡片与 target 下拉；获取失败不阻塞任务列表。
   const fetchLogDbStatus = useCallback(async () => {
     try {
       const data = await services.adminStatus.getLogDatabaseStatus();
@@ -405,20 +411,27 @@ export function TaskManager() {
                       </div>
                     </div>
 
-                    {task.type === 'logs_db_switch' && logDbStatus && (
+                    {task.type === 'of_log_db_switch' && logDbStatus && (
                       <div className='pt-3 mt-3 border-t border-border/50 space-y-1.5'>
                         <div className='flex items-center justify-between gap-2'>
                           <span className='text-[10px] text-muted-foreground shrink-0'>
-                            日志主库
+                            {t('logPrimaryDb')}
                           </span>
                           <span className='text-[10px] font-mono text-foreground truncate'>
-                            {LOG_DATABASE_LABELS[logDbStatus.active_database] ||
-                              logDbStatus.active_database}
+                            {LOG_DATABASE_LABEL_KEYS[
+                              logDbStatus.active_database
+                            ]
+                              ? t(
+                                  LOG_DATABASE_LABEL_KEYS[
+                                    logDbStatus.active_database
+                                  ],
+                                )
+                              : logDbStatus.active_database}
                           </span>
                         </div>
                         <div className='flex items-center justify-between gap-2'>
                           <span className='text-[10px] text-muted-foreground shrink-0'>
-                            保留天数
+                            {t('retentionDays')}
                           </span>
                           <span className='text-[10px] font-mono text-muted-foreground truncate'>
                             {retentionSummary || '-'}
@@ -426,7 +439,7 @@ export function TaskManager() {
                         </div>
                         <div className='flex items-center justify-between gap-2'>
                           <span className='text-[10px] text-muted-foreground shrink-0'>
-                            迁移状态
+                            {t('migrationStatus')}
                           </span>
                           <Badge
                             variant={
@@ -437,8 +450,8 @@ export function TaskManager() {
                             className='text-[10px] h-5 px-1.5'
                           >
                             {logDbStatus.migration === 'migrating'
-                              ? '迁移中'
-                              : '空闲'}
+                              ? t('migrating')
+                              : t('idle')}
                           </Badge>
                         </div>
                       </div>
@@ -534,98 +547,106 @@ export function TaskManager() {
               }
               return (
                 <div className='space-y-4'>
-                  {targetTask.params.map((param) => (
-                    <div key={param.name} className='grid gap-2'>
-                      <Label
-                        htmlFor={`param-${param.name}`}
-                        className='flex items-center gap-1'
-                      >
-                        {param.label}
-                        {param.required && (
-                          <span className='text-destructive font-bold'>*</span>
-                        )}
-                      </Label>
-                      {param.type === 'text' ? (
-                        <Textarea
-                          id={`param-${param.name}`}
-                          placeholder={param.placeholder}
-                          className='text-xs min-h-[80px]'
-                          value={paramValues[param.name] || ''}
-                          onChange={(e) =>
-                            setParamValues((prev) => ({
-                              ...prev,
-                              [param.name]: e.target.value,
-                            }))
-                          }
-                        />
-                      ) : param.type === 'boolean' ? (
-                        <div className='flex items-center gap-2 pt-1 h-9'>
-                          <Switch
+                  {targetTask.params.map((param) => {
+                    const isSwitchTarget =
+                      param.name === 'target' &&
+                      getSelectedTaskMeta()?.type === 'of_log_db_switch';
+                    return (
+                      <div key={param.name} className='grid gap-2'>
+                        <Label
+                          htmlFor={`param-${param.name}`}
+                          className='flex items-center gap-1'
+                        >
+                          {param.label}
+                          {param.required && (
+                            <span className='text-destructive font-bold'>
+                              *
+                            </span>
+                          )}
+                        </Label>
+                        {param.type === 'text' ? (
+                          <Textarea
                             id={`param-${param.name}`}
-                            checked={paramValues[param.name] === 'true'}
-                            onCheckedChange={(checked) =>
+                            placeholder={param.placeholder}
+                            className='text-xs min-h-[80px]'
+                            value={paramValues[param.name] || ''}
+                            onChange={(e) =>
                               setParamValues((prev) => ({
                                 ...prev,
-                                [param.name]: checked ? 'true' : 'false',
+                                [param.name]: e.target.value,
                               }))
                             }
                           />
-                          <span className='text-xs text-muted-foreground'>
-                            {paramValues[param.name] === 'true'
-                              ? t('paramOn')
-                              : t('paramOff')}
-                          </span>
-                        </div>
-                      ) : param.name === 'target' &&
-                        getSelectedTaskMeta()?.type === 'logs_db_switch' &&
-                        availableLogDbTargets.length > 0 ? (
-                        <Select
-                          value={paramValues[param.name] || ''}
-                          onValueChange={(value) =>
-                            setParamValues((prev) => ({
-                              ...prev,
-                              [param.name]: value,
-                            }))
-                          }
-                          disabled={dispatching}
-                        >
-                          <SelectTrigger
-                            id={`param-${param.name}`}
-                            className='w-full text-xs'
-                            size='sm'
+                        ) : param.type === 'boolean' ? (
+                          <div className='flex items-center gap-2 pt-1 h-9'>
+                            <Switch
+                              id={`param-${param.name}`}
+                              checked={paramValues[param.name] === 'true'}
+                              onCheckedChange={(checked) =>
+                                setParamValues((prev) => ({
+                                  ...prev,
+                                  [param.name]: checked ? 'true' : 'false',
+                                }))
+                              }
+                            />
+                            <span className='text-xs text-muted-foreground'>
+                              {paramValues[param.name] === 'true'
+                                ? t('paramOn')
+                                : t('paramOff')}
+                            </span>
+                          </div>
+                        ) : isSwitchTarget &&
+                          availableLogDbTargets.length > 0 ? (
+                          <Select
+                            value={paramValues[param.name] || ''}
+                            onValueChange={(value) =>
+                              setParamValues((prev) => ({
+                                ...prev,
+                                [param.name]: value,
+                              }))
+                            }
+                            disabled={dispatching}
                           >
-                            <SelectValue placeholder='选择目标日志库...' />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {availableLogDbTargets.map((target) => (
-                              <SelectItem key={target} value={target}>
-                                {LOG_DATABASE_LABELS[target] || target}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <Input
-                          id={`param-${param.name}`}
-                          type={param.type === 'number' ? 'number' : 'text'}
-                          placeholder={param.placeholder}
-                          className='text-xs'
-                          value={paramValues[param.name] || ''}
-                          onChange={(e) =>
-                            setParamValues((prev) => ({
-                              ...prev,
-                              [param.name]: e.target.value,
-                            }))
-                          }
-                        />
-                      )}
-                      {param.description && (
-                        <p className='text-[10px] text-muted-foreground'>
-                          {param.description}
-                        </p>
-                      )}
-                    </div>
-                  ))}
+                            <SelectTrigger
+                              id={`param-${param.name}`}
+                              className='w-full text-xs'
+                              size='sm'
+                            >
+                              <SelectValue placeholder={t('selectLogDb')} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {availableLogDbTargets.map((target) => (
+                                <SelectItem key={target} value={target}>
+                                  {LOG_DATABASE_LABEL_KEYS[target]
+                                    ? t(LOG_DATABASE_LABEL_KEYS[target])
+                                    : target}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <Input
+                            id={`param-${param.name}`}
+                            type={param.type === 'number' ? 'number' : 'text'}
+                            placeholder={param.placeholder}
+                            className='text-xs'
+                            value={paramValues[param.name] || ''}
+                            onChange={(e) =>
+                              setParamValues((prev) => ({
+                                ...prev,
+                                [param.name]: e.target.value,
+                              }))
+                            }
+                          />
+                        )}
+                        {param.description && (
+                          <p className='text-[10px] text-muted-foreground'>
+                            {param.description}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               );
             })()}

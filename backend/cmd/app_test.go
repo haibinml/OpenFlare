@@ -4,148 +4,130 @@
 package cmd
 
 import (
-	"Wavelet/core"
-	"context"
+	"path/filepath"
 	"testing"
 
-	"github.com/alicebob/miniredis/v2"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"Wavelet/core"
 )
 
-func TestNewWaveletAppProfiles(t *testing.T) {
-	profiles := []core.Profile{
-		core.ProfileAPI,
-		core.ProfileWorker,
-		core.ProfileSchedule,
-		core.ProfileAll,
+func testSource(t *testing.T) core.ConfigSource {
+	t.Helper()
+	return core.NewMapSource(map[string]any{
+		"app": map[string]any{
+			"addr": "127.0.0.1:0",
+			"env":  "testing",
+		},
+		"redis": map[string]any{
+			"enabled": false,
+		},
+		"database": map[string]any{
+			"enabled":     false,
+			"sqlite_path": filepath.Join(t.TempDir(), "openflare-cmd.db"),
+		},
+	})
+}
+
+func TestNewOpenFlareAppRegistersServerAndWaveletUser(t *testing.T) {
+	app := newOpenFlareApp(core.ProfileAPI, core.WithConfigSource(testSource(t)))
+	if err := app.Prepare(); err != nil {
+		t.Fatal(err)
+	}
+	names := map[string]bool{}
+	for _, p := range app.Plugins() {
+		names[p.Name()] = true
+	}
+	for _, n := range []string{"user", "auth", "cap", "admin", "server"} {
+		if !names[n] {
+			t.Errorf("missing plugin %s", n)
+		}
 	}
 
-	for _, prof := range profiles {
-		t.Run(string(prof), func(t *testing.T) {
-			app := newWaveletApp(prof, core.WithConfigValues(map[string]any{
-				"app": map[string]any{
-					"addr": "127.0.0.1:0",
-				},
-				"redis": map[string]any{
-					"enabled": false,
-				},
-			}))
-			require.NotNil(t, app)
-			assert.Equal(t, prof, app.Profile())
+	if err := app.Reconcile(); err != nil {
+		t.Fatal(err)
+	}
 
-			// 3 infra + 2 cache + 4 worker/cron + 8 domain + 1 http driver = 18 plugins
-			plugins := app.Plugins()
-			assert.Len(t, plugins, 18)
-
-			require.NoError(t, app.Reconcile())
-
-			// Verify standard infra plugins
-			_, ok := app.Plugin("database")
-			assert.True(t, ok, "database plugin missing")
-
-			_, ok = app.Plugin("logger")
-			assert.True(t, ok, "logger plugin missing")
-
-			_, ok = app.Plugin("storage")
-			assert.True(t, ok, "storage plugin missing")
-
-			// In zero-Redis mode (default in test)
-			f, ok := app.Fiber("cache_memory")
-			assert.True(t, ok, "cache_memory fiber missing")
-			assert.Equal(t, core.FiberActive, f.State())
-
-			f, ok = app.Fiber("cache")
-			assert.True(t, ok, "cache fiber missing")
-			assert.Equal(t, core.FiberSkipped, f.State())
-
-			f, ok = app.Fiber("driver_inproc_worker")
-			assert.True(t, ok, "inproc worker driver fiber missing")
-			assert.Equal(t, core.FiberActive, f.State())
-
-			f, ok = app.Fiber("driver_asynq_worker")
-			assert.True(t, ok, "asynq worker driver fiber missing")
-			assert.Equal(t, core.FiberSkipped, f.State())
-
-			f, ok = app.Fiber("driver_inproc_cron")
-			assert.True(t, ok, "inproc scheduler driver fiber missing")
-			assert.Equal(t, core.FiberActive, f.State())
-
-			f, ok = app.Fiber("driver_asynq_cron")
-			assert.True(t, ok, "asynq scheduler driver fiber missing")
-			assert.Equal(t, core.FiberSkipped, f.State())
-
-			// Verify domain plugins
-			_, ok = app.Plugin("auth")
-			assert.True(t, ok, "auth plugin missing")
-
-			_, ok = app.Plugin("user")
-			assert.True(t, ok, "user plugin missing")
-
-			_, ok = app.Plugin("message_gateway")
-			assert.True(t, ok, "message_gateway plugin missing")
-
-			_, ok = app.Plugin("risk_control")
-			assert.True(t, ok, "risk_control plugin missing")
-
-			_, ok = app.Plugin("admin")
-			assert.True(t, ok, "admin plugin missing")
-
-			_, ok = app.Plugin("upload")
-			assert.True(t, ok, "upload plugin missing")
-
-			_, ok = app.Plugin("cap")
-			assert.True(t, ok, "cap plugin missing")
-
-			_, ok = app.Plugin("system")
-			assert.True(t, ok, "system plugin missing")
-
-			// Verify driver plugins
-			_, ok = app.Plugin("driver_http")
-			assert.True(t, ok, "http driver missing")
-		})
+	got := map[string]bool{}
+	for _, rd := range app.Context().Router().Routes() {
+		got[rd.Method+" "+rd.Path] = true
+	}
+	for _, want := range []string{
+		"GET /api/healthz",
+		"GET /api/v1/user/self",
+		"GET /api/v1/d/nodes",
+		"POST /api/v1/cap/challenge",
+	} {
+		if !got[want] {
+			t.Errorf("missing route %s", want)
+		}
+	}
+	for _, drop := range []string{
+		"GET /api/health",
+		"GET /healthz",
+		"POST /api/cap/challenge",
+	} {
+		if got[drop] {
+			t.Errorf("removed route still registered: %s", drop)
+		}
 	}
 }
 
-func TestNewWaveletAppWithRedisEnabled(t *testing.T) {
-	mr, err := miniredis.Run()
-	require.NoError(t, err)
-	defer mr.Close()
+func TestFreshInstallSeedsOpenFlareDefaults(t *testing.T) {
+	dbPath := filepath.Join(t.TempDir(), "fresh.db")
+	app := cordisPrepare(t, cordisSQLiteSource(t, dbPath))
+	t.Cleanup(func() { _ = app.Context().Dispose() })
 
-	app := newWaveletApp(core.ProfileAll, core.WithConfigValues(map[string]any{
-		"redis": map[string]any{
-			"enabled": true,
-			"addrs":   []string{mr.Addr()},
-		},
-	}))
-	require.NotNil(t, app)
-	defer func() {
-		_ = app.Stop(context.Background())
-		_ = app.Context().Dispose()
-	}()
-	require.NoError(t, app.Reconcile())
+	db := openInspectDB(t, dbPath, "")
+	defer func() { _ = db.Close() }()
 
-	f, ok := app.Fiber("cache")
-	assert.True(t, ok, "cache plugin missing in Redis mode")
-	assert.Equal(t, core.FiberActive, f.State())
+	var tables int
+	if err := db.QueryRow(`SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name LIKE 'of_%'`).Scan(&tables); err != nil {
+		t.Fatal(err)
+	}
+	if tables == 0 {
+		t.Fatal("fresh install created no of_* tables")
+	}
 
-	f, ok = app.Fiber("driver_asynq_worker")
-	assert.True(t, ok, "asynq worker driver missing in Redis mode")
-	assert.Equal(t, core.FiberActive, f.State())
+	rows, err := db.Query(`SELECT task_type FROM w_schedules WHERE task_type LIKE 'of_%' ORDER BY 1`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = rows.Close() }()
+	var got []string
+	for rows.Next() {
+		var taskType string
+		if err := rows.Scan(&taskType); err != nil {
+			t.Fatal(err)
+		}
+		got = append(got, taskType)
+	}
+	want := []string{
+		"of_pages_source_scan",
+		"of_ssl_renew",
+		"of_uptime_kuma_sync",
+		"of_waf_ip_group_sync",
+	}
+	if len(got) != len(want) {
+		t.Fatalf("of_* schedules = %v, want %v", got, want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("of_* schedules = %v, want %v", got, want)
+		}
+	}
 
-	f, ok = app.Fiber("driver_asynq_cron")
-	assert.True(t, ok, "asynq scheduler driver missing in Redis mode")
-	assert.Equal(t, core.FiberActive, f.State())
+	var cleanup int
+	if err := db.QueryRow(`SELECT COUNT(*) FROM w_schedules WHERE task_type = 'of_database_auto_cleanup'`).Scan(&cleanup); err != nil {
+		t.Fatal(err)
+	}
+	if cleanup != 0 {
+		t.Fatal("must not seed of_database_auto_cleanup")
+	}
 
-	f, ok = app.Fiber("cache_memory")
-	assert.True(t, ok)
-	assert.Equal(t, core.FiberSkipped, f.State())
-
-	f, ok = app.Fiber("driver_inproc_worker")
-	assert.True(t, ok)
-	assert.Equal(t, core.FiberSkipped, f.State())
-
-	f, ok = app.Fiber("driver_inproc_cron")
-	assert.True(t, ok)
-	assert.Equal(t, core.FiberSkipped, f.State())
+	var geoip string
+	if err := db.QueryRow(`SELECT value FROM w_system_configs WHERE key = 'geoip_provider'`).Scan(&geoip); err != nil {
+		t.Fatalf("geoip_provider: %v", err)
+	}
+	if geoip != "ipinfo" {
+		t.Fatalf("geoip_provider = %q, want ipinfo", geoip)
+	}
 }

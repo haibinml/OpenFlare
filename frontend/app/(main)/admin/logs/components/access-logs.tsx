@@ -186,12 +186,12 @@ export function AccessLogs() {
 
   const copyToClipboard = (text: string, subject: string) => {
     navigator.clipboard.writeText(text);
-    toast.success(`${subject}已复制到剪贴板`);
+    toast.success(t('copiedToClipboard', { subject }));
   };
 
   // Prettify Headers JSON string
   const getPrettyHeaders = (headersRaw?: string) => {
-    if (!headersRaw) return '暂无头部数据';
+    if (!headersRaw) return t('noHeaderData');
     try {
       const parsed = JSON.parse(headersRaw);
       return JSON.stringify(parsed, null, 2);
@@ -417,7 +417,7 @@ export function AccessLogs() {
               {t('accessLogDetail')}
             </SheetTitle>
             <SheetDescription className='text-xs'>
-              访问 ID: {selectedLog?.id}
+              {t('accessId', { id: selectedLog?.id ?? '' })}
             </SheetDescription>
           </SheetHeader>
 
@@ -505,7 +505,7 @@ export function AccessLogs() {
                     onClick={() =>
                       copyToClipboard(selectedLog.user_agent, 'User-Agent')
                     }
-                    title='复制 User-Agent'
+                    title={t('copyUserAgent')}
                   >
                     <Copy className='size-3' />
                   </Button>
@@ -531,7 +531,7 @@ export function AccessLogs() {
                         'Headers',
                       )
                     }
-                    title='复制 Headers'
+                    title={t('copyHeaders')}
                   >
                     <Copy className='size-3' />
                   </Button>

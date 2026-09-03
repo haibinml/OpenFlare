@@ -174,13 +174,16 @@ export function AppLogs() {
   }, [logs, autoScroll]);
 
   // ---- Data fetching ---------------------------------------------------
-  const fetchLogs = useCallback(async (cursor: number = 0) => {
-    try {
-      return await services.adminLog.getLogs(cursor);
-    } catch (err) {
-      throw err instanceof Error ? err : new Error('获取日志失败');
-    }
-  }, []);
+  const fetchLogs = useCallback(
+    async (cursor: number = 0) => {
+      try {
+        return await services.adminLog.getLogs(cursor);
+      } catch (err) {
+        throw err instanceof Error ? err : new Error(t('fetchFailed'));
+      }
+    },
+    [t],
+  );
 
   const loadHistory = useCallback(
     async (cursor: number = 0) => {
@@ -211,16 +214,16 @@ export function AppLogs() {
         setNextCursor(data.next_cursor);
       } catch (err) {
         if (isInitial) {
-          setError(err instanceof Error ? err : new Error('获取日志失败'));
+          setError(err instanceof Error ? err : new Error(t('fetchFailed')));
         } else {
-          toast.error('加载更早日志失败');
+          toast.error(t('loadOlderFailed'));
         }
       } finally {
         if (isInitial) setLoading(false);
         else setLoadingMore(false);
       }
     },
-    [fetchLogs],
+    [fetchLogs, t],
   );
 
   // ---- WebSocket -------------------------------------------------------

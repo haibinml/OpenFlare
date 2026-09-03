@@ -3,7 +3,6 @@ import { FileTextIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 import { cn } from '@/lib/utils';
-import { useTranslations } from 'next-intl';
 
 /**
  * 空状态展示组件属性
@@ -56,9 +55,6 @@ export function EmptyState({
   className,
   iconSize = 'md',
 }: EmptyStateProps) {
-  const t = useTranslations('layout.empty');
-  const displayTitle = title ?? t('noData');
-  const displayDescription = description ?? t('noContent');
   const iconSizes = { sm: 'size-10', md: 'size-12', lg: 'size-16' };
   const iconInnerSizes = { sm: 'size-5', md: 'size-6', lg: 'size-8' };
 
@@ -80,14 +76,10 @@ export function EmptyState({
         />
       </div>
 
-      {displayTitle && (
-        <p className='text-base font-medium mb-1'>{displayTitle}</p>
-      )}
+      {title && <p className='text-base font-medium mb-1'>{title}</p>}
 
-      {displayDescription && (
-        <p className='text-sm text-muted-foreground max-w-md'>
-          {displayDescription}
-        </p>
+      {description && (
+        <p className='text-sm text-muted-foreground max-w-md'>{description}</p>
       )}
 
       {onAction && actionText && (
@@ -136,12 +128,10 @@ export function EmptyStateWithBorder(props: EmptyStateProps) {
  * @returns {React.ReactNode} 简化版空状态组件
  */
 export function EmptyInline({
-  message,
+  message = '暂无数据',
   icon: Icon = FileTextIcon,
   className,
 }: Pick<EmptyStateProps, 'icon' | 'className'> & { message?: string }) {
-  const t = useTranslations('layout.empty');
-  const displayMessage = message ?? t('noData');
   return (
     <div
       className={cn(
@@ -150,7 +140,7 @@ export function EmptyInline({
       )}
     >
       <Icon className='size-4' />
-      <span>{displayMessage}</span>
+      <span>{message}</span>
     </div>
   );
 }

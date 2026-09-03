@@ -4,8 +4,8 @@ import type {
   CreateUserRequest,
   ListUsersRequest,
   ListUsersResponse,
-  UpdateUserStatusRequest,
   UpdateUserRequest,
+  UpdateUserStatusRequest,
 } from './types';
 
 export class AdminUserService extends BaseService {

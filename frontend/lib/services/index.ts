@@ -23,13 +23,27 @@ import {
 import { AuthService } from './auth';
 import { ConfigService } from './config';
 import { DbManageService } from './db-manage';
-import {
-  AdminMessageGatewayService,
-  UserMessageGatewayService,
-} from './message-gateway';
 import { PushService } from './push';
 import { AdminUploadService, UploadService } from './upload';
 import { UserService } from './user';
+import {
+  AccessLogService,
+  ApplyLogService,
+  ConfigVersionService,
+  DashboardService,
+  DnsAccountService,
+  NodeService,
+  OptionService,
+  OriginService,
+  PagesService,
+  ProxyRouteService,
+  StatusService,
+  TlsCertificateService,
+  UptimeKumaService,
+  WafService,
+  ZoneDomainService,
+  ZoneService,
+} from './openflare';
 
 const services = {
   auth: AuthService,
@@ -47,8 +61,22 @@ const services = {
   adminUpload: AdminUploadService,
   dbManage: DbManageService,
   push: PushService,
-  adminMessageGateway: AdminMessageGatewayService,
-  userMessageGateway: UserMessageGatewayService,
+  openflareNode: NodeService,
+  openflareProxyRoute: ProxyRouteService,
+  openflareConfigVersion: ConfigVersionService,
+  openflareApplyLog: ApplyLogService,
+  openflareDashboard: DashboardService,
+  openflareWaf: WafService,
+  openflareZone: ZoneService,
+  openflareZoneDomain: ZoneDomainService,
+  openflareTls: TlsCertificateService,
+  openflareDns: DnsAccountService,
+  openflarePages: PagesService,
+  openflareOrigin: OriginService,
+  openflareAccessLog: AccessLogService,
+  openflareOption: OptionService,
+  openflareUptimeKuma: UptimeKumaService,
+  openflareStatus: StatusService,
 } as const;
 
 export default services;
@@ -173,19 +201,6 @@ export type {
 } from './db-manage';
 
 export { PushService } from './push';
-export {
-  AdminMessageGatewayService,
-  UserMessageGatewayService,
-} from './message-gateway';
-export type {
-  MessageChannel,
-  MessageChannelDefinition,
-  CreateMessageChannelRequest,
-  UpdateMessageChannelRequest,
-  PublicMessageChannel,
-  MessageBinding,
-  BindMessageChannelRequest,
-} from './message-gateway';
 export type {
   PushEvent,
   PushHistory,
@@ -195,3 +210,56 @@ export type {
   UpdatePushEventRequest,
   TestPushRequest,
 } from './push';
+
+// ==================== OpenFlare 业务服务导出 ====================
+
+export {
+  OpenFlareBaseService,
+  NodeService,
+  ProxyRouteService,
+  ConfigVersionService,
+  ApplyLogService,
+  DashboardService,
+  WafService,
+  TlsCertificateService,
+  DnsAccountService,
+  PagesService,
+  OriginService,
+  AccessLogService,
+  OptionService,
+  StatusService,
+  UptimeKumaService,
+} from './openflare';
+
+export type {
+  NodeItem,
+  ProxyRouteItem,
+  ProxyRouteZoneDomain,
+  ProxyRouteConfigSection,
+  ConfigVersionSummary,
+  ConfigVersionDetail,
+  ConfigDiffResult,
+  ConfigPreviewResult,
+  ApplyLogList,
+  DashboardOverview,
+  WAFIPGroup,
+  WAFRule,
+  WAFRuleGraph,
+  WAFRuleNode,
+  WAFRuleGroup,
+  WAFSiteRuleGroups,
+  TlsCertificateItem,
+  DnsAccountItem,
+  PagesProject,
+  PagesDeployment,
+  PagesSource,
+  PagesSourceActionReceipt,
+  PagesSourceStatus,
+  OriginItem,
+  OriginDetail,
+  AccessLogList,
+  AccessLogOverview,
+  OptionItem,
+  GeoIPLookupResult,
+  OpenFlarePublicStatus,
+} from './openflare';

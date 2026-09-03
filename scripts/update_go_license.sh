@@ -55,6 +55,10 @@ find_go_files() {
     -o -path './docs' \
     -o -path './frontend/node_modules' \
     -o -path './frontend/.next' \
+    -o -path './frontend/out' \
+    -o -path './internal/router/dist' \
+    -o -path './internal/router/root/dist' \
+    -o -path './backend/plugins/drivers/driver_http/dist' \
     -o -path './plugins/drivers/driver_http/dist' \
     -o -path './vendor' \) -prune \
     -o -type f -name '*.go' -print
@@ -75,7 +79,12 @@ local $/;
 my $src = <$in>;
 close $in;
 
-my $header =
+my $new_only_header =
+    "// Copyright 2026 Arctel.net\n" .
+    "// SPDX-License-Identifier: Apache-2.0";
+
+my $modified_header =
+    "// Copyright 2025 linux.do\n" .
     "// Copyright 2026 Arctel.net\n" .
     "// SPDX-License-Identifier: Apache-2.0";
 
@@ -114,16 +123,30 @@ elsif ($body =~ m{\A(/\*.*?\*/)(\n*)}s) {
     $rest =~ s/\A\n+//;
 
     if ($block =~ /Licensed under the Apache License/ && $block =~ /Copyright /) {
-        $result = $prefix . $header . "\n\n" . $rest;
+        my $has_linux_do  = ($block =~ /Copyright [^\n]*linux\.do/);
+        my $has_arctel    = ($block =~ /Copyright [^\n]*Arctel\.net/);
+        my $has_modified  = ($block =~ /Modified by Arctel\.net/);
+
+        if ($has_linux_do && ($has_arctel || $has_modified)) {
+            $result = $prefix . $modified_header . "\n\n" . $rest;
+        } elsif ($has_arctel && !$has_linux_do) {
+            $result = $prefix . $new_only_header . "\n\n" . $rest;
+        } elsif ($has_linux_do && !$has_arctel && !$has_modified) {
+            my $h = "// Copyright 2025 linux.do\n" .
+                    "// SPDX-License-Identifier: Apache-2.0";
+            $result = $prefix . $h . "\n\n" . $rest;
+        } else {
+            $result = $prefix . $new_only_header . "\n\n" . $rest;
+        }
     } else {
         # Non-Apache block comment — prepend new header.
-        $result = $prefix . $header . "\n\n" . $block . "\n\n" . $rest;
+        $result = $prefix . $new_only_header . "\n\n" . $block . "\n\n" . $rest;
     }
 }
 # --- Case 3: no header at all ---
 else {
     $body =~ s/\A\n+//;
-    $result = $prefix . $header . "\n\n" . $body;
+    $result = $prefix . $new_only_header . "\n\n" . $body;
 }
 
 open my $fh, '>', $out or die "write $out: $!";

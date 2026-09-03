@@ -4,11 +4,11 @@
 'use client';
 
 import * as React from 'react';
+import { useTranslations } from 'next-intl';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import { Edit2, Loader2, Play, Plus, Settings, Trash2 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -219,7 +219,7 @@ export function SettingsTab() {
             ? channelToken
             : channelOther;
       if (field.required && !value.trim()) {
-        toast.error(`${field.label}不能为空`);
+        toast.error(t('fieldRequired', { label: field.label }));
         return;
       }
     }
@@ -516,7 +516,7 @@ export function SettingsTab() {
               <>
                 <div className='p-3.5 border rounded-lg bg-muted/20 space-y-1.5'>
                   <div className='text-xs font-semibold'>
-                    {activeDef.name}配置说明
+                    {t('configHelp', { name: activeDef.name })}
                   </div>
                   <p className='text-[11px] text-muted-foreground leading-relaxed'>
                     {activeDef.description}

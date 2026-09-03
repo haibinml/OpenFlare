@@ -1,21 +1,17 @@
-import { getTranslations } from 'next-intl/server';
 import { LegalPageLayout } from '@/components/common/docs/legal-page-layout';
-import {
-  getApiSections,
-  DOCS_LAST_UPDATED,
-} from '@/components/common/docs/api';
+import { apiSections, DOCS_LAST_UPDATED } from '@/components/common/docs/api';
 
-export default async function ApiDocPage() {
-  const t = await getTranslations('docs');
-
+export default function ApiDocPage() {
   return (
     <LegalPageLayout
-      title={t('api.title')}
+      title='API 接口文档'
       lastUpdated={DOCS_LAST_UPDATED}
-      sections={getApiSections(t)}
+      sections={apiSections}
       description={
         <p className='text-muted-foreground text-sm leading-relaxed'>
-          {t('api.description')}
+          OpenFlare 提供简单、强大的 API
+          接口，支持多种编程语言和开发环境。通过标准化的 RESTful
+          接口，您可以轻松地与后端服务进行集成与二次开发。
         </p>
       }
     />

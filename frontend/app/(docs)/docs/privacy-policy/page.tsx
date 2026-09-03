@@ -1,21 +1,18 @@
-import { getTranslations } from 'next-intl/server';
 import { LegalPageLayout } from '@/components/common/docs/legal-page-layout';
-import { getPrivacySections } from '@/components/common/docs/privacy';
+import { privacySections } from '@/components/common/docs/privacy';
 import { TERMS_LAST_UPDATED } from '@/components/common/docs/terms';
 
-export default async function PrivacyPolicyPage() {
-  const t = await getTranslations('docs');
-
+export default function PrivacyPolicyPage() {
   return (
     <LegalPageLayout
-      title={t('privacy.title')}
+      title='隐私政策 (Privacy)'
       lastUpdated={TERMS_LAST_UPDATED}
-      sections={getPrivacySections(t)}
+      sections={privacySections}
       description={
         <span>
-          {t('privacy.description')}
+          我们非常重视您的隐私保护。本政策将向您透明地展示我们如何收集、使用、存储您的个人信息，
           <br className='hidden md:block' />
-          {t('privacy.descriptionRights')}
+          以及您享有的相关权利。
         </span>
       }
     />

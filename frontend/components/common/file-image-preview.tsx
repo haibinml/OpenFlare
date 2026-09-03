@@ -5,7 +5,6 @@ import { ImageOff } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { getFileUrl, type ImageQuality } from '@/lib/services/upload/utils';
-import { useTranslations } from 'next-intl';
 
 type FileImagePreviewProps = {
   fileId: string | number;
@@ -26,7 +25,6 @@ export function FileImagePreview({
 }: FileImagePreviewProps) {
   const [failed, setFailed] = React.useState(false);
   const src = getFileUrl(fileId, quality);
-  const t = useTranslations('common');
 
   React.useEffect(() => {
     setFailed(false);
@@ -36,7 +34,7 @@ export function FileImagePreview({
     return (
       <div
         role='img'
-        aria-label={`${alt} ${t('loadFailed')}`}
+        aria-label={`${alt} 加载失败`}
         className={cn(
           'flex size-full flex-col items-center justify-center gap-1 bg-muted/50 text-muted-foreground',
           fallbackClassName,
@@ -49,7 +47,7 @@ export function FileImagePreview({
           )}
         />
         {variant === 'default' && (
-          <span className='text-[10px] leading-none'>{t('loadFailed')}</span>
+          <span className='text-[10px] leading-none'>加载失败</span>
         )}
       </div>
     );

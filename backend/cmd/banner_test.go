@@ -28,7 +28,7 @@ func TestFormatStartupBanner(t *testing.T) {
 	})
 
 	for _, want := range []string{
-		"Wavelet v3.2.1",
+		"OpenFlare v3.2.1",
 		"Environment: production",
 		"Build time:  2026-07-13T08:00:00Z",
 		"Listening:   http://:3000",

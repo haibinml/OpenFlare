@@ -1,216 +1,146 @@
 ---
 name: "new-api"
-description: "Wavelet 项目专用：当新增或修改业务 API、Handler、服务层逻辑、插件路由注册时必须使用。本技能指导基于 Cordis 插件的 API 架构、ctx.Router() 声明式路由注册、Handler/Service 分层、Swagger 与质量门禁。"
+description: "Wavelet 项目专用：当新增或修改自定义业务 API、新增业务路由、新增 service 层核心逻辑时必须使用。本技能指导包职责划分、推荐文件结构、路由解耦、Swagger 文档生成与质量门禁验证。"
 ---
 
-# 新增业务 API 开发与路由注册规范 (Cordis 插件化架构)
+# 新增业务 API 开发与路由注册规范
 
-本技能是 Wavelet 在 Cordis 微内核与插件化架构下，进行 HTTP API 接口开发与路由注册的唯一指导规范。
+本技能是 Wavelet 项目接口开发与路由注册的唯一指导规范。在开发任何新接口前，请严格按照本指南进行架构决策与路由注册。
 
 ---
 
-## 1. 核心架构哲学：插件自包含 (Self-Contained Plugins)
+## 核心路由准则与防线 (Routing Governance & Guardrails)
 
-在 Cordis 架构中，**业务 API 不再集中在旧的 `internal/router/` 或 `internal/apps/` 目录**。
-所有业务能力均封装为**高内聚、扁平自包含的插件 (Plugin)**。每个插件自主管理自身的路由声明、中间件挂载、服务逻辑、数据模型与迁移脚本。
+Wavelet 后端路由采用了**严格的框架层与业务层隔离机制**。请牢记以下开发原则：
 
-### 插件目录推荐结构 (`backend/plugins/domain/<name>/` 或下游 `custom_plugins/<name>/`)
+1. **禁止修改框架级路由文件**：
+   - 以下文件属于系统框架/平台级接口，**禁止为了添加自定义业务接口而进行任何修改**：
+     - `internal/router/router.go`（核心入口委派）
+     - `internal/router/root/default.go`（公开文件服务、robots.txt、Swagger 及 /api/health 路由）
+     - `internal/router/root/frontend.go`（前端静态服务）
+     - `internal/router/v1/v1.go`（V1 分发层协调器）
+     - `internal/router/v1/admin.go`（框架管理员端管理接口）
+     - `internal/router/v1/user.go`（框架普通用户端基础接口、OAuth及公开接口）
+2. **仅允许在 `custom.go` 中注册业务接口**：
+   - 所有的自定义/业务相关接口注册，有且仅有以下两个合法的承载点：
+     - [internal/router/root/custom.go](file:///Users/ryan/DEV/Go/Wavelet/internal/router/root/custom.go)（用于挂载到根路径的特殊业务接口）
+     - [internal/router/v1/custom.go](file:///Users/ryan/DEV/Go/Wavelet/internal/router/v1/custom.go)（用于挂载在 API V1 下的标准自定义业务接口）
 
-#### 模式 1：极简单文件自包含（适用于极简微型插件 / 单一实体 / <500行）
+---
+
+## 路由归属判定表 (Where should I register my new API?)
+
+根据接口的**访问路径特征**和**访问身份/限制条件**，决定将新开发的 API 挂载至何处：
+
+| 目标 API 路径特征 | 访问身份/条件限制 | 对应的路由注册入口 | 是否允许修改 |
+| :--- | :--- | :--- | :--- |
+| **`/my-custom-path`** (挂载在根路径下的特殊业务接口) | 自定义控制 | `root/custom.go` 中的 `RegisterCustomRootRoutes` | **允许修改 (业务自定义入口)** |
+| **`/api/v1/custom/...`** (API v1 下的定制业务接口) | 自定义控制 | `v1/custom.go` 中的 `RegisterCustomRoutes` | **允许修改 (业务自定义入口)** |
+| **`/api/v1/admin/...`** (系统管理员管理端接口) | 需要管理员登录 (`admin.LoginAdminRequired()`) | `v1/admin.go` | **禁止修改 (仅限系统框架路由)** |
+| **`/api/v1/user/...`** (框架普通用户基础接口) | 需要普通用户登录 (`oauth.LoginRequired()`) | `v1/user.go` | **禁止修改 (仅限系统框架路由)** |
+| **`/api/v1/public/...`** (Captcha、Config 等系统公开接口) | 所有人 (无条件 / 公开) | `v1/user.go` | **禁止修改 (仅限系统框架路由)** |
+| **`GET /f/:id`**, **`GET /robots.txt`**, **`GET /api/health`** (系统级默认及公开接口) | 所有人 (无条件 / 公开) | `root/default.go` | **禁止修改 (仅限系统框架路由)** |
+
+---
+
+## 两个自定义路由包的用法与区别 (Root Custom vs V1 Custom)
+
+### 1. 根路径自定义包：`root/custom.go`
+
+* **适用场景**：适用于需要**直接挂载在主域名根路径下**的特殊自定义业务接口（如第三方 Webhook 回调、特定的短链接重定向、外部数据接口等，不需要 `/api/v1` 前缀）。
+* **用法示例**：
+  在 [root/custom.go](file:///Users/ryan/DEV/Go/Wavelet/internal/router/root/custom.go) 中实现：
+  ```go
+  package root
+
+  import (
+  	"OpenFlare/internal/apps/custom"
+  	"github.com/gin-gonic/gin"
+  )
+
+  // RegisterCustomRootRoutes registers custom business routes that belong to the root path.
+  func RegisterCustomRootRoutes(r *gin.Engine) {
+  	// 挂载到根路径下，如 GET /my-custom-webhook
+  	r.GET("/my-custom-webhook", custom.HandleRootWebhook)
+  }
+  ```
+  *(注：该函数已由 `root.go` 自动加载，你无需修改任何其他核心文件。)*
+
+### 2. V1 API 自定义包：`v1/custom.go`
+
+* **适用场景**：适用于普通的**自定义业务 API**，需要规范挂载在标准 API V1 路径下（即自动带有 `/api/v1/custom/...` 前缀，可选择性配置用户/管理员登录中间件）。
+* **用法示例**：
+  在 [v1/custom.go](file:///Users/ryan/DEV/Go/Wavelet/internal/router/v1/custom.go) 中实现：
+  ```go
+  package v1
+
+  import (
+  	"OpenFlare/internal/apps/custom"
+  	"github.com/gin-gonic/gin"
+  )
+
+  // RegisterCustomRoutes registers standard custom API routes under /api/v1.
+  func RegisterCustomRoutes(apiV1Router *gin.RouterGroup) {
+  	customRouter := apiV1Router.Group("/custom")
+  	{
+  		// 挂载到 /api/v1/custom 下，例如：POST /api/v1/custom/action
+  		customRouter.POST("/action", custom.DoActionHandler)
+  	}
+  }
+  ```
+  *(注：该函数已由 `v1/v1.go` 自动加载，你无需修改任何其他核心文件。)*
+
+---
+
+## 建议创建/修改的文件结构 (Recommended Directory Structure)
+
+当新增一套定制的业务接口（例如名为 `custom` 的业务模块）时，建议采用以下标准文件结构：
+
 ```text
-backend/plugins/domain/demo/
-├── plugin.go        # 插件入口：实现 core.Plugin，通过 ctx.Router() 挂载路由
-├── handlers.go      # HTTP 控制器单文件：参数校验、上下文提取、调用 Service、信封响应
-├── service.go       # 业务服务层单文件：纯 Go 逻辑，仅依赖 context.Context
-├── repository.go    # 数据库访问层单文件：GORM 查询、SQL 防注入与转义
-├── models.go        # GORM 数据实体定义（自带表前缀）与 DTO
-├── errs.go          # 模块内错误常量定义（camelCase 字符串）
-└── migrations/      # 专属嵌入式 Goose SQL 迁移脚本
-    └── 20260827000001_create_demo_table.sql
-```
-> ⚠️ **严禁**：当需要拆分多个 Handler/Service 文件时，**严禁在根目录平铺 `handlers_*.go`、`service_*.go`、`repository_*.go` 等前缀文件**，必须立即采用模式 2（独立子包分层）。
-
-#### 模式 2：标准独立子包分层架构（适用于标准/中大型业务插件 / 官方推荐标准）
-```text
-backend/plugins/domain/order/
-├── plugin.go           # 插件根入口：实现 core.Plugin，装配各子包并向 Cordis 注册
-│
-├── handler/            # package handler：HTTP 控制器与路由声明（或 controller/）
-│   ├── router.go       # 路由组声明与中间件挂载
-│   └── order.go        # 订单 Handler（直接以业务命名，禁止 handlers_order.go）
-│
-├── service/            # package service：业务逻辑层（用例编排、事件发布）
-│   ├── service.go      # Service 接口与组装
-│   └── order.go        # 订单业务用例实现（直接以业务命名，禁止 service_order.go）
-│
-├── repository/         # package repository：数据持久化访问层 (DAL)
-│   ├── repository.go   # 仓储抽象与通用工厂
-│   └── order.go        # 订单仓储实现（直接以业务命名，禁止 repository_order.go）
-│
-├── model/              # package model (或 models/)：纯数据实体与 DTO（无外部依赖）
-│   ├── entity.go       # 数据库映射实体 (TableName() 带插件专属前缀)
-│   ├── dto.go          # 请求与响应 DTO
-│   └── events.go       # 领域事件定义
-│
-├── errs/               # package errs：错误常量与错误码 (或根目录 errs.go)
-│   └── errs.go
-│
-└── migrations/         # 专属嵌入式 Goose SQL 迁移脚本
-    └── 20260827000001_create_orders_table.sql
+internal/
+├── router/
+│   ├── root/
+│   │   └── custom.go           # [修改] 若为根路径 API，在此处注册，将路由委派给 apps/custom
+│   └── v1/
+│       └── custom.go           # [修改] 若为 v1 API，在此处注册，将路由委派给 apps/custom
+└── apps/
+    └── custom/
+        ├── routers.go          # [新建] HTTP Handlers (Gin)，负责参数绑定、校验与响应
+        ├── logics.go           # [新建] 业务逻辑层：承载模块内闭环的纯 Go 业务逻辑，不依赖 gin.Context
+        └── errs.go             # [新建] 存放模块特有的业务错误常量定义（可选）
 ```
 
 ---
 
-## 2. 插件契约与路由注册流程
+## 核心开发步骤 (Step-by-Step Flow)
 
-### 步骤 1：定义插件结构并实现 `core.Plugin`
+### 步骤 1：数据库定义与迁移
+如果自定义功能涉及新表或字段，请参考 [database-migration](../database-migration/SKILL.md) 技能，在 `internal/infra/persistence/migrator/goose/` 目录下编写迁移文件，在 `internal/model/` 中定义 GORM 实体（无 CRUD / 无 DB 访问），并在 `internal/repository/` 中实现数据访问（**repository 为唯一持久化入口**）。
 
-插件必须实现 `core.Plugin` 接口：
+### 步骤 2：在模块内实现业务逻辑 (`logics.go` / `service.go`)
+业务逻辑逻辑应当实现于 `internal/apps/custom/` 目录下：
+- **优先使用纯函数（`logics.go`）**：定义接收 `context.Context` 且不依赖 `*gin.Context` 的函数，易于单元测试与 Worker 复用。参考 `internal/apps/user/logics.go`。
+- **有状态服务（`service.go`）**：若需注入依赖（如 DB 连接、外部客户端等），可定义 Service 结构体和构造函数。
+- **跨模块副作用（推送、任务监听等）**：核心业务代码通过 `internal/listener` 发射域事件，禁止直接 `import` push 模块；装配在 `internal/platform/bootstrap` 完成（参见 `push-notification` skill）。
 
-```go
-package order
+### 步骤 3：编写 HTTP Handler (`routers.go`)
+在 `internal/apps/custom/routers.go` 中编写 Handler：
+- 负责请求参数绑定与校验（使用 `ShouldBindJSON`/`ShouldBindQuery`）。
+- 负责提取 Session / 用户身份。
+- 调用业务逻辑层，并使用 `OpenFlare/internal/shared/response` 统一返回响应：
+  - 成功时返回：`response.OK(data)` 或 `response.OKNil()`
+  - 失败时返回：`response.Err(msg)`
+- 编写规范的 Swagger 注释。
 
-import (
-	"github.com/Rain-kl/Wavelet/core"
-	"github.com/Rain-kl/Wavelet/core/contracts"
-)
-
-type Plugin struct {
-	svc *OrderService
-}
-
-func (p *Plugin) Name() string {
-	return "domain.order"
-}
-
-func (p *Plugin) Apply(ctx *core.Context) error {
-	// 1. 初始化业务 Service
-	p.svc = NewOrderService(ctx)
-
-	// 2. 如果需要对外暴露服务，注入 IoC 容器供其他插件消费
-	// core.Provide[contracts.OrderService](ctx, p.svc)
-
-	// 3. 注册 HTTP 路由与中间件
-	p.registerRoutes(ctx)
-
-	return nil
-}
-```
-
-### 步骤 2：通过 `ctx.Router()` 挂载路由组与中间件
-
-通过微内核扩展点 `ctx.Router()` 声明式挂载语义化路由与鉴权中间件：
-
-```go
-func (p *Plugin) registerRoutes(ctx *core.Context) {
-	// 获取认证服务提供的标准中间件（若需要）
-	authSvc, _ := core.Inject[contracts.AuthService](ctx)
-	
-	// 创建带语义化版本前缀的路由组
-	group := ctx.Router().Group("/api/v1/orders")
-	if authSvc != nil {
-		group.Use(authSvc.RequireAuthMiddleware())
-	}
-
-	// 绑定 Handler
-	group.GET("", p.handleListOrders)
-	group.POST("", p.handleCreateOrder)
-	group.GET("/:id", p.handleGetOrderDetail)
-	group.PUT("/:id/cancel", p.handleCancelOrder)
-}
-```
-
-### 步骤 3：公开接口与白名单注册 (`RegisterWhitelist`)
-
-如果插件包含**无需登录**的公开端点（如登录、注册、人机校验、Webhooks、公开状态查询），必须在 `Apply` 中主动注册到白名单：
-
-```go
-func (p *Plugin) Apply(ctx *core.Context) error {
-	// 注册公开接口白名单（支持精确路径与通配符如 /api/v1/oauth/*）
-	ctx.Router().RegisterWhitelist(
-		"/api/v1/public/ping",
-		"/api/v1/public/webhook/*",
-	)
-
-	// 或在子路由组中相对注册：
-	publicGroup := ctx.Router().Group("/api/v1/public")
-	publicGroup.RegisterWhitelist("/status", "/docs/*")
-	...
-}
-```
-> 💡 **防线机制**：注册到白名单的路由在经过 `auth.RequireAuthMiddleware()` 时将自动放行，彻底消除全局/组级鉴权中间件引起的 401 Unauthorized 误拦截。
+### 步骤 4：在自定义包中注册路由并委派
+根据 **路由归属判定表**，在 [root/custom.go](file:///Users/ryan/DEV/Go/Wavelet/internal/router/root/custom.go) 或 [v1/custom.go](file:///Users/ryan/DEV/Go/Wavelet/internal/router/v1/custom.go) 中编写注册代码，将路由路径绑定到步骤 3 中编写的 Handler。
 
 ---
 
-## 3. Handler 与 Service 职责划分
+## 质量验证门禁 (Quality Gates)
 
-### Handler 规范 (`handlers.go`)
-Handler 负责协议接入层：
-1. 参数绑定：使用 `c.ShouldBindJSON` 或 `c.ShouldBindQuery`。
-2. 提取当前登录用户信息（如 `oauth.GetCurrentUser(c)`）。
-3. 调用底层纯函数或 Service 逻辑。
-4. 错误处理：统一使用 `response.Abort*` 系列函数中断请求，禁止直接 `c.JSON(status, response.Err(...))`。
-5. 成功响应：使用 `c.JSON(http.StatusOK, response.OK(data))` 或 `response.OKNil()`。
-6. 编写完整的 Swagger / OpenAPI 注释。
-
-```go
-// @Summary 创建订单
-// @Description 创建一笔新的业务订单
-// @Tags Order
-// @Accept json
-// @Produce json
-// @Param request body CreateOrderRequest true "创建订单参数"
-// @Success 200 {object} response.Envelope{data=OrderDTO} "创建成功"
-// @Failure 400 {object} response.Envelope "参数绑定失败"
-// @Failure 401 {object} response.Envelope "未授权"
-// @Router /api/v1/orders [post]
-func (p *Plugin) handleCreateOrder(c *gin.Context) {
-	var req CreateOrderRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.AbortBadRequest(c, errs.ErrBindParamsFailed)
-		return
-	}
-
-	user, ok := oauth.GetCurrentUser(c)
-	if !ok {
-		response.AbortUnauthorized(c, errs.ErrUnauthorized)
-		return
-	}
-
-	order, err := p.svc.CreateOrder(c.Request.Context(), user.ID, req)
-	if err != nil {
-		// 底层已记录日志，此处根据业务错误码响应
-		response.AbortInternal(c, errs.ErrCreateOrderFailed)
-		return
-	}
-
-	c.JSON(http.StatusOK, response.OK(order))
-}
-```
-
-### Service / Logics 规范 (`service.go`)
-1. 纯 Go 逻辑，第一参数为 `ctx context.Context`，返回 `(result, error)`。
-2. **严禁依赖 `*gin.Context`** 或调用 `c.JSON`/`Abort*`。
-3. 数据库操作通过 `ctx.DB()` 或受 Trace 保护的 DB 实例完成。
-4. 缓存操作通过 `ctx.Cache()` 完成。
-
----
-
-## 4. 跨插件依赖与防线 (Guardrails)
-
-1. **严禁跨插件 import 内部实现**：插件之间不得直接 import 对方包中的具体结构体或私有逻辑。
-2. **面向契约编程**：跨插件调用一律在 `core/contracts/` 中定义 Interface，通过 `core.Provide` 注册、`core.Inject` 或 `ctx.Using` 延迟解析。
-3. **事件驱动通知**：涉及跨域状态联动（如用户注册成功、订单支付完成），统一使用 `ctx.Events().Emit(...)` 广播领域事件，由订阅方自愿监听，消除循环依赖。
-
----
-
-## 5. 质量验证门禁
-
-在完成 API 开发后，必须依次运行以下命令：
-```bash
-make license        # 确保新文件具有开源许可头
-make swagger        # 重新生成 Swagger 文档
-make format         # 代码自动格式化
-make code-check     # 静态代码质量检查 (golangci-lint)
-go test ./plugins/...  # 运行插件单元测试
-```
+每次新增或修改接口后，必须运行并验证以下各项：
+1. **自动授权许可**：`make license`（新增 Go 文件时自动添加许可头）
+2. **重新生成 Swagger 文档**：`make swagger`（若有 Swagger 注释修改）
+3. **静态代码及风格检查**：`make code-check`（确保通过 golangci-lint 和前端 TS 检查）
+4. **自动化单元测试**：`go test ./...`（确保所有测试 100% 通过）

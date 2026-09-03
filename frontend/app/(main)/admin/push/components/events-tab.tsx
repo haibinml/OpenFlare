@@ -4,6 +4,7 @@
 'use client';
 
 import * as React from 'react';
+import { useTranslations } from 'next-intl';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
@@ -66,8 +67,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-
-import { useTranslations } from 'next-intl';
 
 import { ErrorInline } from '@/components/layout/error';
 import { LoadingStateWithBorder } from '@/components/layout/loading';
@@ -263,8 +262,8 @@ export function EventsTab() {
     );
     if (taskMeta) {
       const defaultTemplate = {
-        title: `任务完成: ${taskMeta.name}`,
-        content: `异步任务 {{task_name}} 已完成。状态: {{task_status}}，耗时: {{task_duration}} ms。`,
+        title: t('taskCompleteTitle', { name: taskMeta.name }),
+        content: t('taskCompleteContent'),
         level: 'INFO',
       };
       setNewEventTemplate(JSON.stringify(defaultTemplate, null, 2));
@@ -650,11 +649,11 @@ export function EventsTab() {
                     {newEventChannels.length > 0
                       ? newEventChannels
                           .map((ch) => {
-                            if (ch === 'email') return '邮件';
+                            if (ch === 'email') return t('emailChannel');
                             return ch;
                           })
                           .join(', ')
-                      : '选择已配置推送渠道'}
+                      : t('selectConfiguredChannels')}
                     <ChevronDown className='ml-2 size-4 shrink-0 opacity-50' />
                   </Button>
                 </PopoverTrigger>
@@ -680,7 +679,7 @@ export function EventsTab() {
                             }
                           }}
                         />
-                        <span>{ch === 'email' ? '邮件推送' : ch}</span>
+                        <span>{ch === 'email' ? t('emailPush') : ch}</span>
                       </label>
                     ))}
                     {availableChannels.length === 0 && (
@@ -699,7 +698,7 @@ export function EventsTab() {
               </Label>
               <Input
                 type='text'
-                placeholder='多个目标用英文逗号分隔，例如：user1@test.com, user2@test.com'
+                placeholder={t('pushTargetsPlaceholder')}
                 value={newEventTargets}
                 onChange={(e) => setNewEventTargets(e.target.value)}
                 className='text-xs h-9'

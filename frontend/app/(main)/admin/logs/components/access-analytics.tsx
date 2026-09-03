@@ -66,12 +66,15 @@ interface TopUserData {
   count: number;
 }
 
-const chartConfig = {
-  count: {
-    label: '请求量',
-    color: 'hsl(var(--primary))',
-  },
-} satisfies ChartConfig;
+function useAnalyticsChartConfig() {
+  const t = useTranslations('admin.logs.analytics');
+  return {
+    count: {
+      label: t('requestVolume'),
+      color: 'hsl(var(--primary))',
+    },
+  } satisfies ChartConfig;
+}
 
 // Format YYYY-MM-DD to MM/DD
 function formatDateLabel(dateStr: string) {
@@ -85,6 +88,7 @@ function formatDateLabel(dateStr: string) {
 
 export function AccessAnalytics() {
   const t = useTranslations('admin.logs.analytics');
+  const chartConfig = useAnalyticsChartConfig();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [clickhouseDisabled, setClickhouseDisabled] = useState(false);
@@ -111,7 +115,7 @@ export function AccessAnalytics() {
       setClickhouseDisabled(false);
     } catch (err) {
       const errorInstance =
-        err instanceof Error ? err : new Error('获取数据统计失败');
+        err instanceof Error ? err : new Error(t('fetchFailed'));
       const errMsg = errorInstance.message || '';
       if (errMsg.includes('ClickHouse') || errMsg.includes('未启用')) {
         setClickhouseDisabled(true);
@@ -121,7 +125,7 @@ export function AccessAnalytics() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     fetchAnalytics();
@@ -290,7 +294,7 @@ export function AccessAnalytics() {
                     strokeWidth={2}
                     fillOpacity={1}
                     fill='url(#colorCount)'
-                    name='请求次数'
+                    name={t('requestCount')}
                   />
                 </AreaChart>
               </ChartContainer>
@@ -338,8 +342,10 @@ export function AccessAnalytics() {
                           <span className='font-semibold'>{item.browser}</span>
                         </span>
                         <span className='text-muted-foreground font-mono text-xs'>
-                          {item.count.toLocaleString()} 次 ({percent.toFixed(1)}
-                          %)
+                          {t('countTimes', {
+                            count: item.count.toLocaleString(),
+                            percent: percent.toFixed(1),
+                          })}
                         </span>
                       </div>
                       <div className='h-2 w-full rounded-full bg-muted overflow-hidden'>

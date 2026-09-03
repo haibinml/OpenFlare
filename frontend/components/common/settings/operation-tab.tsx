@@ -1,13 +1,13 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   useMutation,
   useQuery,
   useQueryClient,
   type UseQueryResult,
 } from '@tanstack/react-query';
-import { KeyRound, ShieldAlert, X } from 'lucide-react';
+import { Database, KeyRound, Save, ShieldAlert, X } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -16,6 +16,10 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -28,6 +32,24 @@ import type { SystemConfig } from '@/lib/services/admin';
 import { TemplatesManager } from './templates';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
+
+const LOG_RETENTION_FIELDS = [
+  {
+    key: 'log_retention_days_postgres',
+    label: 'PostgreSQL',
+    descKey: 'retentionPostgresDesc',
+  },
+  {
+    key: 'log_retention_days_sqlite',
+    label: 'SQLite',
+    descKey: 'retentionSqliteDesc',
+  },
+  {
+    key: 'log_retention_days_clickhouse',
+    label: 'ClickHouse',
+    descKey: 'retentionClickhouseDesc',
+  },
+] as const;
 
 interface OperationTabProps {
   configs: Record<string, SystemConfig>;
@@ -44,6 +66,65 @@ export function OperationTab({
   const uploadTypesQuery = useQuery({
     queryKey: ['admin', 'upload-types'],
     queryFn: () => services.adminSystemConfig.listUploadTypes(),
+  });
+
+  const businessConfigsQuery = useQuery({
+    queryKey: ['admin', 'system-configs', 'business'],
+    queryFn: () => services.adminSystemConfig.listSystemConfigs('business'),
+  });
+
+  const businessConfigs = useMemo(() => {
+    return (businessConfigsQuery.data ?? []).reduce<
+      Record<string, SystemConfig>
+    >((acc, config) => {
+      acc[config.key] = config;
+      return acc;
+    }, {});
+  }, [businessConfigsQuery.data]);
+
+  const [retentionValues, setRetentionValues] = useState<
+    Record<string, string>
+  >({});
+
+  useEffect(() => {
+    if (!businessConfigsQuery.data) return;
+    setRetentionValues((prev) => {
+      const next: Record<string, string> = {};
+      LOG_RETENTION_FIELDS.forEach((field) => {
+        const config = businessConfigs[field.key];
+        next[field.key] = config?.value || prev[field.key] || '90';
+      });
+      return next;
+    });
+  }, [businessConfigsQuery.data, businessConfigs]);
+
+  const updateRetentionMutation = useMutation({
+    mutationFn: async (values: Record<string, string>) => {
+      for (const field of LOG_RETENTION_FIELDS) {
+        const raw = (values[field.key] ?? '').trim();
+        const num = Number(raw);
+        if (!raw || !Number.isInteger(num) || num < 1) {
+          throw new Error(t('retentionInvalid', { label: field.label }));
+        }
+        const config = businessConfigs[field.key];
+        if (!config) {
+          throw new Error(`缺少配置项: ${field.key}`);
+        }
+        await services.adminSystemConfig.updateSystemConfig(field.key, {
+          value: String(num),
+          description: config.description,
+        });
+      }
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['admin', 'system-configs'],
+      });
+      toast.success(t('logRetentionUpdated'));
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || t('logRetentionUpdateFailed'));
+    },
   });
 
   const updateWhitelistMutation = useMutation({
@@ -101,15 +182,15 @@ export function OperationTab({
 
   const availableTypes = useMemo(() => {
     const types = uploadTypesQuery.data ?? [];
-    return types.map((t) => {
-      let label = t;
-      if (t === 'avatar') label = '头像 (avatar)';
-      else if (t === 'attachment') label = '附件 (attachment)';
-      else if (t === 'doc') label = '文档 (doc)';
-      else if (t === 'generic') label = '通用 (generic)';
-      return { value: t, label };
+    return types.map((type) => {
+      let label = type;
+      if (type === 'avatar') label = t('typeAvatar');
+      else if (type === 'attachment') label = t('typeAttachment');
+      else if (type === 'doc') label = t('typeDoc');
+      else if (type === 'generic') label = t('typeGeneric');
+      return { value: type, label };
     });
-  }, [uploadTypesQuery.data]);
+  }, [t, uploadTypesQuery.data]);
 
   return (
     <div className='space-y-6'>
@@ -206,6 +287,77 @@ export function OperationTab({
                 </p>
               )}
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 日志保留时间设置 */}
+      <Card className='border border-dashed shadow-sm'>
+        <CardHeader className='border-b border-dashed pb-4'>
+          <div className='flex items-center gap-2'>
+            <div className='p-1.5 rounded-lg bg-primary/10 text-primary'>
+              <Database className='size-4' />
+            </div>
+            <div>
+              <CardTitle className='text-base font-semibold'>
+                {t('logRetentionTitle')}
+              </CardTitle>
+              <CardDescription className='text-xs'>
+                {t('logRetentionDesc')}
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className='pt-6'>
+          <div className='grid gap-4 sm:grid-cols-3'>
+            {LOG_RETENTION_FIELDS.map((field) => (
+              <div key={field.key} className='grid gap-2'>
+                <Label htmlFor={field.key}>{field.label}</Label>
+                <div className='flex items-center gap-2'>
+                  <Input
+                    id={field.key}
+                    type='number'
+                    min={1}
+                    className='text-xs'
+                    value={retentionValues[field.key] ?? ''}
+                    disabled={
+                      updateRetentionMutation.isPending ||
+                      businessConfigsQuery.isPending
+                    }
+                    onChange={(e) =>
+                      setRetentionValues((prev) => ({
+                        ...prev,
+                        [field.key]: e.target.value,
+                      }))
+                    }
+                  />
+                  <span className='text-xs text-muted-foreground whitespace-nowrap'>
+                    {t('days')}
+                  </span>
+                </div>
+                <p className='text-[10px] text-muted-foreground'>
+                  {t(field.descKey)}
+                </p>
+              </div>
+            ))}
+          </div>
+          <div className='mt-4 flex justify-end'>
+            <Button
+              type='button'
+              size='sm'
+              onClick={() => updateRetentionMutation.mutate(retentionValues)}
+              disabled={
+                updateRetentionMutation.isPending ||
+                businessConfigsQuery.isPending
+              }
+            >
+              {updateRetentionMutation.isPending ? (
+                <Spinner className='size-3' />
+              ) : (
+                <Save className='size-3' />
+              )}
+              {t('save')}
+            </Button>
           </div>
         </CardContent>
       </Card>

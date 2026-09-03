@@ -2,10 +2,10 @@
 
 import React, {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useState,
-  useCallback,
 } from 'react';
 import { useTheme as useNextTheme } from 'next-themes';
 import type { Theme } from './types';

@@ -2,9 +2,9 @@
 
 import * as React from 'react';
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Layers, RefreshCw } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import {
   Card,
@@ -88,14 +88,14 @@ export function TableBrowser({
         });
         setTableData(data);
       } catch (err) {
-        toast.error(`获取数据表 ${tableName} 数据失败`, {
-          description: err instanceof Error ? err.message : '未知错误',
+        toast.error(t('fetchTableFailed', { table: tableName }), {
+          description: err instanceof Error ? err.message : t('unknownError'),
         });
       } finally {
         setLoadingData(false);
       }
     },
-    [],
+    [t],
   );
 
   // 默认选择第一张表

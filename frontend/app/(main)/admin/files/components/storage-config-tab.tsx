@@ -438,7 +438,7 @@ export function StorageConfigTab() {
                     <TextField
                       label={t('storage.basePath')}
                       value={config.webdav.base_path}
-                      placeholder='wavelet'
+                      placeholder='openflare'
                       onChange={(base_path) =>
                         setConfig({
                           ...config,

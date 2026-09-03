@@ -74,6 +74,7 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
   const router = useRouter();
   const { user } = useUser();
   const t = useTranslations('layout.search');
+  const tLayout = useTranslations('layout');
   const [search, setSearch] = useState('');
   const [currentTip, setCurrentTip] = useState<React.ReactNode>(null);
   const [results, setResults] = useState<SearchItem[]>([]);
@@ -117,9 +118,9 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
   }, [open, metaKey, t]);
 
   useEffect(() => {
-    const items = searchItems(search, user?.is_admin);
+    const items = searchItems(search, user?.is_admin, (key) => tLayout(key));
     setResults(items);
-  }, [search, user?.is_admin]);
+  }, [search, user?.is_admin, tLayout]);
 
   const handleSelect = useCallback(
     (item: SearchItem, openInNewTab = false) => {

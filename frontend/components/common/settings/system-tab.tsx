@@ -123,7 +123,7 @@ export function SystemTab({ configs, systemConfigsQuery }: SystemTabProps) {
     },
   });
 
-  const handleSystemSubmit = (e: React.FormEvent) => {
+  const handleSystemSave = (e: React.FormEvent) => {
     e.preventDefault();
     saveSystemMutation.mutate();
   };
@@ -165,7 +165,7 @@ export function SystemTab({ configs, systemConfigsQuery }: SystemTabProps) {
     },
   });
 
-  const handleSmtpSubmit = (e: React.FormEvent) => {
+  const handleSmtpSave = (e: React.FormEvent) => {
     e.preventDefault();
     saveSmtpMutation.mutate();
   };
@@ -238,7 +238,7 @@ export function SystemTab({ configs, systemConfigsQuery }: SystemTabProps) {
           </div>
         </CardHeader>
         <CardContent className='pt-6'>
-          <form onSubmit={handleSystemSubmit} className='flex flex-col gap-6'>
+          <form onSubmit={handleSystemSave} className='flex flex-col gap-6'>
             <div className='grid grid-cols-1 gap-4 lg:grid-cols-2'>
               <div className='flex flex-col gap-1.5'>
                 <Label htmlFor='site_name' className='text-xs font-semibold'>
@@ -249,7 +249,7 @@ export function SystemTab({ configs, systemConfigsQuery }: SystemTabProps) {
                   type='text'
                   value={siteName}
                   onChange={(e) => setSiteName(e.target.value)}
-                  placeholder='例如: Wavelet'
+                  placeholder='例如: OpenFlare'
                   className='border-dashed bg-card text-xs'
                 />
                 <p className='text-[11px] leading-relaxed text-muted-foreground'>
@@ -372,7 +372,7 @@ export function SystemTab({ configs, systemConfigsQuery }: SystemTabProps) {
           </div>
         </CardHeader>
         <CardContent className='pt-6'>
-          <form onSubmit={handleSmtpSubmit} className='space-y-6'>
+          <form onSubmit={handleSmtpSave} className='space-y-6'>
             <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
               <div className='space-y-1.5'>
                 <Label htmlFor='smtp_host' className='text-xs font-semibold'>

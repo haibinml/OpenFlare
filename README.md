@@ -1,352 +1,192 @@
-# wavelet
+<div align="center">
 
-🚀 A modern, production-ready full-stack boilerplate for building scalable web applications
+# OpenFlare
 
-[中文](./README_zh.md)
+**[English](./README.md) | [简体中文](./README.zh-CN.md)**
 
-[![License: Apache2.0](https://img.shields.io/badge/License-Apache2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Go Version](https://img.shields.io/badge/Go-1.25+-blue.svg)](https://golang.org/)
-[![Next.js](https://img.shields.io/badge/Next.js-16-black.svg)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React-19-blue.svg)](https://reactjs.org/)
+OpenFlare is an open-source CDN orchestration and edge security platform. It supports reverse proxy, centralized configuration synchronization, in-network tunneling (Tunnels), dynamic WAF protection, and CC defense challenges.
 
-## 📖 Introduction
+</div>
 
-**wavelet** is a generic, production-ready full-stack boilerplate built with **Go (Gin + GORM)** on the backend and **Next.js (App Router + Shadcn UI)** on the frontend. It ships with everything you need to bootstrap a modern SaaS, internal tool, or developer platform — without the boilerplate headaches.
+<p align="center">
+  <a href="https://raw.githubusercontent.com/Rain-kl/OpenFlare/main/LICENSE">
+    <img src="https://img.shields.io/github/license/Rain-kl/OpenFlare?color=brightgreen" alt="license">
+  </a>
+  <a href="https://github.com/Rain-kl/OpenFlare/releases/latest">
+    <img src="https://img.shields.io/github/v/release/Rain-kl/OpenFlare?color=brightgreen&include_prereleases" alt="release">
+  </a>
+  <a href="https://github.com/Rain-kl/OpenFlare/pkgs/container/openflare">
+    <img src="https://img.shields.io/badge/GHCR-ghcr.io%2Frain--kl%2Fopenflare-brightgreen" alt="ghcr">
+  </a>
+</p>
 
-The project was designed from the ground up to be **framework-first and business-agnostic**: plug in your own domain logic while reusing the battle-tested infrastructure that comes out of the box.
+> [!WARNING]
+> After the first login with the `admin` user, you must change the default password `12345678`.
+>
+> The BETA version is a temporary product in the development and testing stage and may have unknown issues. It should not be used in production environments.
 
-### ✨ Key Features
+## Documentation
 
-- 🔐 **Multi-auth System** — Local password login/registration + pluggable OIDC/OAuth2 providers (supports multiple auth sources simultaneously)
-- 🗝️ **Personal Access Tokens** — API key management for programmatic access; supports `Authorization: Bearer` and `X-Access-Token` headers
-- 👤 **User Management** — Admin panel for listing, searching, filtering, enabling/disabling user accounts
-- ⚙️ **Dynamic System Config** — Key-value system configuration management with live reload, controllable from the admin UI
-- 📋 **Async Task Queue** — Background job processing with [Asynq](https://github.com/hibiken/asynq) (Redis-backed), including a scheduling dashboard
-- 📁 **S3 File Storage** — Unified file upload/download via S3-compatible APIs with local disk cache
-- 📊 **Observability** — Structured logging (Zap) + distributed tracing (OpenTelemetry)
-- 🎨 **Modern UI** — Responsive, dark-mode-ready design system built with Tailwind CSS 4 and Shadcn UI
-- 📖 **Built-in Documentation** — Integrated docs portal with usage guides, API reference, privacy policy, and terms of service
+**https://openflare.fyrn.link**
 
-## 🏗️ Architecture Overview
+Common entry points:
 
-```
-┌─────────────────┐    ┌─────────────────────────────┐    ┌─────────────────┐
-│   Frontend      │    │          Backend             │    │   Database      │
-│   (Next.js)     │◄──►│           (Go)               │◄──►│  (PostgreSQL)   │
-│                 │    │                              │    │                 │
-│ • React 19      │    │ • Gin HTTP Framework         │    │ • PostgreSQL    │
-│ • TypeScript    │    │ • GORM ORM                   │    │ • Redis Cache   │
-│ • Tailwind 4    │    │ • Multi-provider Auth        │    │                 │
-│ • Shadcn UI     │    │ • AccessToken Middleware     │    │                 │
-│                 │    │ • Asynq Task Queue           │    │                 │
-│                 │    │ • OpenTelemetry Tracing      │    │                 │
-│                 │    │ • Swagger API Docs           │    │                 │
-└─────────────────┘    └─────────────────────────────┘    └─────────────────┘
-                                      │
-                           ┌──────────┴──────────┐
-                           │   Multi-Process CLI  │
-                           │  (Cobra + Viper)     │
-                           │ • api      (HTTP)    │
-                           │ • worker   (Queue)   │
-                           │ • scheduler(Cron)    │
-                           └─────────────────────┘
-```
+* [Quick Start](https://openflare.fyrn.link/guide/quick-start)
+* [Deployment Guide](https://openflare.fyrn.link/deployment/deployment)
+* [Configuration Reference](https://openflare.fyrn.link/reference/configuration)
+* [System Design](https://openflare.fyrn.link/design/)
 
-## 🛠️ Tech Stack
+## Core Capabilities
 
-### Backend
-- **[Go 1.25+](https://go.dev/doc)** — Primary language
-- **[Gin](https://github.com/gin-gonic/gin)** — HTTP web framework
-- **[GORM](https://github.com/go-gorm/gorm)** — ORM with PostgreSQL & ClickHouse support
-- **[Redis](https://github.com/redis/redis)** — Cache, session store, and task queue backend
-- **[Asynq](https://github.com/hibiken/asynq)** — Distributed task queue (Redis-backed)
-- **[Cobra + Viper](https://github.com/spf13/cobra)** — CLI entrypoint and configuration management
-- **[OpenTelemetry](https://opentelemetry.io)** — Distributed tracing and observability
-- **[Zap](https://github.com/uber-go/zap)** — Structured, high-performance logging
-- **[Swagger (Swaggo)](https://github.com/swaggo/swag)** — Auto-generated API documentation
-- **[AWS SDK v2](https://github.com/aws/aws-sdk-go-v2)** — S3-compatible file storage
-- **[Snowflake](https://github.com/bwmarrin/snowflake)** — Distributed ID generation
+* **Reverse Proxy Configuration Management**: Uses website rules as the aggregation boundary, supports multi-domain binding and multi-upstream load balancing, and centrally manages reverse proxy configurations for all OpenResty nodes.
+* **Secure In-Network Tunneling (Tunnels)**: Open-source version of Cloudflare Tunnels. No public IP or exposed inbound ports are required. Securely reverse-proxy internal web services to the public internet through Relay relay nodes and OpenFlared clients.
+* **Edge WAF Security Protection**: Provides global and custom rule groups, supports manual/auto/subscription-type IP groups, MaxMind GeoIP national-level geographic access control, IP group member Checksum differential synchronization (no Nginx reload required), and custom blocking responses.
+* **CC Defense and Human-Computer Challenge (PoW)**: Built-in high-performance client-side cryptography Proof of Work challenge (similar to Turnstile). Secures high-speed interception and blocking of zombie networks and crawlers at the gateway edge.
+* **Pages Static Hosting**: Supports uploading or synchronizing pre-built artifacts from restricted Remote URLs or public GitHub Release assets. GitHub latest can be checked periodically and optionally auto-published. All sources are unified to generate immutable deployments, pulled by the edge Agent and served locally by OpenResty, supporting rollbacks, SPA Fallback, and API reverse proxy.
+* **TLS Certificate Automation**: Supports dynamic certificate uploads, automatic multi-domain certificate matching and binding, and automatic issuance and renewal of certificates from Let's Encrypt via the ACME protocol.
+* **Uptime Kuma Monitoring Synchronization**: Integrated with Uptime Kuma to automatically perform differential synchronization of monitoring site lists, real-time awareness of node availability and service status.
+* **SSO Single Sign-On**: Supports GitHub OAuth and standard OIDC protocol for seamless integration with enterprise identity providers to achieve unified login.
+* **Unified Observability**: Aggregates node request metrics, real-time access log details, host and Nginx resource snapshots, health events, and network fluctuation replenishment buffers.
 
-### Frontend
-- **[Next.js 16](https://github.com/vercel/next.js)** — React framework with App Router
-- **[React 19](https://github.com/facebook/react)** — UI library
-- **[TypeScript](https://github.com/microsoft/TypeScript)** — Type safety
-- **[Tailwind CSS 4](https://github.com/tailwindlabs/tailwindcss)** — Utility-first styling
-- **[Shadcn UI](https://github.com/shadcn-ui/ui)** — Accessible, composable component library
-- **[Lucide Icons](https://github.com/lucide-icons/lucide)** — Icon library
+## Interface Preview
 
-## 📋 Requirements
+### Dashboard Overview
 
-- **Go** >= 1.25
-- **Node.js** >= 18.0
-- **PostgreSQL** >= 14
-- **Redis** >= 6.0
-- **pnpm** >= 8.0 (recommended)
+![OpenFlare dashboard overview](./docs/assets/readme/dashboard-overview.png)
 
-## 🚀 Quick Start
+### Access Logs
 
-### 1. Clone the Repository
+![OpenFlare version release](./docs/assets/readme/domain_overview.png)
+
+### WAF Protection
+
+![OpenFlare version release](./docs/assets/readme/waf.png)
+
+## Quick Start
+
+### Hardware Configuration Recommendations
+
+| Component              | Minimum Hardware Requirements     | Recommended Hardware Requirements | Notes |
+|------------------------|-----------------------------------|-----------------------------------|-------|
+| **Server Control Plane** | 1 CPU core / 2 GB RAM / 20 GB disk | 2 CPU cores / 4 GB RAM / 50 GB+ disk | Disk usage should be expanded reasonably based on access log retention duration and concurrent traffic |
+| **Agent Data Plane**     | 1 CPU core / 512 MB RAM / 2 GB disk | 2 CPU cores / 2 GB RAM / 10 GB+ disk | Expanded based on OpenResty concurrent proxy connections and WAF interception processing |
+| **Relay Relay Node**     | 1 CPU core / 1 GB RAM / 5 GB disk | 2 CPU cores / 2 GB RAM / 20 GB disk | frps transmission relay throughput is mainly limited by bandwidth and CPU throughput |
+| **OpenFlared Client**    | 1 CPU core / 256 MB RAM / 1 GB disk | 1 CPU core / 512 MB RAM / 5 GB disk | Runs independently on the internal network with extremely low resource consumption; only network throughput needs to be guaranteed |
+
+### 1. Start the Server
+
+Use `docker-compose`:
 
 ```bash
-git clone https://github.com/Rain-kl/Wavelet.git refreshing
-cd refreshing
+# Download environment variable template and create .env file
+curl -o .env.example https://raw.githubusercontent.com/Rain-kl/OpenFlare/refs/heads/main/.env.example
+cp .env.example .env
 ```
 
-### 2. Configure Environment
+```yaml
+services:
+  openflare:
+    image: ghcr.io/rain-kl/openflare:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      TZ: ${TZ:-Asia/Shanghai}
+    ports:
+      - "3000:3000"
+    volumes:
+      - openflare_uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-openflare}
+      POSTGRES_USER: ${DB_USERNAME:-openflare}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-replace-with-strong-password}
+    volumes:
+      - openflare_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-openflare} -d ${DB_NAME:-openflare}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: valkey/valkey:8.0-alpine
+    restart: unless-stopped
+    command: ["valkey-server", "--appendonly", "yes"]
+    volumes:
+      - openflare_redis_data:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+volumes:
+    openflare_uploads:
+    openflare_postgres_data:
+    openflare_redis_data:
+```
+
+See the [deployment documentation](https://openflare.fyrn.link/deployment/deployment) for details.
+
+Access address: `http://localhost:3000`
+
+Default account:
+
+* Username: `admin`
+* Password: `12345678`
+
+### 2. Install Agent
+
+Before installing the Agent, first install OpenResty on the node or use the built-in OpenResty Agent Docker image.
+
+You can copy the installation command from the control panel's **Nodes Management -> Details -> Node Information -> Node ID and Deployment**, or use the script below:
+
+#### Docker Deployment
+
+Docker deployment can directly run the Agent image:
 
 ```bash
-cp config.example.yaml config.yaml
+docker pull ghcr.io/rain-kl/openflare-agent:latest
+docker rm -f openflare-agent 2>/dev/null || true
+docker run -d --name openflare-agent --restart unless-stopped \
+  -p 80:80 -p 443:443/tcp -p 443:443/udp \
+  -v openflare-agent-pages:/data/var/lib/openflare/pages \
+  -e OPENFLARE_SERVER_URL=http://your-server:3000 \
+  -e OPENFLARE_AGENT_TOKEN=YOUR_AGENT_TOKEN \
+  ghcr.io/rain-kl/openflare-agent:latest
 ```
 
-Edit `config.yaml` to configure your database and Redis. OIDC auth sources are configured at runtime in the admin settings page.
+## Cordis / Wavelet upstream
 
-### 3. Initialize Database
+OpenFlare is built on Wavelet Cordis. After cloning, enable `merge=ours` from `.gitattributes` so `git merge wavelet/main` keeps OpenFlare-owned paths:
 
 ```bash
-# Start local dependencies (PostgreSQL + Redis)
-docker compose up -d
-
-# Optional: also start ClickHouse
-docker compose --profile clickhouse up -d
-
-# If you use an external PostgreSQL instance instead of Docker, create the database manually
-createdb -h <host> -p 5432 -U postgres refreshing
-
-# Database schema is auto-migrated on first startup
+git config include.path ../.gitconfig
+# worktree-safe:
+git config include.path "$(git rev-parse --show-toplevel)/.gitconfig"
 ```
 
-### 4. Start the Backend
+`docker compose` uses `docker-compose.yaml`. `docker-compose.wavelet.yml` is the upstream Wavelet stack and is not the product default. Image publishes go through `.github/workflows/build-image-openflare*.yml`; the Wavelet `build-image.yml` is isolated.
 
-```bash
-# Install Go dependencies
-go mod tidy
+## Open Source License
 
-# Generate Swagger API documentation
-make swagger
+This project is licensed under the [Apache License 2.0](./LICENSE).
 
-# Start the HTTP API server
-go run main.go api
-```
+## Star History
 
-> The backend also supports separate `scheduler` and `worker` processes for async task processing:
-> ```bash
-> go run main.go scheduler   # Cron job scheduler
-> go run main.go worker      # Asynq task worker
-> ```
-
-### 5. Start the Frontend
-
-```bash
-cd frontend
-
-# Install dependencies
-pnpm install
-
-# Start dev server (Turbopack)
-pnpm dev
-```
-
-### 6. Access the Application
-
-| Service | URL |
-|---------|-----|
-| Frontend | http://localhost:3000 |
-| Swagger API Docs | http://localhost:8000/swagger/index.html |
-| Health Check | http://localhost:8000/api/health |
-
-## ⚙️ Configuration
-
-Key configuration options (see `config.example.yaml` for the full reference):
-
-| Option | Description | Example |
-|--------|-------------|---------|
-| `app.addr` | Backend listen address | `:8000` |
-| `database.host` | PostgreSQL host | `127.0.0.1` |
-| `database.database` | Database name | `refreshing` |
-| `redis.host` | Redis host | `127.0.0.1` |
-| `storage.endpoint` | S3-compatible endpoint | `s3.amazonaws.com` |
-
-## 🔧 Development Guide
-
-### Backend
-
-```bash
-# Run API server
-go run main.go api
-
-# Run task scheduler
-go run main.go scheduler
-
-# Run async worker
-go run main.go worker
-
-# Regenerate Swagger docs (required after controller changes)
-make swagger
-
-# Format & vet code
-make tidy
-```
-
-### Frontend
-
-```bash
-cd frontend
-
-# Development mode (Turbopack)
-pnpm dev
-
-# Production build
-pnpm build
-
-# Start production server
-pnpm start
-
-# Lint & format
-pnpm lint
-pnpm format
-```
-
-## 📁 Project Structure
-
-```
-wavelet/
-├── main.go                  # Entry point (delegates to internal/cmd)
-├── config.example.yaml      # Configuration template
-├── Makefile                 # Common commands (swagger, tidy, license, cross-build)
-├── docker/                  # Docker image build files (integrated/frontend/backend)
-├── docs/                    # Swagger auto-generated docs
-├── frontend/                # Next.js frontend application
-│   ├── app/                 # App Router pages
-│   ├── components/          # React components (ui, common, layout)
-│   ├── lib/services/        # API service layer
-│   └── types/               # TypeScript type definitions
-└── internal/                # Go backend (private)
-    ├── cmd/                 # CLI commands (api, scheduler, worker)
-    ├── apps/                # Business modules (oauth, user, admin, upload)
-    ├── model/               # GORM entities and business methods
-    ├── router/              # HTTP route registration
-    ├── task/                # Async task definitions and workers
-    ├── db/                  # Database and Redis initialization
-    ├── storage/             # S3 file storage abstraction
-    └── common/              # Shared utilities and response helpers
-```
-
-## 📚 API Documentation
-
-Swagger API documentation is auto-generated and available once the backend is running:
-
-```
-http://localhost:8000/swagger/index.html
-```
-
-The built-in frontend docs portal at `/docs` includes:
-- **Usage Guide** — Step-by-step walkthrough for getting started
-- **API Reference** — Detailed interface documentation
-- **Privacy Policy** — Template privacy policy (customize as needed)
-- **Terms of Service** — Template terms of service
-
-## 🧪 Testing
-
-```bash
-# Backend tests
-go test ./...
-
-# Frontend lint
-cd frontend && pnpm lint
-```
-
-## 🚀 Deployment
-
-### Cross-platform Binary
-
-Build static binaries for all 6 targets (Linux / macOS / Windows × amd64 / arm64) with a single command.
-The compiled frontend is embedded in every binary — no separate deployment needed.
-
-**Prerequisites:** Docker with BuildKit enabled (Docker 23+ defaults to on).
-
-```bash
-# Build all 6 binaries → ./bin/
-make cross-build
-
-# Stamp a release version
-make cross-build VERSION=v1.2.3
-
-# Build only a specific OS (both architectures)
-make cross-build GOOS=linux
-make cross-build GOOS=darwin
-make cross-build GOOS=windows
-
-# Build only a specific architecture (all OSes)
-make cross-build GOARCH=amd64
-make cross-build GOARCH=arm64
-
-# Combine filters — single binary
-make cross-build GOOS=linux GOARCH=arm64
-make cross-build GOOS=darwin GOARCH=amd64 VERSION=v1.2.3
-```
-
-Output files in `./bin/`:
-
-| File | Platform |
-|------|----------|
-| `wavelet_linux_amd64` | Linux x86-64 |
-| `wavelet_linux_arm64` | Linux ARM64 |
-| `wavelet_darwin_amd64` | macOS Intel |
-| `wavelet_darwin_arm64` | macOS Apple Silicon |
-| `wavelet_windows_amd64.exe` | Windows x86-64 |
-| `wavelet_windows_arm64.exe` | Windows ARM64 |
-
-> The version string is accessible at runtime via `wavelet --version`.
-
-### Docker
-
-```bash
-# Build image
-docker build -t refreshing .
-
-# Run (pass your config as a volume mount)
-docker run -d -p 8000:8000 \
-  -v $(pwd)/config.yaml:/app/config.yaml \
-  refreshing api
-```
-
-### Production
-
-1. Build the frontend:
-   ```bash
-   cd frontend && pnpm build
-   ```
-
-2. Compile the backend:
-   ```bash
-   go build -o refreshing main.go
-   ```
-
-3. Configure `config.yaml` for production.
-
-4. Start services:
-   ```bash
-   ./refreshing api        # HTTP API
-   ./refreshing scheduler  # Cron scheduler (optional)
-   ./refreshing worker     # Task worker (optional)
-   ```
-
-## 🤝 Contributing
-
-We welcome contributions! Please read the following before submitting code:
-
-- [Contributing Guidelines](CONTRIBUTING.md)
-- [Code of Conduct](CODE_OF_CONDUCT.md)
-- [Contributor License Agreement](CLA.md)
-
-### Workflow
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/your-feature`)
-3. Commit your changes (`git commit -am 'Add your feature'`)
-4. Push to the branch (`git push origin feature/your-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the [Apache 2.0 License](LICENSE).
+<a href="https://www.star-history.com/?repos=Rain-kl%2FOpenFlare&type=date&legend=bottom-right">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=Rain-kl/OpenFlare&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=Rain-kl/OpenFlare&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=Rain-kl/OpenFlare&type=date&legend=top-left" />
+ </picture>
+</a>

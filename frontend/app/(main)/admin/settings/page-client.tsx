@@ -64,6 +64,14 @@ const SystemStatusManager = dynamic(
   { loading: () => tabFallback },
 );
 
+const OpenFlareOpsSettings = dynamic(
+  () =>
+    import('./components/openflare-ops').then(
+      (mod) => mod.OpenFlareOpsSettings,
+    ),
+  { loading: () => tabFallback },
+);
+
 function systemConfigMap(configs: SystemConfig[]) {
   return configs.reduce<Record<string, SystemConfig>>((accumulator, config) => {
     accumulator[config.key] = config;
@@ -80,6 +88,7 @@ export function AdminSettingsPageClient() {
   const activeTab = useMemo(() => {
     const rawTab = searchParams.get('tab');
     const validTabs = [
+      'openflare-ops',
       'security',
       'operation',
       'system',
@@ -87,7 +96,7 @@ export function AdminSettingsPageClient() {
       'status',
       'info',
     ];
-    return rawTab && validTabs.includes(rawTab) ? rawTab : 'security';
+    return rawTab && validTabs.includes(rawTab) ? rawTab : 'openflare-ops';
   }, [searchParams]);
 
   const handleTabChange = (value: string) => {
@@ -140,6 +149,12 @@ export function AdminSettingsPageClient() {
         className='w-full'
       >
         <TabsList variant='line' className='w-fit inline-flex gap-8 mb-6'>
+          <TabsTrigger
+            value='openflare-ops'
+            className='px-0 pb-2 text-xs font-semibold'
+          >
+            {t('tabs.openflare')}
+          </TabsTrigger>
           <TabsTrigger
             value='security'
             className='px-0 pb-2 text-xs font-semibold'
@@ -201,6 +216,12 @@ export function AdminSettingsPageClient() {
         </TabsContent>
         <TabsContent value='info' className='focus-visible:outline-none'>
           <InfoTab />
+        </TabsContent>
+        <TabsContent
+          value='openflare-ops'
+          className='focus-visible:outline-none'
+        >
+          <OpenFlareOpsSettings />
         </TabsContent>
       </Tabs>
     </motion.div>

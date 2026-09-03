@@ -9,13 +9,26 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   // Prevent 308 redirects on /api/* trailing slashes; dev rewrites proxy legacy APIs as-is.
   skipTrailingSlashRedirect: true,
-  experimental: {},
+  experimental: {
+    turbopackFileSystemCacheForBuild: true,
+  },
   ...(isExport
     ? { output: 'export' }
     : {
+        async redirects() {
+          return [
+            { source: '/openflare', destination: '/', permanent: true },
+            {
+              source: '/openflare/:path*',
+              destination: '/:path*',
+              permanent: true,
+            },
+            { source: '/home', destination: '/', permanent: true },
+          ];
+        },
         async rewrites() {
           const backendUrl =
-            process.env.WAVELET_BACKEND_URL || 'http://localhost:8000';
+            process.env.WAVELET_BACKEND_URL || 'http://localhost:3000';
           return [
             // 上传文件静态资源
             {

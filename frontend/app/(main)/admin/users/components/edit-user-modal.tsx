@@ -284,7 +284,9 @@ export function EditUserModal({
           <AlertDialogHeader>
             <AlertDialogTitle>{t('deleteConfirmTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t('deleteConfirmDesc', { name: user.nickname || user.username })}
+              {t('deleteConfirmDesc', {
+                name: user.nickname || user.username,
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -16,7 +16,6 @@ import {
 } from '@/components/ui/input-otp';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
-import { useTranslations } from 'next-intl';
 
 interface PasswordDialogProps {
   isOpen: boolean;
@@ -37,13 +36,10 @@ export function PasswordDialog({
   onOpenChange,
   onConfirm,
   loading = false,
-  title,
-  description,
+  title = '请输入密码',
+  description = '为了您的账户安全，请输入6位认证密码进行验证',
 }: PasswordDialogProps) {
   const [password, setPassword] = useState('');
-  const t = useTranslations('general.passwordDialog');
-  const displayTitle = title ?? t('enterPassword');
-  const displayDescription = description ?? t('enterPasswordDesc');
 
   const handleConfirm = () => {
     if (password.length === 6) {
@@ -62,8 +58,8 @@ export function PasswordDialog({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className='w-xs sm:w-md'>
         <DialogHeader>
-          <DialogTitle>{displayTitle}</DialogTitle>
-          <DialogDescription>{displayDescription}</DialogDescription>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
 
         <div className='py-2 flex justify-center'>
@@ -96,7 +92,7 @@ export function PasswordDialog({
             disabled={loading}
             className='h-8 text-xs'
           >
-            {t('cancel')}
+            取消
           </Button>
           <Button
             type='button'
@@ -107,10 +103,10 @@ export function PasswordDialog({
             {loading ? (
               <>
                 <Spinner className='mr-2 h-4 w-4' />
-                {t('verifying')}
+                验证中...
               </>
             ) : (
-              t('confirm')
+              '确认'
             )}
           </Button>
         </div>

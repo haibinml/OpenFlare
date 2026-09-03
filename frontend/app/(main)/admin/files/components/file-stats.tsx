@@ -50,43 +50,47 @@ const categoryMap: Record<string, string> = {
   其他: 'others',
 };
 
-const statsChartConfig = {
-  images: {
-    label: 'images',
-    color: 'hsl(var(--chart-1))',
-  },
-  videos: {
-    label: 'videos',
-    color: 'hsl(var(--chart-2))',
-  },
-  audio: {
-    label: 'audio',
-    color: 'hsl(var(--chart-3))',
-  },
-  documents: {
-    label: 'documents',
-    color: 'hsl(var(--chart-4))',
-  },
-  archives: {
-    label: 'archives',
-    color: 'hsl(var(--chart-5))',
-  },
-  others: {
-    label: 'others',
-    color: 'hsl(var(--chart-6))',
-  },
-  count: {
-    label: 'count',
-    color: 'hsl(var(--primary))',
-  },
-  size: {
-    label: 'size',
-    color: 'hsl(var(--chart-2))',
-  },
-} satisfies ChartConfig;
+function useStatsChartConfig() {
+  const t = useTranslations('admin.files');
+  return {
+    images: {
+      label: t('stats.catImages'),
+      color: 'hsl(var(--chart-1))',
+    },
+    videos: {
+      label: t('stats.catVideos'),
+      color: 'hsl(var(--chart-2))',
+    },
+    audio: {
+      label: t('stats.catAudio'),
+      color: 'hsl(var(--chart-3))',
+    },
+    documents: {
+      label: t('stats.catDocuments'),
+      color: 'hsl(var(--chart-4))',
+    },
+    archives: {
+      label: t('stats.catArchives'),
+      color: 'hsl(var(--chart-5))',
+    },
+    others: {
+      label: t('stats.catOthers'),
+      color: 'hsl(var(--chart-6))',
+    },
+    count: {
+      label: t('stats.chartLabelCount'),
+      color: 'hsl(var(--primary))',
+    },
+    size: {
+      label: t('stats.chartLabelSize'),
+      color: 'hsl(var(--chart-2))',
+    },
+  } satisfies ChartConfig;
+}
 
 export function FileStats() {
   const t = useTranslations('admin.files');
+  const statsChartConfig = useStatsChartConfig();
   const [trendMetric, setTrendMetric] = React.useState<'count' | 'size'>(
     'count',
   );
@@ -139,11 +143,16 @@ export function FileStats() {
 
   const maxStats = React.useMemo(() => {
     if (!stats?.categories || stats.categories.length === 0) {
-      return { maxCountName: '无', maxCount: 0, maxSizeName: '无', maxSize: 0 };
+      return {
+        maxCountName: t('stats.none'),
+        maxCount: 0,
+        maxSizeName: t('stats.none'),
+        maxSize: 0,
+      };
     }
-    let maxCountName = '无';
+    let maxCountName = t('stats.none');
     let maxCount = 0;
-    let maxSizeName = '无';
+    let maxSizeName = t('stats.none');
     let maxSize = 0;
 
     stats.categories.forEach((cat) => {
@@ -158,7 +167,7 @@ export function FileStats() {
     });
 
     return { maxCountName, maxCount, maxSizeName, maxSize };
-  }, [stats?.categories]);
+  }, [stats?.categories, t]);
 
   const trendSummary = React.useMemo(() => {
     if (!stats?.trend) return { count: 0, size: 0 };
@@ -369,7 +378,7 @@ export function FileStats() {
                         const formattedValue =
                           trendMetric === 'size'
                             ? formatFileSize(Number(value))
-                            : `${value} 个`;
+                            : `${value} ${t('stats.countUnit')}`;
                         return (
                           <>
                             <div className='flex items-center gap-1.5'>
@@ -479,7 +488,7 @@ export function FileStats() {
                                   </span>
                                 </div>
                                 <span className='text-foreground font-mono font-medium tabular-nums ml-auto'>
-                                  {value} 个
+                                  {value} {t('stats.countUnit')}
                                 </span>
                               </>
                             );
@@ -488,8 +497,12 @@ export function FileStats() {
                       }
                     />
                     <ChartLegend
-                      content={<ChartLegendContent nameKey='name' />}
-                      className='flex-wrap justify-center gap-x-4 gap-y-1 text-[11px] pt-4'
+                      content={
+                        <ChartLegendContent
+                          nameKey='name'
+                          className='flex-wrap justify-center gap-x-4 gap-y-1 text-[11px] pt-4'
+                        />
+                      }
                     />
                   </PieChart>
                 </ChartContainer>
@@ -576,8 +589,12 @@ export function FileStats() {
                       }
                     />
                     <ChartLegend
-                      content={<ChartLegendContent nameKey='name' />}
-                      className='flex-wrap justify-center gap-x-4 gap-y-1 text-[11px] pt-4'
+                      content={
+                        <ChartLegendContent
+                          nameKey='name'
+                          className='flex-wrap justify-center gap-x-4 gap-y-1 text-[11px] pt-4'
+                        />
+                      }
                     />
                   </PieChart>
                 </ChartContainer>

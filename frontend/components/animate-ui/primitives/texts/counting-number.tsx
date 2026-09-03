@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useMotionValue, useSpring, type SpringOptions } from 'motion/react';
+import { type SpringOptions, useMotionValue, useSpring } from 'motion/react';
 
 import { useIsInView, type UseIsInViewOptions } from '@/hooks/use-is-in-view';
 

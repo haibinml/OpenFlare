@@ -136,7 +136,7 @@
 }
 
 @theme inline {
-  /*
+  /* 
    * Aurora 动画配置
    */
   --animate-aurora: aurora 120s linear infinite;

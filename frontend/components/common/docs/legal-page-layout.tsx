@@ -6,7 +6,6 @@ import { ArrowLeft, Calendar, Check, Copy, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { motion, useScroll, useSpring } from 'motion/react';
-import { useTranslations } from 'next-intl';
 import type { PolicySection } from './types';
 
 interface LegalPageLayoutProps {
@@ -33,7 +32,6 @@ export function LegalPageLayout({
     damping: 30,
     restDelta: 0.001,
   });
-  const t = useTranslations('docs');
 
   const allSectionIds = React.useMemo(() => {
     return sections.flatMap((section) => [
@@ -194,7 +192,7 @@ export function LegalPageLayout({
     const lines: string[] = [];
     lines.push(`# ${title}`);
     lines.push('');
-    lines.push(`${t('lastUpdated')}：${lastUpdated}`);
+    lines.push(`最后更新：${lastUpdated}`);
     if (description) {
       const descriptionElement = contentRoot.querySelector(
         '[data-docs-description]',
@@ -305,7 +303,7 @@ export function LegalPageLayout({
               className='gap-2 pl-0 text-muted-foreground hover:text-foreground hover:bg-transparent -ml-2'
             >
               <ArrowLeft className='w-4 h-4' />
-              {t('backToHome')}
+              返回首页
             </Button>
           </Link>
 
@@ -320,11 +318,11 @@ export function LegalPageLayout({
             <div className='flex flex-wrap items-center gap-4 text-xs text-muted-foreground mb-8'>
               <span className='flex items-center gap-1.5 bg-muted/50 px-3 py-1 rounded-full border border-border/50'>
                 <FileText className='w-3.5 h-3.5' />
-                {t('sectionCount', { count: sections.length })}
+                {sections.length} 个内容
               </span>
               <span className='flex items-center gap-1.5 bg-muted/50 px-3 py-1 rounded-full border border-border/50'>
                 <Calendar className='w-3.5 h-3.5' />
-                {t('lastUpdated')}：{lastUpdated}
+                最后更新：{lastUpdated}
               </span>
               <Button
                 type='button'
@@ -338,7 +336,7 @@ export function LegalPageLayout({
                 ) : (
                   <Copy className='w-3.5 h-3.5' />
                 )}
-                {hasCopied ? t('copied') : t('copyMarkdown')}
+                {hasCopied ? '已复制' : '复制 Markdown'}
               </Button>
             </div>
             {description && (
@@ -359,7 +357,7 @@ export function LegalPageLayout({
             <div className='sticky top-24'>
               <div className='space-y-2 max-h-[calc(100vh-8rem)] overflow-y-auto pr-4 scrollbar-thin'>
                 <div className='text-sm font-semibold text-foreground mb-4 pl-3'>
-                  {t('toc')}
+                  目录
                 </div>
                 <nav className='space-y-1'>
                   {sections.map((section) => (
@@ -447,15 +445,15 @@ export function LegalPageLayout({
             <div className='pt-16 border-t border-border mt-20'>
               <div className='bg-muted/30 rounded-2xl p-8 text-center'>
                 <p className='text-muted-foreground text-sm mb-4'>
-                  {t('haveQuestions')}
+                  对这些内容有疑问？
                 </p>
                 <div className='flex justify-center gap-4'>
                   <Link
-                    href='https://github.com/Rain-kl/Wavelet/issues'
+                    href='https://github.com/Rain-kl/OpenFlare/issues'
                     target='_blank'
                   >
                     <Button variant='outline' className='h-9 text-xs'>
-                      {t('contactSupport')}
+                      联系支持
                     </Button>
                   </Link>
                 </div>

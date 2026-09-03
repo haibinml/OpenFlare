@@ -5,10 +5,11 @@ import Link from 'next/link';
 import { Check, Loader2, Monitor, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { toast } from 'sonner';
-import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { useCustomTheme } from '@/lib/theme';
 import { cn } from '@/lib/utils';
+import { LanguageSwitcher } from '@/components/common/language-switcher';
+import { useTranslations } from 'next-intl';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -17,7 +18,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { LanguageSwitcher } from '@/components/common/language-switcher';
 
 function ThemeModeSection() {
   const { theme, setTheme } = useTheme();

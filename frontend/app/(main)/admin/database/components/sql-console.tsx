@@ -6,8 +6,8 @@ import { useTheme } from 'next-themes';
 import CodeMirror from '@uiw/react-codemirror';
 import { sql } from '@codemirror/lang-sql';
 import { toast } from 'sonner';
-import { ArrowLeft, Play, RefreshCw, Terminal, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { ArrowLeft, Play, RefreshCw, Terminal, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -101,7 +101,7 @@ export function SQLConsole({ dbType, onClose }: SQLConsoleProps) {
       setSqlResult(result);
       toast.success(t('sqlExecSuccess'));
     } catch (err) {
-      setSqlError(err instanceof Error ? err.message : '未知执行错误');
+      setSqlError(err instanceof Error ? err.message : t('unknownExecError'));
       toast.error(t('sqlExecFailed'));
     } finally {
       setExecutingSQL(false);
@@ -198,7 +198,7 @@ export function SQLConsole({ dbType, onClose }: SQLConsoleProps) {
                 size='icon'
                 className='h-7 w-7 text-muted-foreground hover:text-foreground'
                 onClick={() => setSqlQuery('')}
-                title='清空编辑器'
+                title={t('clearEditor')}
               >
                 <Trash2 className='size-3.5' />
               </Button>
@@ -241,7 +241,7 @@ export function SQLConsole({ dbType, onClose }: SQLConsoleProps) {
         <div
           onMouseDown={handleMouseDown}
           className='h-1.5 bg-border/60 hover:bg-primary/50 cursor-row-resize transition-colors flex items-center justify-center shrink-0 select-none z-10'
-          title='拖动调整大小'
+          title={t('dragResize')}
         >
           <div className='w-8 h-1 rounded bg-muted-foreground/30' />
         </div>
@@ -272,7 +272,7 @@ export function SQLConsole({ dbType, onClose }: SQLConsoleProps) {
 
             {sqlError && (
               <div className='bg-destructive/10 border border-destructive/20 text-destructive font-mono text-xs p-4 rounded-lg overflow-auto h-full max-h-[300px]'>
-                <p className='font-semibold mb-1'>SQL 执行报错 (Error):</p>
+                <p className='font-semibold mb-1'>{t('execErrorTitle')}</p>
                 <pre className='whitespace-pre-wrap'>{sqlError}</pre>
               </div>
             )}

@@ -4,17 +4,17 @@ import { motion } from 'motion/react';
 import { ArrowRight, CreditCard, Globe, Shield, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { useTranslations } from 'next-intl';
 
 export interface HeroSectionProps {
   className?: string;
 }
 
+/**
+ * Hero Section - 首页 Hero 展示
+ */
 export const HeroSection = React.memo(function HeroSection({
   className,
 }: HeroSectionProps) {
-  const t = useTranslations('home.hero');
-
   return (
     <section className={cn('w-full', className)}>
       <motion.div
@@ -41,9 +41,8 @@ export const HeroSection = React.memo(function HeroSection({
               }}
               className='text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] mb-6 text-foreground'
             >
-              Wavelet
-              <br />
-              <span className='bg-clip-text text-primary'>Modern Platform</span>
+              Modern Platform <br />
+              <span className='bg-clip-text text-primary'>为二次开发而生</span>
             </motion.h1>
 
             <motion.p
@@ -57,9 +56,9 @@ export const HeroSection = React.memo(function HeroSection({
               }}
               className='text-sm md:text-base text-muted-foreground max-w-xl leading-relaxed mb-10'
             >
-              {t('subtitle')}
+              通用的、现代化的后台管理系统脚手架
               <br className='hidden md:block' />
-              {t('subtitleLine2')}
+              开箱即用、完整基建、极易扩展，助您快速构建企业级应用。
             </motion.p>
 
             <motion.div
@@ -73,23 +72,28 @@ export const HeroSection = React.memo(function HeroSection({
               }}
               className='flex flex-col sm:flex-row items-center gap-4'
             >
-              <Link href='/home' className='w-full sm:w-auto'>
+              <Link href='/' className='w-full sm:w-auto'>
                 <Button
                   size='lg'
                   className='w-full rounded-full bg-primary hover:bg-primary/90 font-medium transition-all active:scale-95'
                 >
-                  {t('getStarted')}
+                  立即开始
                   <ArrowRight className='size-4' />
                 </Button>
               </Link>
 
-              <Link href='/docs/how-to-use' className='w-full sm:w-auto'>
+              <Link
+                href='https://openflare.fyrn.link/'
+                target='_blank'
+                rel='noopener noreferrer'
+                className='w-full sm:w-auto'
+              >
                 <Button
                   variant='secondary'
                   size='lg'
                   className='w-full rounded-full font-medium active:scale-95'
                 >
-                  {t('learnMore')}
+                  了解更多
                 </Button>
               </Link>
             </motion.div>
@@ -103,15 +107,15 @@ export const HeroSection = React.memo(function HeroSection({
             >
               <div className='flex items-center gap-2'>
                 <Zap className='w-5 h-5 text-yellow-500' />
-                <span>{t('features.readyToUse')}</span>
+                <span>开箱即用</span>
               </div>
               <div className='flex items-center gap-2'>
                 <Globe className='w-5 h-5 text-blue-500' />
-                <span>{t('features.highlyExtensible')}</span>
+                <span>高度可扩展</span>
               </div>
               <div className='flex items-center gap-2'>
                 <Shield className='w-5 h-5 text-green-500' />
-                <span>{t('features.industrialGrade')}</span>
+                <span>工业级基建</span>
               </div>
             </motion.div>
           </div>

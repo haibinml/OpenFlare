@@ -290,22 +290,6 @@ export function AccessTokenMain() {
                       size='sm'
                       className='text-xs border-dashed text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg h-8 px-2.5'
                       onClick={() =>
-                        handleCopyText(token.masked_token, token.id)
-                      }
-                    >
-                      {copiedId === token.id ? (
-                        <Check className='size-3.5 mr-1 text-emerald-500' />
-                      ) : (
-                        <Copy className='size-3.5 mr-1' />
-                      )}
-                      {ta('copy')}
-                    </Button>
-                    <Button
-                      type='button'
-                      variant='outline'
-                      size='sm'
-                      className='text-xs border-dashed text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg h-8 px-2.5'
-                      onClick={() =>
                         setRotateTarget({ id: token.id, name: token.name })
                       }
                       disabled={rotateTokenMutation.isPending}

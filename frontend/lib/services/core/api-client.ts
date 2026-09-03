@@ -90,7 +90,7 @@ function getRequestKey(config: {
  */
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Browser must use same-origin relative URLs so Session Cookie hits Next rewrite.
+    // Browser must use same-origin relative URLs so Session Cookie hits Next rewrite (3010→3000).
     if (typeof window !== 'undefined') {
       config.baseURL = getApiBaseUrl();
     }

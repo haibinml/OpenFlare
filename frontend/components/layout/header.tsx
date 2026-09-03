@@ -21,8 +21,8 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
 import { SearchDialog } from '@/components/layout/search-dialog';
-import { LanguageSwitcher } from '@/components/common/language-switcher';
 import { Kbd } from '@/components/ui/kbd';
+import { LanguageSwitcher } from '@/components/common/language-switcher';
 
 /**
  * 铃铛按钮组件
@@ -123,7 +123,7 @@ export function SiteHeader({
           <div className='flex items-center gap-2'>
             <SidebarTrigger />
             <span className='text-sm font-medium truncate max-w-[120px]'>
-              {user?.nickname || user?.username || 'Guest'}
+              {user?.nickname || user?.username || t('guest')}
             </span>
           </div>
           <div className='flex items-center gap-1'>
@@ -255,7 +255,7 @@ function AppBanner() {
             <p className='flex flex-wrap items-center justify-center gap-x-2 text-center'>
               <span className='text-foreground'>{t('bannerTitle')}</span>
               <a
-                href='https://example.com'
+                href='https://openflare.fyrn.link/changelog/'
                 target='_blank'
                 className='underline underline-offset-4 hover:text-foreground'
               >

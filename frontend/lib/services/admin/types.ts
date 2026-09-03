@@ -212,6 +212,10 @@ export interface TaskExecution {
 export interface ListTaskExecutionsRequest {
   status?: TaskExecutionStatus;
   task_type?: string;
+  /** Prefix match on stored asynq task type (ignored when task_type / task_types is set). */
+  task_type_prefix?: string;
+  /** Comma-separated exact asynq task types for IN filter (ignored when task_type is set). */
+  task_types?: string;
   page?: number;
   page_size?: number;
 }
@@ -413,6 +417,8 @@ export interface LogDatabaseStatus {
   retention_days: Record<string, number>;
   /** 当前主库的合法迁移目标 */
   available_targets: string[];
+  /** ClickHouse 运行指标（仅主库为 ClickHouse 时） */
+  clickhouse?: unknown;
 }
 
 /**

@@ -152,7 +152,7 @@ pnpm dev
 |------|------|
 | 前端界面 | http://localhost:3000 |
 | Swagger 接口文档 | http://localhost:8000/swagger/index.html |
-| 健康检查 | http://localhost:8000/api/health |
+| 健康检查 | http://localhost:8000/api/healthz |
 
 ## ⚙️ 配置说明
 

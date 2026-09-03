@@ -61,7 +61,7 @@ export class DbManageService extends BaseService {
     const disposition = response.headers['content-disposition'] as
       | string
       | undefined;
-    let filename = 'wavelet_export';
+    let filename = 'openflare_export';
     if (disposition) {
       const match = disposition.match(/filename="?([^";]+)"?/);
       if (match) filename = match[1];

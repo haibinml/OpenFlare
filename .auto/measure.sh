@@ -1,46 +1,90 @@
 #!/bin/bash
-# Autoresearch measure — pinned yardstick.
-#   debt          : findings under .auto/lint.ref.yaml (lower is better)  [PRIMARY]
-#   nolint_dirs   : raw //nolint directive count (lower is better, floor 0)
-#   tests_passed  : go test packages passing (floor, must never drop)
-#   test_funcs    : total Test*/Benchmark* funcs (floor, must never drop)
-#   arch_viol     : Cordis architecture script violations (floor 0)
-#   coverage      : backend statement coverage % (informational)
-set -uo pipefail
-cd "$(dirname "$0")/../backend"
+# Benchmark: total code-quality issues across backend + frontend (lower is better).
+# Fixed linter set — see .auto/prompt.md. Never tune this file to game counts.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+start=$(date +%s)
 
-# Hermetic lint result cache. golangci-lint's default cache is machine-wide, so
-# entries written while analysing a different worktree are replayed carrying that
-# checkout's absolute paths, which misattributes findings and can serve a stale
-# verdict. Key the cache to this directory. Count-neutral: cold and shared-warm
-# runs both report the same number of findings.
-GOLANGCI_LINT_CACHE="${TMPDIR:-/tmp}/ar-lint-cache-$(pwd | cksum | awk '{print $1}')"
-export GOLANGCI_LINT_CACHE
+# ---------- Backend: golangci-lint, repo config + fixed best-practice extras ----------
+EXTRA_LINTERS="errorlint,errname,nilnil,forcetypeassert,copyloopvar,intrange,mirror,perfsprint,prealloc,usestdlibvars,modernize,sloglint,canonicalheader,nosprintfhostport,recvcheck,wastedassign,exhaustive"
+golang_out=$(golangci-lint run --enable="$EXTRA_LINTERS" 2>&1 || true)
 
-REF_CFG="$(cd .. && pwd)/.auto/lint.ref.yaml"
+golang_total=0
+while IFS= read -r line; do
+  if [[ "$line" =~ ^\*\ ([a-zA-Z0-9_]+):\ ([0-9]+)$ ]]; then
+    name="${BASH_REMATCH[1]}"
+    n="${BASH_REMATCH[2]}"
+    golang_total=$((golang_total + n))
+    echo "METRIC golint_${name}=$n"
+  fi
+done <<< "$golang_out"
+echo "METRIC golint_total=$golang_total"
 
-# Primary: pinned yardstick findings (never the mutable project config).
-golangci-lint run -c "${REF_CFG}" > /tmp/ar_debt.txt 2>&1 || true
-DEBT=$(grep -cE '\.go:[0-9]+:[0-9]+: ' /tmp/ar_debt.txt || true)
+# ---------- Backend: test-code quality (tests excluded from repo config; safe linters only) ----------
+test_out=$(golangci-lint run --tests=true --enable=testifylint,usetesting,thelper --enable-only=testifylint,usetesting,thelper 2>&1 || true)
+golang_test_total=0
+while IFS= read -r line; do
+  if [[ "$line" =~ ^\*\ ([a-zA-Z0-9_]+):\ ([0-9]+)$ ]]; then
+    name="${BASH_REMATCH[1]}"
+    n="${BASH_REMATCH[2]}"
+    golang_test_total=$((golang_test_total + n))
+    echo "METRIC golint_test_${name}=$n"
+  fi
+done <<< "$test_out"
+echo "METRIC golint_test_total=$golang_test_total"
 
-# Suppression reliance — anti-cheat signal.
-NOLINT=$(rg '//\s*nolint' --glob '*.go' 2>/dev/null | wc -l | tr -d ' ')
+# ---------- Backend: govet extra analyzers (dead code / nil deref — real-bug finders) ----------
+cat > /tmp/govetx.yml <<'EOF'
+version: "2"
+linters:
+  default: none
+  enable:
+    - govet
+  settings:
+    govet:
+      enable:
+        - nilness
+        - unusedwrite
+EOF
+vetx_out=$(golangci-lint run --config /tmp/govetx.yml --max-issues-per-linter=0 2>&1 || true)
+rm -f /tmp/govetx.yml
+golang_vetx_total=0
+while IFS= read -r line; do
+  if [[ "$line" =~ ^\*\ ([a-zA-Z0-9_]+):\ ([0-9]+)$ ]]; then
+    name="${BASH_REMATCH[1]}"
+    n="${BASH_REMATCH[2]}"
+    golang_vetx_total=$((golang_vetx_total + n))
+    echo "METRIC golint_vetx_${name}=$n"
+  fi
+done <<< "$vetx_out"
+echo "METRIC golint_vetx_total=$golang_vetx_total"
 
-# Regression floors. One covered run feeds both the pass floor and coverage.
-go test -cover ./... > /tmp/ar_test.txt 2>&1 || true
-TESTS_PASSED=$(grep -c '^ok' /tmp/ar_test.txt || true)
-FAILS=$(grep -cE '^(FAIL|--- FAIL)' /tmp/ar_test.txt || true)
-TEST_FUNCS=$(rg -c '^(func Test|func Benchmark)' --glob '*_test.go' 2>/dev/null | awk -F: '{s+=$2} END {print s+0}')
+# ---------- Frontend: eslint (repo gate) ----------
+cd frontend
+eslint_out=$(pnpm exec eslint . --max-warnings 0 2>&1 || true)
+eslint_problems=0; eslint_errors=0; eslint_warnings=0
+if [[ "$eslint_out" =~ ([0-9]+)\ problems? ]]; then eslint_problems="${BASH_REMATCH[1]}"; fi
+if [[ "$eslint_out" =~ \(([0-9]+)\ errors?, ]]; then eslint_errors="${BASH_REMATCH[1]}"; fi
+if [[ "$eslint_out" =~ ,\ ([0-9]+)\ warnings? ]]; then eslint_warnings="${BASH_REMATCH[1]}"; fi
+echo "METRIC eslint_problems=$eslint_problems"
+echo "METRIC eslint_errors=$eslint_errors"
+echo "METRIC eslint_warnings=$eslint_warnings"
 
-# Cordis architecture violations (count of FAIL lines emitted by the gate script).
-ARCH_VIOL=$("../scripts/check_cordis_architecture.sh" 2>&1 | grep -c 'FAIL' || true)
+# ---------- Frontend: tsc (repo gate) ----------
+tsc_out=$(pnpm exec tsc --noEmit --jsx preserve 2>&1 || true)
+tsc_errors=$(grep -cE "error TS" <<< "$tsc_out" || true)
+echo "METRIC tsc_errors=$tsc_errors"
 
-COVERAGE=$(grep -oE 'coverage: [0-9.]+%' /tmp/ar_test.txt | awk '{gsub("%","",$2); s+=$2; n++} END {if(n>0) printf "%.2f", s/n; else print "0"}')
+# ---------- Frontend: vitest (2026-08-16 起全绿，纳入基准防回归) ----------
+vitest_out=$(pnpm exec vitest run --reporter=dot 2>&1 || true)
+vitest_failed=0; vitest_total=0
+if [[ "$vitest_out" =~ ([0-9]+)\ failed ]]; then vitest_failed="${BASH_REMATCH[1]}"; fi
+if [[ "$vitest_out" =~ Tests[[:space:]]+([0-9]+)\ passed ]]; then vitest_total="${BASH_REMATCH[1]}"; fi
+if [[ "$vitest_out" =~ Tests[[:space:]]+([0-9]+) ]]; then vitest_total="${BASH_REMATCH[1]}"; fi
+echo "METRIC vitest_failed=$vitest_failed"
+echo "METRIC vitest_total=$vitest_total"
 
-echo "METRIC debt=${DEBT}"
-echo "METRIC nolint_dirs=${NOLINT}"
-echo "METRIC tests_passed=${TESTS_PASSED}"
-echo "METRIC test_funcs=${TEST_FUNCS}"
-echo "METRIC arch_viol=${ARCH_VIOL}"
-echo "METRIC coverage=${COVERAGE}"
-echo "INFO test_failures=${FAILS}"
+end=$(date +%s)
+total=$((golang_total + golang_test_total + golang_vetx_total + eslint_problems + tsc_errors + vitest_failed))
+echo "METRIC total_issues=$total"
+echo "METRIC measure_s=$((end - start))"

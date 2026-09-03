@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { EyeIcon, EyeOffIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
 import { useAuth } from '@/components/providers/auth-provider';
 import { Button } from '@/components/ui/button';
@@ -19,7 +20,6 @@ import { OTPForm } from './otp-form';
 import { AuthService } from '@/lib/services/auth';
 import { ConfigService } from '@/lib/services/config';
 import type { LoginRequest } from '@/lib/services/auth/types';
-import { useTranslations } from 'next-intl';
 import { safeRedirectTarget } from '@/lib/utils';
 
 function persistRedirectTarget(
@@ -198,8 +198,8 @@ export function LoginForm({
   };
 
   const registrationEnabled =
-    configBool(publicConfigQuery.data?.registration_enabled, true) &&
-    configBool(publicConfigQuery.data?.password_register_enabled, true);
+    configBool(publicConfigQuery.data?.registration_enabled, false) &&
+    configBool(publicConfigQuery.data?.password_register_enabled, false);
 
   const passwordLoginEnabled = configBool(
     publicConfigQuery.data?.password_login_enabled,

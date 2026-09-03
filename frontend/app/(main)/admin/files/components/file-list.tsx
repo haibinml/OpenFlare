@@ -497,7 +497,9 @@ export function FileList() {
                   <div className='flex flex-col items-center gap-3'>
                     {getFileIcon(detailTarget.mime_type, 'size-14')}
                     <span className='text-xs font-medium text-muted-foreground uppercase'>
-                      {detailTarget.extension} 文件
+                      {t('list.extensionFile', {
+                        ext: detailTarget.extension,
+                      })}
                     </span>
                   </div>
                 )}
@@ -636,7 +638,9 @@ export function FileList() {
           <AlertDialogHeader>
             <AlertDialogTitle>{t('list.deleteTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t('list.deleteConfirm', { name: deleteTarget?.file_name || '' })}
+              {t('list.deleteConfirm', {
+                name: deleteTarget?.file_name ?? '',
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

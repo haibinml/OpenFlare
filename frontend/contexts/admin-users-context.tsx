@@ -17,7 +17,6 @@ import type {
   UpdateUserRequest,
 } from '@/lib/services/admin';
 import services from '@/lib/services';
-import { useTranslations } from 'next-intl';
 
 /** 用户列表查询参数 */
 export interface UserQueryParams {
@@ -70,7 +69,6 @@ export function AdminUsersProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const t = useTranslations('contexts.adminUsers');
   // State
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [total, setTotal] = useState(0);
@@ -239,10 +237,7 @@ export function AdminUsersProvider({
         is_active: !user.is_active,
       });
       toast.success(
-        t('userStatusChanged', {
-          action: !user.is_active ? t('enabled') : t('disabled'),
-          username: user.username,
-        }),
+        `已${!user.is_active ? '启用' : '禁用'}用户 ${user.username}`,
       );
     } catch {
       // Revert on error
@@ -251,7 +246,7 @@ export function AdminUsersProvider({
           u.id === user.id ? { ...u, is_active: originalStatus } : u,
         ),
       );
-      toast.error(t('updateStatusFailed'));
+      toast.error('更新状态失败');
     }
   };
 
@@ -266,10 +261,10 @@ export function AdminUsersProvider({
       setTotal((prev) => prev + 1);
       // Clear cache because data changed
       cacheRef.current = {};
-      toast.success(t('userCreated', { username: newUser.username }));
+      toast.success(`已成功创建用户 ${newUser.username}`);
       return newUser;
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t('createUserFailed'));
+      toast.error(err instanceof Error ? err.message : '创建用户失败');
       throw err;
     }
   };
@@ -280,9 +275,9 @@ export function AdminUsersProvider({
       setUsers((prev) => prev.filter((u) => u.id !== user.id));
       setTotal((prev) => Math.max(0, prev - 1));
       cacheRef.current = {};
-      toast.success(t('userDeleted', { username: user.username }));
+      toast.success(`已删除用户 ${user.username}`);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t('deleteUserFailed'));
+      toast.error(err instanceof Error ? err.message : '删除用户失败');
       throw err;
     }
   };
@@ -292,9 +287,9 @@ export function AdminUsersProvider({
       await services.adminUser.updateUser(id, req);
       setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, ...req } : u)));
       cacheRef.current = {};
-      toast.success(t('updateUserSuccess'));
+      toast.success('更新用户信息成功');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t('updateUserFailed'));
+      toast.error(err instanceof Error ? err.message : '更新用户信息失败');
       throw err;
     }
   };

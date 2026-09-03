@@ -4,6 +4,7 @@
 'use client';
 
 import * as React from 'react';
+import { useTranslations } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
 import {
   ChevronLeft,
@@ -35,7 +36,6 @@ import {
 import { ErrorInline } from '@/components/layout/error';
 import { LoadingStateWithBorder } from '@/components/layout/loading';
 import { cn } from '@/lib/utils';
-import { useTranslations } from 'next-intl';
 
 import {
   Dialog,

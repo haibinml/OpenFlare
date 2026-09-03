@@ -2,7 +2,6 @@ import * as React from 'react';
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { FileTextIcon } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 /**
  * 加载页面组件
@@ -61,7 +60,6 @@ export function AppleSpinner({
  * 用于统一显示加载状态
  */
 export function LoadingPage(props: { text?: string; badgeText?: string }) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _ = props;
   return (
     <div className='absolute inset-0 z-50 overflow-hidden font-sans bg-background/80 backdrop-blur-md text-foreground flex items-center justify-center'>
@@ -89,15 +87,12 @@ interface LoadingStateProps extends React.ComponentProps<'div'> {
  * 用于统一显示加载中的状态
  */
 export function LoadingState({
-  title,
-  description,
+  title = '加载中',
+  description = '正在获取活动数据...',
   icon: Icon = FileTextIcon,
   className,
   iconSize = 'md',
 }: LoadingStateProps) {
-  const t = useTranslations('layout.loading');
-  const displayTitle = title ?? t('loading');
-  const displayDescription = description ?? t('loadingDesc');
   const iconSizes = { sm: 'size-8', md: 'size-10', lg: 'size-14' };
   const iconInnerSizes = { sm: 'size-4', md: 'size-5', lg: 'size-7' };
 
@@ -119,13 +114,13 @@ export function LoadingState({
         />
       </div>
 
-      {displayTitle && (
-        <p className='text-sm font-medium mb-1 animate-pulse'>{displayTitle}</p>
+      {title && (
+        <p className='text-sm font-medium mb-1 animate-pulse'>{title}</p>
       )}
 
-      {displayDescription && (
+      {description && (
         <p className='text-xs text-muted-foreground max-w-md animate-pulse'>
-          {displayDescription}
+          {description}
         </p>
       )}
     </div>

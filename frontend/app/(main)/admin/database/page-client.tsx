@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic';
 import * as React from 'react';
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import {
   Activity,
@@ -16,7 +17,6 @@ import {
   Server,
   Terminal,
 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import {
   Card,
@@ -79,7 +79,7 @@ export function DatabasePageClient() {
         setOverview(data);
       } catch (err) {
         toast.error(t('fetchOverviewFailed'), {
-          description: err instanceof Error ? err.message : '未知错误',
+          description: err instanceof Error ? err.message : t('unknownError'),
         });
       } finally {
         setLoadingOverview(false);
@@ -96,7 +96,7 @@ export function DatabasePageClient() {
       setTables(data);
     } catch (err) {
       toast.error(t('fetchTablesFailed'), {
-        description: err instanceof Error ? err.message : '未知错误',
+        description: err instanceof Error ? err.message : t('unknownError'),
       });
     } finally {
       setLoadingTables(false);
@@ -128,7 +128,7 @@ export function DatabasePageClient() {
       });
     } catch (err) {
       toast.error(t('exportFailed'), {
-        description: err instanceof Error ? err.message : '导出异常',
+        description: err instanceof Error ? err.message : t('exportException'),
       });
     } finally {
       setExporting(false);

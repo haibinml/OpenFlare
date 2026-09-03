@@ -1,8 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import {
   Activity,
@@ -46,7 +46,7 @@ const formatNumber = (num: number | string) => {
  * 运行时系统状态展示与管理组件
  */
 export function SystemStatusManager() {
-  const t = useTranslations('admin.settings.status');
+  const t = useTranslations('openflareOps.status');
   const [status, setStatus] = useState<SystemStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [wavelet, setWavelet] = useState(false);
@@ -85,9 +85,8 @@ export function SystemStatusManager() {
         setStatus(data);
         prevStatusRef.current = data;
       } catch (err) {
-        toast.error(t('fetchFailed'), {
-          description:
-            err instanceof Error ? err.message : t('unknownRequestError'),
+        toast.error(t('loadFailed'), {
+          description: err instanceof Error ? err.message : t('unknownError'),
         });
       } finally {
         setLoading(false);
@@ -203,7 +202,7 @@ export function SystemStatusManager() {
           <Activity className='size-5 text-primary' />
           <div>
             <h1 className='text-2xl font-semibold tracking-tight'>
-              {t('pageTitle')}
+              {t('title')}
             </h1>
           </div>
         </div>
@@ -259,10 +258,10 @@ export function SystemStatusManager() {
               <CardHeader className='flex flex-row items-center justify-between pb-2 space-y-0'>
                 <div className='space-y-0.5'>
                   <CardTitle className='text-sm font-semibold'>
-                    {t('cards.serviceOverview')}
+                    {t('overview')}
                   </CardTitle>
                   <CardDescription className='text-[10px]'>
-                    {t('cards.serviceOverviewDesc')}
+                    {t('overviewDesc')}
                   </CardDescription>
                 </div>
                 <Badge
@@ -274,17 +273,17 @@ export function SystemStatusManager() {
               </CardHeader>
               <CardContent className='space-y-1'>
                 <RenderMetricRow
-                  label={t('metrics.uptime')}
+                  label={t('uptime')}
                   value={status.uptime}
                   field='uptime'
                 />
                 <RenderMetricRow
-                  label={t('metrics.goroutines')}
+                  label={t('goroutines')}
                   value={status.num_goroutine}
                   field='num_goroutine'
                 />
                 <RenderMetricRow
-                  label={t('metrics.heapObjects')}
+                  label={t('heapObjects')}
                   value={status.heap_objects}
                   field='heap_objects'
                 />
@@ -296,10 +295,10 @@ export function SystemStatusManager() {
               <CardHeader className='flex flex-row items-center justify-between pb-2 space-y-0'>
                 <div className='space-y-0.5'>
                   <CardTitle className='text-sm font-semibold'>
-                    {t('cards.memoryStats')}
+                    {t('memory')}
                   </CardTitle>
                   <CardDescription className='text-[10px]'>
-                    {t('cards.memoryStatsDesc')}
+                    {t('memoryDesc')}
                   </CardDescription>
                 </div>
                 <Badge
@@ -312,22 +311,22 @@ export function SystemStatusManager() {
               <CardContent className='space-y-3'>
                 <div className='space-y-1'>
                   <RenderMetricRow
-                    label={t('metrics.alloc')}
+                    label={t('alloc')}
                     value={status.alloc}
                     field='alloc'
                   />
                   <RenderMetricRow
-                    label={t('metrics.totalAlloc')}
+                    label={t('totalAlloc')}
                     value={status.total_alloc}
                     field='total_alloc'
                   />
                   <RenderMetricRow
-                    label={t('metrics.sys')}
+                    label={t('sys')}
                     value={status.sys}
                     field='sys'
                   />
                   <RenderMetricRow
-                    label={t('metrics.nextGc')}
+                    label={t('nextGc')}
                     value={status.next_gc}
                     field='next_gc'
                   />
@@ -335,7 +334,7 @@ export function SystemStatusManager() {
                 {/* 物理内存水位比例 */}
                 <div className='space-y-1 px-1 pt-1'>
                   <div className='flex justify-between text-[10px] text-muted-foreground'>
-                    <span>{t('metrics.memoryUsagePercent')}</span>
+                    <span>{t('usageRatio')}</span>
                     <span className='font-mono'>
                       {getMemoryUsagePercent()}%
                     </span>
@@ -350,10 +349,10 @@ export function SystemStatusManager() {
               <CardHeader className='flex flex-row items-center justify-between pb-2 space-y-0'>
                 <div className='space-y-0.5'>
                   <CardTitle className='text-sm font-semibold'>
-                    {t('cards.heapStack')}
+                    {t('heapStack')}
                   </CardTitle>
                   <CardDescription className='text-[10px]'>
-                    {t('cards.heapStackDesc')}
+                    {t('heapStackDesc')}
                   </CardDescription>
                 </div>
                 <Badge
@@ -365,37 +364,37 @@ export function SystemStatusManager() {
               </CardHeader>
               <CardContent className='space-y-1'>
                 <RenderMetricRow
-                  label={t('metrics.heapAlloc')}
+                  label={t('heapAlloc')}
                   value={status.heap_alloc}
                   field='heap_alloc'
                 />
                 <RenderMetricRow
-                  label={t('metrics.heapSys')}
+                  label={t('heapSys')}
                   value={status.heap_sys}
                   field='heap_sys'
                 />
                 <RenderMetricRow
-                  label={t('metrics.heapIdle')}
+                  label={t('heapIdle')}
                   value={status.heap_idle}
                   field='heap_idle'
                 />
                 <RenderMetricRow
-                  label={t('metrics.heapInuse')}
+                  label={t('heapInuse')}
                   value={status.heap_inuse}
                   field='heap_inuse'
                 />
                 <RenderMetricRow
-                  label={t('metrics.heapReleased')}
+                  label={t('heapReleased')}
                   value={status.heap_released}
                   field='heap_released'
                 />
                 <RenderMetricRow
-                  label={t('metrics.stackInuse')}
+                  label={t('stackInuse')}
                   value={status.stack_inuse}
                   field='stack_inuse'
                 />
                 <RenderMetricRow
-                  label={t('metrics.stackSys')}
+                  label={t('stackSys')}
                   value={status.stack_sys}
                   field='stack_sys'
                 />
@@ -407,10 +406,10 @@ export function SystemStatusManager() {
               <CardHeader className='flex flex-row items-center justify-between pb-2 space-y-0'>
                 <div className='space-y-0.5'>
                   <CardTitle className='text-sm font-semibold'>
-                    {t('cards.internalStructs')}
+                    {t('structs')}
                   </CardTitle>
                   <CardDescription className='text-[10px]'>
-                    {t('cards.internalStructsDesc')}
+                    {t('structsDesc')}
                   </CardDescription>
                 </div>
                 <Badge
@@ -422,37 +421,37 @@ export function SystemStatusManager() {
               </CardHeader>
               <CardContent className='space-y-1'>
                 <RenderMetricRow
-                  label={t('metrics.mspanInuse')}
+                  label={t('mspanInuse')}
                   value={status.mspan_inuse}
                   field='mspan_inuse'
                 />
                 <RenderMetricRow
-                  label={t('metrics.mspanSys')}
+                  label={t('mspanSys')}
                   value={status.mspan_sys}
                   field='mspan_sys'
                 />
                 <RenderMetricRow
-                  label={t('metrics.mcacheInuse')}
+                  label={t('mcacheInuse')}
                   value={status.mcache_inuse}
                   field='mcache_inuse'
                 />
                 <RenderMetricRow
-                  label={t('metrics.mcacheSys')}
+                  label={t('mcacheSys')}
                   value={status.mcache_sys}
                   field='mcache_sys'
                 />
                 <RenderMetricRow
-                  label={t('metrics.buckHashSys')}
+                  label={t('buckHashSys')}
                   value={status.buck_hash_sys}
                   field='buck_hash_sys'
                 />
                 <RenderMetricRow
-                  label={t('metrics.gcSys')}
+                  label={t('gcSys')}
                   value={status.gc_sys}
                   field='gc_sys'
                 />
                 <RenderMetricRow
-                  label={t('metrics.otherSys')}
+                  label={t('otherSys')}
                   value={status.other_sys}
                   field='other_sys'
                 />
@@ -464,10 +463,10 @@ export function SystemStatusManager() {
               <CardHeader className='flex flex-row items-center justify-between pb-2 space-y-0'>
                 <div className='space-y-0.5'>
                   <CardTitle className='text-sm font-semibold'>
-                    {t('cards.gcAndAlloc')}
+                    {t('gc')}
                   </CardTitle>
                   <CardDescription className='text-[10px]'>
-                    {t('cards.gcAndAllocDesc')}
+                    {t('gcDesc')}
                   </CardDescription>
                 </div>
                 <Badge
@@ -481,39 +480,39 @@ export function SystemStatusManager() {
                 <div className='grid grid-cols-1 sm:grid-cols-2 gap-x-6'>
                   <div>
                     <RenderMetricRow
-                      label={t('metrics.numGc')}
+                      label={t('numGc')}
                       value={status.num_gc}
                       field='num_gc'
                     />
                     <RenderMetricRow
-                      label={t('metrics.lastGcTime')}
+                      label={t('lastGc')}
                       value={status.last_gc_time}
                       field='last_gc_time'
                     />
                     <RenderMetricRow
-                      label={t('metrics.pauseTotalNs')}
+                      label={t('pauseTotal')}
                       value={status.pause_total_ns}
                       field='pause_total_ns'
                     />
                     <RenderMetricRow
-                      label={t('metrics.lastPause')}
+                      label={t('lastPause')}
                       value={status.last_pause}
                       field='last_pause'
                     />
                   </div>
                   <div>
                     <RenderMetricRow
-                      label={t('metrics.mallocs')}
+                      label={t('mallocs')}
                       value={status.mallocs}
                       field='mallocs'
                     />
                     <RenderMetricRow
-                      label={t('metrics.frees')}
+                      label={t('frees')}
                       value={status.frees}
                       field='frees'
                     />
                     <RenderMetricRow
-                      label={t('metrics.lookups')}
+                      label={t('lookups')}
                       value={status.lookups}
                       field='lookups'
                     />

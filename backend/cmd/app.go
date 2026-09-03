@@ -6,6 +6,8 @@ package cmd
 import (
 	"Wavelet/core"
 	"Wavelet/core/contracts"
+	ofserver "Wavelet/openflare/plugins/server"
+	"Wavelet/openflare/plugins/server/migrate"
 	"Wavelet/plugins/domain/admin"
 	"Wavelet/plugins/domain/auth"
 	"Wavelet/plugins/domain/cap"
@@ -49,7 +51,7 @@ const (
 
 // runProfileApp prepares and runs the application for a given profile.
 func runProfileApp(profile core.Profile, mode string, listensForHTTP bool) {
-	app := newWaveletApp(profile)
+	app := newOpenFlareApp(profile)
 	if err := app.Prepare(); err != nil {
 		log.Fatalf("[%s] prepare failed: %v\n", mode, err)
 	}
@@ -67,8 +69,8 @@ func runProfileApp(profile core.Profile, mode string, listensForHTTP bool) {
 	}
 }
 
-// newWaveletApp creates a core.App wired with Wavelet platform infrastructure, domain plugins, and profile drivers.
-func newWaveletApp(profile core.Profile, opts ...core.AppOption) *core.App {
+// newOpenFlareApp creates a core.App wired with Wavelet platform plugins plus the OpenFlare server plugin.
+func newOpenFlareApp(profile core.Profile, opts ...core.AppOption) *core.App {
 	src, err := config.NewSource()
 	if err != nil {
 		log.Fatalf("[App] load config source failed: %v\n", err)
@@ -78,6 +80,7 @@ func newWaveletApp(profile core.Profile, opts ...core.AppOption) *core.App {
 		core.WithProfile(profile),
 		core.WithConfigSource(src),
 		core.WithShutdownTimeout(defaultShutdownTimeout),
+		core.WithMigrationBaseline(migrate.Legacy),
 	}
 	appOpts = append(appOpts, opts...)
 
@@ -112,10 +115,15 @@ func newWaveletApp(profile core.Profile, opts ...core.AppOption) *core.App {
 		system.New(),
 	)
 
-	// 4. Bind Goose migration engine
+	// 4. OpenFlare business routes (after domain plugins, before the HTTP driver)
+	app.Use(
+		ofserver.New(),
+	)
+
+	// 5. Bind Goose migration engine
 	app.SetMigrationEngine(&gooseEngine{})
 
-	// 5. Mount HTTP runtime driver
+	// 6. Mount HTTP runtime driver
 	app.Use(
 		driver_http.New(),
 	)

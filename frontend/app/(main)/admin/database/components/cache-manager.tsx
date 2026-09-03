@@ -2,9 +2,9 @@
 
 import * as React from 'react';
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { HardDrive, RefreshCw, Trash2 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 import {
   Card,
@@ -77,7 +77,7 @@ export function CacheManager({ refreshTrigger }: CacheManagerProps) {
         setLruEnabled(data.lru_enabled);
       } catch (err) {
         toast.error(t('fetchCacheStatusFailed'), {
-          description: err instanceof Error ? err.message : '未知错误',
+          description: err instanceof Error ? err.message : t('unknownError'),
         });
       } finally {
         setLoadingCache(false);
@@ -116,7 +116,7 @@ export function CacheManager({ refreshTrigger }: CacheManagerProps) {
       await fetchCacheStatus(true);
     } catch (err) {
       toast.error(t('saveConfigFailed'), {
-        description: err instanceof Error ? err.message : '未知错误',
+        description: err instanceof Error ? err.message : t('unknownError'),
       });
     } finally {
       setSavingConfig(false);
@@ -133,7 +133,7 @@ export function CacheManager({ refreshTrigger }: CacheManagerProps) {
       await fetchCacheStatus(true);
     } catch (err) {
       toast.error(t('clearCacheFailed'), {
-        description: err instanceof Error ? err.message : '未知错误',
+        description: err instanceof Error ? err.message : t('unknownError'),
       });
     } finally {
       setClearingCache(false);
@@ -256,7 +256,7 @@ export function CacheManager({ refreshTrigger }: CacheManagerProps) {
                       value={maxSizeMB}
                       onChange={(e) => setMaxSizeMB(e.target.value)}
                       className='h-8 text-xs bg-background/50 border-border/40'
-                      placeholder='例如 100'
+                      placeholder={t('maxSizePlaceholder')}
                       required
                     />
                     <p className='text-[9px] text-muted-foreground'>
@@ -275,7 +275,7 @@ export function CacheManager({ refreshTrigger }: CacheManagerProps) {
                       value={ttlMinutes}
                       onChange={(e) => setTtlMinutes(e.target.value)}
                       className='h-8 text-xs bg-background/50 border-border/40'
-                      placeholder='例如 60，0 表示永不过期'
+                      placeholder={t('ttlPlaceholder')}
                       required
                     />
                     <p className='text-[9px] text-muted-foreground'>

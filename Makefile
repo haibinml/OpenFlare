@@ -1,4 +1,4 @@
-.PHONY: swagger license license-check build-embedded build-test cross-build code-check format canary
+.PHONY: swagger license license-check format build-embedded build-test cross-build code-check build-backend build-frontend build-agent build-relay build-flared build-all
 
 VERSION ?= dev
 BUILD_DATE ?= $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
@@ -14,9 +14,13 @@ license-check:
 	scripts/update_go_license.sh --check
 
 format:
-	@echo "==> Formatting backend Go source with golangci-lint fmt (gofumpt, same gate as code-check)..."
-	cd backend && golangci-lint fmt
-	@echo "==> Formatting frontend source..."
+	@echo "==> Formatting backend Go source and removing unused imports..."
+	@command -v goimports >/dev/null 2>&1 || { \
+		echo "goimports not found, installing..."; \
+		go install golang.org/x/tools/cmd/goimports@latest; \
+	}
+	goimports -w $$(find backend -type f -name '*.go')
+	@echo "==> Formatting frontend source and removing unused imports..."
 	cd frontend && pnpm format
 
 build-embedded:
@@ -31,20 +35,48 @@ build-embedded:
 	cd backend && go build \
 		-tags embed_frontend \
 		-ldflags "-s -w -X '$(MODULE)/pkg/buildinfo.Version=$(VERSION)' -X '$(MODULE)/pkg/buildinfo.BuildTime=$(BUILD_DATE)'" \
-		-o ../bin/wavelet \
+		-o ../bin/openflare-server \
 		main.go
 
 code-check:
-	@scripts/check_cordis_architecture.sh
+	@echo "==> Architecture guards..."
+	@command -v rg >/dev/null 2>&1 || { echo 'error: rg (ripgrep) is required for architecture guards' >&2; exit 1; }
+	@if rg -n 'db\.DB\(|db\.Redis' backend/openflare/plugins/server/kernel/model --glob '*.go' -g '!*_test.go' ; then \
+		echo 'error: internal/model must not access db.DB or db.Redis (non-test code)' >&2; \
+		exit 1; \
+	fi
 	cd backend && golangci-lint run
-	cd frontend && pnpm tsc --noEmit --jsx preserve && npx eslint . --max-warnings 0
+	cd frontend && node scripts/merge-i18n-fragments.mjs && pnpm tsc --noEmit --jsx preserve && npx eslint . --max-warnings 0
 
 build-backend:
 	@echo "==> Building backend version=$(VERSION) build_date=$(BUILD_DATE)..."
 	cd backend && go build \
 		-ldflags "-s -w -X '$(MODULE)/pkg/buildinfo.Version=$(VERSION)' -X '$(MODULE)/pkg/buildinfo.BuildTime=$(BUILD_DATE)'" \
-		-o ../bin/wavelet \
+		-o ../bin/openflare-server \
 		main.go
+
+build-agent:
+	@echo "==> Building agent version=$(VERSION)..."
+	cd backend && go build \
+		-ldflags "-s -w -X '$(MODULE)/openflare/plugins/agent/config.Version=$(VERSION)'" \
+		-o ../bin/openflare-agent \
+		cmd/agent/main.go
+
+build-relay:
+	@echo "==> Building relay version=$(VERSION)..."
+	cd backend && go build \
+		-ldflags "-s -w -X '$(MODULE)/openflare/plugins/relay/config.Version=$(VERSION)'" \
+		-o ../bin/openflare-relay \
+		cmd/relay/main.go
+
+build-flared:
+	@echo "==> Building flared version=$(VERSION)..."
+	cd backend && go build \
+		-ldflags "-s -w -X '$(MODULE)/openflare/plugins/flared/config.Version=$(VERSION)'" \
+		-o ../bin/flared \
+		cmd/flared/main.go
+
+build-all: build-backend build-agent build-relay build-flared
 
 build-frontend:
 	@echo "==> Building frontend version=$(VERSION) build_date=$(BUILD_DATE)..."

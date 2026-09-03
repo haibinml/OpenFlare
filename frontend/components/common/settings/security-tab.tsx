@@ -175,7 +175,7 @@ export function SecurityTab({ configs, systemConfigsQuery }: SecurityTabProps) {
     },
   });
 
-  const handleSessionTTLChange = (val: string) => {
+  const handleTTLChange = (val: string) => {
     setSessionTTL(val);
     if (val !== 'custom') {
       updateTTLMutation.mutate(val);
@@ -291,7 +291,7 @@ export function SecurityTab({ configs, systemConfigsQuery }: SecurityTabProps) {
     },
   });
 
-  const handleCapSubmit = (e: React.FormEvent) => {
+  const handleCapSave = (e: React.FormEvent) => {
     e.preventDefault();
     saveCapMutation.mutate();
   };
@@ -329,15 +329,19 @@ export function SecurityTab({ configs, systemConfigsQuery }: SecurityTabProps) {
                   <div className='space-y-1'>
                     <div className='flex items-center gap-2'>
                       {Icon && <Icon className='size-4 text-primary' />}
-                      <span className='font-medium text-sm text-foreground'>
+                      <Label
+                        htmlFor={item.key}
+                        className='font-medium text-sm text-foreground'
+                      >
                         {t(item.titleKey)}
-                      </span>
+                      </Label>
                     </div>
                     <p className='text-xs text-muted-foreground leading-relaxed pr-2'>
                       {t(item.descKey)}
                     </p>
                   </div>
                   <Switch
+                    id={item.key}
                     checked={checked}
                     disabled={updateConfigMutation.isPending}
                     onCheckedChange={(value) => handleToggle(item.key, value)}
@@ -364,9 +368,12 @@ export function SecurityTab({ configs, systemConfigsQuery }: SecurityTabProps) {
                 <Select
                   value={sessionTTL}
                   disabled={updateTTLMutation.isPending}
-                  onValueChange={handleSessionTTLChange}
+                  onValueChange={handleTTLChange}
                 >
-                  <SelectTrigger className='w-[180px] bg-card border-dashed text-xs h-8'>
+                  <SelectTrigger
+                    className='w-[180px] bg-card border-dashed text-xs h-8'
+                    aria-label={t('loginSessionTTL')}
+                  >
                     <SelectValue placeholder={t('selectRetentionTime')} />
                   </SelectTrigger>
                   <SelectContent>
@@ -554,17 +561,24 @@ export function SecurityTab({ configs, systemConfigsQuery }: SecurityTabProps) {
             onCheckedChange={(checked) =>
               handleToggle('cap_login_enabled', checked)
             }
+            aria-label={t('loginCaptchaEnabled')}
           />
         </CardHeader>
         <CardContent className='pt-6'>
           {/* 自动开始计算 Switch */}
           <div className='flex items-center justify-between rounded-xl border border-dashed p-4 bg-card mb-4'>
             <div className='space-y-0.5'>
-              <p className='text-sm font-semibold'>{t('autoStartSolving')}</p>
+              <Label htmlFor='cap_auto_solve' className='text-sm font-semibold'>
+                {t('autoStartSolving')}
+              </Label>
             </div>
-            <Switch checked={capAutoSolve} onCheckedChange={setCapAutoSolve} />
+            <Switch
+              id='cap_auto_solve'
+              checked={capAutoSolve}
+              onCheckedChange={setCapAutoSolve}
+            />
           </div>
-          <form onSubmit={handleCapSubmit} className='space-y-6'>
+          <form onSubmit={handleCapSave} className='space-y-6'>
             <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
               <div className='space-y-1.5'>
                 <Label

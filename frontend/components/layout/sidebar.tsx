@@ -47,25 +47,22 @@ import {
   ArrowUpRight,
   Bell,
   ChevronDown,
-  Code,
-  CreditCard,
   Database,
   FileQuestionMark,
   FileText,
   FolderOpen,
-  Home,
   Layers,
   LogOut,
-  MessagesSquare,
   Settings,
   ShieldCheck,
-  Terminal,
   UserRound,
 } from 'lucide-react';
 
 import { useTranslations } from 'next-intl';
 import { useUser } from '@/contexts/user-context';
 import { usePublicConfig } from '@/hooks/use-public-config';
+import { OpenFlareSidebarMenu } from '@/components/layout/openflare-sidebar-menu';
+import { openflareSidebarNav } from '@/lib/navigation/openflare-nav';
 
 type NavItem = {
   titleKey: string;
@@ -74,33 +71,21 @@ type NavItem = {
   external?: boolean;
 };
 
-const navMainItems: NavItem[] = [
-  { titleKey: 'home', url: '/home', icon: Home },
-  { titleKey: 'myFiles', url: '/files', icon: FolderOpen },
-];
-
 const adminItems: NavItem[] = [
   { titleKey: 'users', url: '/admin/users', icon: UserRound },
   { titleKey: 'tasks', url: '/admin/tasks', icon: Layers },
   { titleKey: 'storage', url: '/admin/files', icon: FolderOpen },
   { titleKey: 'database', url: '/admin/database', icon: Database },
   { titleKey: 'push', url: '/admin/push', icon: Bell },
-  {
-    titleKey: 'messageGateway',
-    url: '/admin/message-gateway',
-    icon: MessagesSquare,
-  },
-  { titleKey: 'logs', url: '/admin/logs', icon: Terminal },
+  // { titleKey: 'logs', url: '/admin/logs', icon: Terminal },
   { titleKey: 'system', url: '/admin/system', icon: ShieldCheck },
   { titleKey: 'adminSettings', url: '/admin/settings', icon: Settings },
 ];
 
 const documentItems: NavItem[] = [
-  { titleKey: 'demo', url: '/admin/demo', icon: Code },
-  { titleKey: 'apiDocs', url: '/docs/api', icon: CreditCard, external: true },
   {
     titleKey: 'usageDocs',
-    url: '/docs/how-to-use',
+    url: 'https://openflare.fyrn.link/',
     icon: FileText,
     external: true,
   },
@@ -194,11 +179,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
   };
 
-  const navMainFiltered = React.useMemo(() => {
-    const displayConfig = parseMenuDisplayConfig(config?.menu_display_config);
-    return navMainItems.filter((item) => displayConfig[item.url] !== false);
-  }, [config]);
-
   const adminFiltered = React.useMemo(() => {
     const displayConfig = parseMenuDisplayConfig(config?.menu_display_config);
     return adminItems.filter((item) => displayConfig[item.url] !== false);
@@ -265,7 +245,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </div>
                 <div className='flex flex-col items-start flex-1 text-left group-data-[collapsible=icon]:hidden'>
                   <span className='text-xs font-medium truncate w-full text-left ml-2'>
-                    {user?.nickname || user?.username || 'Unknown User'}
+                    {user?.nickname || user?.username || t('user.unknownUser')}
                   </span>
                   <span className='text-[11px] font-medium text-muted-foreground/100 truncate w-full text-left ml-2'>
                     {user?.is_admin ? t('user.adminRole') : t('user.userRole')}
@@ -354,7 +334,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <DropdownMenuSeparator className='my-2' />
               <DropdownMenuItem
                 onClick={() => {
-                  router.push('/docs/how-to-use');
+                  window.open(
+                    'https://openflare.fyrn.link/',
+                    '_blank',
+                    'noopener,noreferrer',
+                  );
                   handleCloseSidebar();
                 }}
               >
@@ -372,28 +356,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </DropdownMenu>
         </SidebarHeader>
         <SidebarContent className='group-data-[collapsible=icon]'>
-          {navMainFiltered.length > 0 && (
+          {openflareSidebarNav.length > 0 && (
             <SidebarGroup className='py-0'>
               <SidebarGroupContent className='py-1'>
-                <SidebarMenu className='gap-1'>
-                  {navMainFiltered.map((item) => {
-                    const title = t(`nav.${item.titleKey}`);
-                    return (
-                      <SidebarMenuItem key={item.url}>
-                        <SidebarMenuButton
-                          tooltip={title}
-                          isActive={pathname === item.url}
-                          asChild
-                        >
-                          <Link href={item.url} onClick={handleCloseSidebar}>
-                            {item.icon && <item.icon />}
-                            <span>{title}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    );
-                  })}
-                </SidebarMenu>
+                <OpenFlareSidebarMenu onNavigate={handleCloseSidebar} />
               </SidebarGroupContent>
             </SidebarGroup>
           )}

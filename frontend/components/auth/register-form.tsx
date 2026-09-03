@@ -25,7 +25,7 @@ function getRedirectTarget(searchParams: ReturnType<typeof useSearchParams>) {
     typeof window === 'undefined'
       ? null
       : sessionStorage.getItem('redirect_after_login');
-  return safeRedirectTarget(callbackUrl || storedRedirect || '/home');
+  return safeRedirectTarget(callbackUrl || storedRedirect || '/');
 }
 
 function configBool(value: string | undefined, fallback: boolean) {
@@ -68,8 +68,8 @@ export function RegisterForm() {
   );
 
   const registrationEnabled =
-    configBool(publicConfigQuery.data?.registration_enabled, true) &&
-    configBool(publicConfigQuery.data?.password_register_enabled, true);
+    configBool(publicConfigQuery.data?.registration_enabled, false) &&
+    configBool(publicConfigQuery.data?.password_register_enabled, false);
 
   const emailRegisterEnabled = configBool(
     publicConfigQuery.data?.email_register_verification_enabled,

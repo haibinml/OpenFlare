@@ -62,24 +62,26 @@ writer.Stop(stopCtx)      // close 队列 + drain + 最终 flush
 | 域 | 表 | 写入路径 |
 | :--- | :--- | :--- |
 | 管理端审计 | `w_user_access_logs` | `risk_control` → `batchwriter` → `logstore.Active` |
+| 边缘访问日志 | `of_node_access_logs` | `openflare/chwriter` → `logstore.Active` |
+| 可观测时序 | `of_node_metric_snapshots` 等 | `openflare/chwriter` 分表 writer + 进程内短 TTL 去重 → `logstore.Active` |
 
-**不要**把不同日志域并入同一 channel。新日志表先按 `logstore` skill 判定，再为本域建独立 writer。
+**不要**把 audit、access log、observability 并入同一 channel。
 
 ## 新增 ClickHouse 写入工作流
 
 1. **Model**：在 `internal/model/analytics/` 定义 struct 与 `BatchInsertSQL()`（列顺序与 goose DDL 一致）。
 2. **Goose DDL**：在 `internal/infra/persistence/migrator/goose/clickhouse/` 新增迁移（见 `database-migration`）。
 3. **Repository**：实现 `BatchInsertX(ctx, []analyticsmodel.X) error`：
-    - `len(items)==0` 直接返回
-    - `db.ChConn == nil` 返回明确错误
-    - 一次 `PrepareBatch` → 循环 `Append` → 一次 `Send`
+   - `len(items)==0` 直接返回
+   - `db.ChConn == nil` 返回明确错误
+   - 一次 `PrepareBatch` → 循环 `Append` → 一次 `Send`
 4. **Writer 胶水**（`internal/apps/<domain>/`）：
     - `New` + `Start`，并在初始化逻辑内通过 `lifecycle.OnShutdown("your_writer_name", Stop)` 注册停机回调
     - 日志表的 `FlushFunc` 调 `logstore.Active`（见 `logstore` skill）
     - 业务路径 `TryEnqueue`；HTTP 背压用 `IsFull()`
 5. **测试**：
-    - repository：mock `ChConn` 验证 `BatchInsertSQL` 与 append 列数
-    - batchwriter：`go test ./internal/infra/persistence/batchwriter`
+   - repository：mock `ChConn` 验证 `BatchInsertSQL` 与 append 列数
+   - batchwriter：`go test ./internal/infra/persistence/batchwriter`
 6. 运行 `make code-check`；有 API 变更时 `make swagger`。
 
 ## 背压与丢弃策略
@@ -87,7 +89,8 @@ writer.Stop(stopCtx)      // close 队列 + drain + 最终 flush
 | 场景 | 推荐策略 |
 | :--- | :--- |
 | 管理端 API 审计 | 队列满 → `IsFull()` 触发 429（见 `risk_control` middleware） |
-| 可丢弃的高频日志 | 队列满 → `WithDropHandler` 记 warn；不阻塞请求 |
+| Agent 心跳指标 | 队列满 → `WithDropHandler` 记 warn；不阻塞心跳响应 |
+| 边缘 access log | 优先扩大队列与 batch；必要时丢弃最旧或采样 |
 
 ## 禁止写法
 
@@ -152,6 +155,9 @@ make code-check
 - 框架：`internal/infra/persistence/batchwriter/{config,writer,errs}.go`
 - 连接：`internal/infra/persistence/clickhouse.go`
 - 审计写入：`internal/apps/risk_control/logics.go`
+- OpenFlare 写入胶水：`internal/apps/openflare/chwriter/writer.go`
 - 日志抽象：`internal/repository/logstore`
+- 节点访问日志 CH 实现：`internal/repository/analytics/node_access_log_writer.go`
+- 可观测 CH 实现：`internal/repository/analytics/node_observability_writer.go`
 - 生命周期管理器：`internal/platform/lifecycle/lifecycle.go`
 - Bootstrap：`internal/platform/bootstrap/bootstrap.go`

@@ -199,7 +199,7 @@ export function TaskExecutionsManager() {
             }
           >
             <SelectTrigger size='sm' className='w-[120px]'>
-              <SelectValue placeholder='状态' />
+              <SelectValue placeholder={t('colStatus')} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value='all'>{t('allStatuses')}</SelectItem>
@@ -214,7 +214,7 @@ export function TaskExecutionsManager() {
             onValueChange={handleTaskTypeChange}
           >
             <SelectTrigger size='sm' className='w-[180px]'>
-              <SelectValue placeholder='任务类型' />
+              <SelectValue placeholder={t('taskTypeFilter')} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value='all'>{t('allTasks')}</SelectItem>
@@ -361,7 +361,7 @@ export function TaskExecutionsManager() {
             <SheetDescription>
               {selectedExecution?.task_name ||
                 selectedExecution?.task_type ||
-                '任务记录'}
+                t('executionRecord')}
             </SheetDescription>
           </SheetHeader>
 
