@@ -94,3 +94,8 @@ backend/plugins/**/dist/
 backend/core/**/dist/
 backend/pkg/**/uploads/
 /backend/openflare/plugins/server/upload/filesrv/uploads/
+/backend/plugins/domain/upload/filesrv/uploads/
+/backend/plugins/domain/upload/task/uploads/
+/backend/data/
+/backend/plugins/drivers/driver_http/dist/
+/backend/uploads/
