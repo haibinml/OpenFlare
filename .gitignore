@@ -11,6 +11,7 @@
 
 # config
 config.yaml
+manifest/config/config.yaml
 .env
 .env.*
 !.env.example

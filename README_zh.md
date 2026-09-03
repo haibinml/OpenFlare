@@ -95,10 +95,10 @@ cd refreshing
 ### 2. 配置环境
 
 ```bash
-cp config.example.yaml config.yaml
+cp manifest/config/config.default.yaml manifest/config/config.yaml
 ```
 
-编辑 `config.yaml`，配置数据库和 Redis。OIDC 认证源统一在管理后台的系统设置页面运行时配置。
+编辑 `manifest/config/config.yaml`，配置数据库和 Redis。OIDC 认证源统一在管理后台的系统设置页面运行时配置。
 
 ### 3. 初始化数据库
 
@@ -156,7 +156,7 @@ pnpm dev
 
 ## ⚙️ 配置说明
 
-主要配置项（完整说明请参考 `config.example.yaml`）：
+主要配置项（完整说明请参考 `manifest/config/config.default.yaml`）：
 
 | 配置项 | 说明 | 示例 |
 |--------|------|------|
