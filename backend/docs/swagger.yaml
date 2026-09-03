@@ -156,26 +156,6 @@ definitions:
       type:
         type: string
     type: object
-  Wavelet_plugins_domain_admin_model.Schedule:
-    properties:
-      created_at:
-        type: string
-      cron:
-        type: string
-      id:
-        example: "0"
-        type: string
-      is_active:
-        type: boolean
-      name:
-        type: string
-      payload:
-        type: string
-      task_type:
-        type: string
-      updated_at:
-        type: string
-    type: object
   Wavelet_plugins_domain_admin_model.SystemConfig:
     properties:
       created_at:
@@ -229,29 +209,6 @@ definitions:
       task_type:
         type: string
       triggered_by:
-        type: string
-      updated_at:
-        type: string
-    type: object
-  Wavelet_plugins_domain_admin_model.Template:
-    properties:
-      content:
-        type: string
-      created_at:
-        type: string
-      description:
-        type: string
-      id:
-        type: integer
-      is_system:
-        type: boolean
-      key:
-        type: string
-      name:
-        type: string
-      subject:
-        type: string
-      type:
         type: string
       updated_at:
         type: string
@@ -1890,6 +1847,26 @@ definitions:
       value:
         type: string
     type: object
+  model.Schedule:
+    properties:
+      created_at:
+        type: string
+      cron:
+        type: string
+      id:
+        example: "0"
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      payload:
+        type: string
+      task_type:
+        type: string
+      updated_at:
+        type: string
+    type: object
   model.SystemStatusResponse:
     properties:
       alloc:
@@ -2004,6 +1981,29 @@ definitions:
     - TaskExecutionStatusRunning
     - TaskExecutionStatusSucceeded
     - TaskExecutionStatusFailed
+  model.Template:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      is_system:
+        type: boolean
+      key:
+        type: string
+      name:
+        type: string
+      subject:
+        type: string
+      type:
+        type: string
+      updated_at:
+        type: string
+    type: object
   model.TestSMTPRequest:
     properties:
       smtp_host:
@@ -5873,7 +5873,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/Wavelet_plugins_domain_admin_model.Schedule'
+                    $ref: '#/definitions/model.Schedule'
                   type: array
               type: object
         "401":
@@ -5910,7 +5910,7 @@ paths:
             - $ref: '#/definitions/response.Any'
             - properties:
                 data:
-                  $ref: '#/definitions/Wavelet_plugins_domain_admin_model.Schedule'
+                  $ref: '#/definitions/model.Schedule'
               type: object
         "400":
           description: Cron 表达式无效、异步任务类型不存在或参数错误
@@ -6001,7 +6001,7 @@ paths:
             - $ref: '#/definitions/response.Any'
             - properties:
                 data:
-                  $ref: '#/definitions/Wavelet_plugins_domain_admin_model.Schedule'
+                  $ref: '#/definitions/model.Schedule'
               type: object
         "400":
           description: Cron 表达式无效、参数错误
@@ -6072,7 +6072,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/Wavelet_plugins_domain_admin_model.Template'
+                    $ref: '#/definitions/model.Template'
                   type: array
               type: object
         "401":
@@ -6200,7 +6200,7 @@ paths:
             - $ref: '#/definitions/response.Any'
             - properties:
                 data:
-                  $ref: '#/definitions/Wavelet_plugins_domain_admin_model.Template'
+                  $ref: '#/definitions/model.Template'
               type: object
         "401":
           description: 未登录
@@ -6249,7 +6249,7 @@ paths:
             - $ref: '#/definitions/response.Any'
             - properties:
                 data:
-                  $ref: '#/definitions/Wavelet_plugins_domain_admin_model.Template'
+                  $ref: '#/definitions/model.Template'
               type: object
         "400":
           description: 参数错误

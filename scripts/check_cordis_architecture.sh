@@ -196,6 +196,13 @@ if [ -d "${BACKEND_DIR}/openflare/plugins" ]; then
         if [ -n "$openflare_cross" ]; then
             CROSS_PLUGIN_IMPORTS="${CROSS_PLUGIN_IMPORTS}\n[openflare/plugins/${openflare_name} 违规引用其他 openflare 插件]:\n${openflare_cross}\n"
         fi
+
+        # 检查 openflare 插件是否违规直接引用上游内部插件实现 (Wavelet/plugins/)
+        openflare_upstream_cross=$(rg -n "\"${MODULE}/plugins/" "${openflare_dir}" \
+            -g '*.go' -g '!*_test.go' 2>/dev/null || true)
+        if [ -n "$openflare_upstream_cross" ]; then
+            CROSS_PLUGIN_IMPORTS="${CROSS_PLUGIN_IMPORTS}\n[openflare/plugins/${openflare_name} 违规直接引用上游插件实现]:\n${openflare_upstream_cross}\n"
+        fi
     done
 fi
 

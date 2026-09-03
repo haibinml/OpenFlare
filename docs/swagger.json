@@ -2668,7 +2668,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/Wavelet_plugins_domain_admin_model.Schedule"
+                                                "$ref": "#/definitions/model.Schedule"
                                             }
                                         }
                                     }
@@ -2730,7 +2730,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/Wavelet_plugins_domain_admin_model.Schedule"
+                                            "$ref": "#/definitions/model.Schedule"
                                         }
                                     }
                                 }
@@ -2812,7 +2812,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/Wavelet_plugins_domain_admin_model.Schedule"
+                                            "$ref": "#/definitions/model.Schedule"
                                         }
                                     }
                                 }
@@ -3001,7 +3001,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/Wavelet_plugins_domain_admin_model.Template"
+                                                "$ref": "#/definitions/model.Template"
                                             }
                                         }
                                     }
@@ -3139,7 +3139,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/Wavelet_plugins_domain_admin_model.Template"
+                                            "$ref": "#/definitions/model.Template"
                                         }
                                     }
                                 }
@@ -3219,7 +3219,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/Wavelet_plugins_domain_admin_model.Template"
+                                            "$ref": "#/definitions/model.Template"
                                         }
                                     }
                                 }
@@ -15233,36 +15233,6 @@
                 }
             }
         },
-        "Wavelet_plugins_domain_admin_model.Schedule": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "cron": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string",
-                    "example": "0"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "payload": {
-                    "type": "string"
-                },
-                "task_type": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
         "Wavelet_plugins_domain_admin_model.SystemConfig": {
             "type": "object",
             "properties": {
@@ -15342,41 +15312,6 @@
                     "type": "string"
                 },
                 "triggered_by": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "Wavelet_plugins_domain_admin_model.Template": {
-            "type": "object",
-            "properties": {
-                "content": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_system": {
-                    "type": "boolean"
-                },
-                "key": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "subject": {
-                    "type": "string"
-                },
-                "type": {
                     "type": "string"
                 },
                 "updated_at": {
@@ -17859,6 +17794,36 @@
                 }
             }
         },
+        "model.Schedule": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "cron": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "0"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "payload": {
+                    "type": "string"
+                },
+                "task_type": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "model.SystemStatusResponse": {
             "type": "object",
             "properties": {
@@ -18027,6 +17992,41 @@
                 "TaskExecutionStatusSucceeded",
                 "TaskExecutionStatusFailed"
             ]
+        },
+        "model.Template": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_system": {
+                    "type": "boolean"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "subject": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
         },
         "model.TestSMTPRequest": {
             "type": "object",

@@ -16,6 +16,7 @@ sidebar: false
 - Handler 把「记录不存在 → 404、其它错误 → 400」的分支改走上游 `response.AbortNotFoundIfMissing` / `AbortBadRequestOnError`，不再在 OpenFlare 里各写一份。
 - 控制面 `server` 插件按限界上下文重排目录：去掉 `openflare/` 与 `router/v1` 嵌套；业务在 `domain/`（site/fleet/pages 等），共享内核在 `kernel/`（model/repository 与适配器），HTTP 装配在 `httpapi`。接口路径与表结构不变。
 - `server` 插件把 stamp、of_* SQL 与 ClickHouse 迁入单一 `migrate/` 包，updater 提到 `server/updater/`；删除已停用的 76 条历史迁移。全新安装会写入 OpenFlare 定时任务与产品配置默认值，已 stamp 的升级库不重插。
+- 彻底治理跨组件调用与规约违例：严格遵循 Cordis 插件分层与单一表所有者原则，全面消除业务对上游内部实现的私有 import，统一面向 `backend/core/contracts` 编程；将契约 DTO 持久化解耦并增强通用标准库序列化支持回流 Wavelet 上游，全量架构规约检查与下游测试通过率达 100%。
 
 ### 💄 其他/体验
 
